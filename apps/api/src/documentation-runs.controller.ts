@@ -23,7 +23,7 @@ export class DocumentationRunsController {
   ) {}
 
   @Post()
-  createRun(@Body() body: unknown): object {
+  createRun(@Body() body: unknown): Promise<object> {
     return this.documentationRunsService.createRun(body);
   }
 
@@ -43,22 +43,22 @@ export class DocumentationRunsController {
   }
 
   @Get('/:runId')
-  getRun(@Param('runId') runId: string): object {
+  getRun(@Param('runId') runId: string): Promise<object> {
     return this.documentationRunsService.getRun(runId);
   }
 
   @Get('/:runId/result')
-  getResult(@Param('runId') runId: string): object {
+  getResult(@Param('runId') runId: string): Promise<object> {
     return this.documentationRunsService.getResult(runId);
   }
 
   @Get('/:runId/download')
-  download(
+  async download(
     @Param('runId') runId: string,
     @Query('format') format: string | undefined,
     @Res() response: Response
-  ): void {
-    const download = this.documentationRunsService.getDownload(runId, format ?? 'markdown-tree');
+  ): Promise<void> {
+    const download = await this.documentationRunsService.getDownload(runId, format ?? 'markdown-tree');
     response.setHeader('Content-Type', download.mediaType);
     response.setHeader('Content-Disposition', `attachment; filename="${download.fileName}"`);
     response.send(download.content);

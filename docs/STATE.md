@@ -77,7 +77,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 13: Persistence And Run Artifact Retention.
+Implement Phase 14: API Progress And Error Reporting.
 
 Required package:
 
@@ -86,7 +86,7 @@ apps/api
 packages/shared
 ```
 
-The next step should replace the API's purely in-memory run store with a small persistence boundary. Start with filesystem-backed run metadata and rendered artifact retention under `.tmp/codebase-docs-ai`, then keep the API contract unchanged.
+The next step should enrich run status responses with structured progress and failure details. Failed generation should persist `failed` status with a safe error message instead of losing context or throwing only at request time.
 
 ## Completed Implementation
 
@@ -353,6 +353,22 @@ pnpm typecheck
 pnpm test
 pnpm lint
 CLI smoke generation with local frontend/backend fixtures
+```
+
+### 2026-05-29: Phase 13 Persistence And Run Artifact Retention
+
+- Replaced API run state storage with filesystem-backed run manifests.
+- Persisted uploaded source metadata, lifecycle status, documentation tree, and rendered output artifacts under the run temp directory.
+- Updated result and download endpoints to read retained artifacts from disk.
+- Kept the external API contract unchanged.
+- Added test coverage for reading a completed run through a new service instance.
+- Documented temporary artifact retention behavior.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
 ```
 
 ## Open Questions

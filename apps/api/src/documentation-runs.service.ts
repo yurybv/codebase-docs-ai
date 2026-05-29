@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
@@ -36,9 +36,9 @@ interface StoredSource {
 interface StoredRun {
   run: DocumentationRun;
   sources: StoredSource[];
-  documentationTree?: DocumentationTree;
-  rendered?: Map<DocumentationOutputFormat, RenderedDocumentation>;
   tempPath: string;
+  documentationTreePath?: string;
+  renderedPaths?: Partial<Record<DocumentationOutputFormat, string>>;
 }
 
 interface DownloadResult {
@@ -57,11 +57,10 @@ const uploadSourcesMetadataSchema = z.object({
 
 @Injectable()
 export class DocumentationRunsService {
-  private readonly runs = new Map<string, StoredRun>();
   private readonly engine = createDocumentationEngine();
   private readonly tempRoot = path.resolve(process.env.DOCS_AI_TMP_DIR ?? '.tmp/codebase-docs-ai');
 
-  createRun(body: unknown): { runId: string; status: DocumentationRunStatus } {
+  async createRun(body: unknown): Promise<{ runId: string; status: DocumentationRunStatus }> {
     const parsed = createDocumentationRunSchema.safeParse(body);
     if (!parsed.success) {
       throw new BadRequestException({
@@ -82,12 +81,13 @@ export class DocumentationRunsService {
       createdAt: now,
       updatedAt: now
     };
-
-    this.runs.set(runId, {
+    const storedRun: StoredRun = {
       run,
       sources: [],
-      tempPath: path.join(this.tempRoot, runId)
-    });
+      tempPath: this.runPath(runId)
+    };
+
+    await this.writeRun(storedRun);
 
     return {
       runId,
@@ -100,7 +100,7 @@ export class DocumentationRunsService {
     files: UploadedSourceFile[],
     metadataJson: string
   ): Promise<{ runId: string; status: DocumentationRunStatus; sources: SourceInputMetadata[] }> {
-    const storedRun = this.requireRun(runId);
+    const storedRun = await this.requireRun(runId);
     const parsedMetadata = uploadSourcesMetadataSchema.safeParse(parseJson(metadataJson));
     if (!parsedMetadata.success) {
       throw new BadRequestException({
@@ -141,7 +141,7 @@ export class DocumentationRunsService {
 
     storedRun.sources = storedSources;
     storedRun.run.sources = storedSources.map((source) => source.metadata);
-    this.setStatus(storedRun, 'ready');
+    await this.setStatus(storedRun, 'ready');
 
     return {
       runId,
@@ -151,7 +151,7 @@ export class DocumentationRunsService {
   }
 
   async startRun(runId: string): Promise<{ runId: string; status: DocumentationRunStatus }> {
-    const storedRun = this.requireRun(runId);
+    const storedRun = await this.requireRun(runId);
     if (storedRun.sources.length === 0) {
       throw new BadRequestException({
         code: 'NO_SOURCES_UPLOADED',
@@ -159,8 +159,8 @@ export class DocumentationRunsService {
       });
     }
 
-    this.setStatus(storedRun, 'running');
-    this.setStatus(storedRun, 'extracting_sources');
+    await this.setStatus(storedRun, 'running');
+    await this.setStatus(storedRun, 'extracting_sources');
 
     const loadedSources = await Promise.all(
       storedRun.sources.map((source) =>
@@ -172,19 +172,18 @@ export class DocumentationRunsService {
       )
     );
 
-    this.setStatus(storedRun, 'analyzing_sources');
-    this.setStatus(storedRun, 'building_system_map');
-    this.setStatus(storedRun, 'generating_documentation');
+    await this.setStatus(storedRun, 'analyzing_sources');
+    await this.setStatus(storedRun, 'building_system_map');
+    await this.setStatus(storedRun, 'generating_documentation');
     const result = await this.engine.generateDocumentation({
       title: storedRun.run.name,
       loadedSources,
       options: storedRun.run.options
     });
 
-    this.setStatus(storedRun, 'rendering_output');
-    storedRun.documentationTree = result.documentationTree;
-    storedRun.rendered = result.rendered;
-    this.setStatus(storedRun, 'completed');
+    await this.setStatus(storedRun, 'rendering_output');
+    await this.writeResultArtifacts(storedRun, result.documentationTree, result.rendered);
+    await this.setStatus(storedRun, 'completed');
 
     return {
       runId,
@@ -192,29 +191,32 @@ export class DocumentationRunsService {
     };
   }
 
-  getRun(runId: string): DocumentationRun {
-    return this.requireRun(runId).run;
+  async getRun(runId: string): Promise<DocumentationRun> {
+    return (await this.requireRun(runId)).run;
   }
 
-  getResult(runId: string): { runId: string; status: DocumentationRunStatus; documentation: DocumentationTree } {
-    const storedRun = this.requireRun(runId);
-    if (!storedRun.documentationTree) {
+  async getResult(
+    runId: string
+  ): Promise<{ runId: string; status: DocumentationRunStatus; documentation: DocumentationTree }> {
+    const storedRun = await this.requireRun(runId);
+    if (!storedRun.documentationTreePath) {
       throw new BadRequestException({
         code: 'DOCUMENTATION_NOT_READY',
         message: 'Documentation result is not ready yet.'
       });
     }
+    const documentationTree = await this.readJsonFile<DocumentationTree>(storedRun.documentationTreePath);
 
     return {
       runId,
       status: storedRun.run.status,
-      documentation: storedRun.documentationTree
+      documentation: documentationTree
     };
   }
 
-  getDownload(runId: string, format: string): DownloadResult {
-    const storedRun = this.requireRun(runId);
-    if (!storedRun.rendered) {
+  async getDownload(runId: string, format: string): Promise<DownloadResult> {
+    const storedRun = await this.requireRun(runId);
+    if (!storedRun.renderedPaths) {
       throw new BadRequestException({
         code: 'DOCUMENTATION_NOT_READY',
         message: 'Documentation download is not ready yet.'
@@ -229,13 +231,14 @@ export class DocumentationRunsService {
       });
     }
 
-    const rendered = storedRun.rendered.get(parsedFormat.data);
-    if (!rendered) {
+    const renderedPath = storedRun.renderedPaths[parsedFormat.data];
+    if (!renderedPath) {
       throw new BadRequestException({
         code: 'OUTPUT_FORMAT_NOT_RENDERED',
         message: `Output format was not rendered for this run: ${format}.`
       });
     }
+    const rendered = await this.readJsonFile<RenderedDocumentation>(renderedPath);
 
     if (parsedFormat.data === 'markdown-tree') {
       return {
@@ -261,30 +264,75 @@ export class DocumentationRunsService {
   }
 
   async deleteRun(runId: string): Promise<void> {
-    const storedRun = this.requireRun(runId);
+    const storedRun = await this.requireRun(runId);
     await rm(storedRun.tempPath, {
       recursive: true,
       force: true
     });
-    this.runs.delete(runId);
   }
 
-  private requireRun(runId: string): StoredRun {
-    const storedRun = this.runs.get(runId);
-    if (!storedRun) {
+  private async requireRun(runId: string): Promise<StoredRun> {
+    try {
+      return await this.readJsonFile<StoredRun>(this.manifestPath(runId));
+    } catch {
       throw new NotFoundException({
         code: 'DOCUMENTATION_RUN_NOT_FOUND',
         message: `Documentation run was not found: ${runId}.`
       });
     }
-
-    return storedRun;
   }
 
-  private setStatus(storedRun: StoredRun, status: DocumentationRunStatus): void {
+  private async setStatus(storedRun: StoredRun, status: DocumentationRunStatus): Promise<void> {
     storedRun.run.status = status;
     storedRun.run.updatedAt = new Date().toISOString();
+    await this.writeRun(storedRun);
   }
+
+  private async writeResultArtifacts(
+    storedRun: StoredRun,
+    documentationTree: DocumentationTree,
+    rendered: Map<DocumentationOutputFormat, RenderedDocumentation>
+  ): Promise<void> {
+    const resultPath = path.join(storedRun.tempPath, 'results');
+    await mkdir(resultPath, {
+      recursive: true
+    });
+
+    storedRun.documentationTreePath = path.join(resultPath, 'documentation-tree.json');
+    await writeJsonFile(storedRun.documentationTreePath, documentationTree);
+
+    const renderedPaths: Partial<Record<DocumentationOutputFormat, string>> = {};
+    for (const [format, renderedDocumentation] of rendered.entries()) {
+      const renderedPath = path.join(resultPath, `rendered-${format}.json`);
+      await writeJsonFile(renderedPath, renderedDocumentation);
+      renderedPaths[format] = renderedPath;
+    }
+    storedRun.renderedPaths = renderedPaths;
+    await this.writeRun(storedRun);
+  }
+
+  private async writeRun(storedRun: StoredRun): Promise<void> {
+    await mkdir(storedRun.tempPath, {
+      recursive: true
+    });
+    await writeJsonFile(this.manifestPath(storedRun.run.id), storedRun);
+  }
+
+  private async readJsonFile<TValue>(filePath: string): Promise<TValue> {
+    return JSON.parse(await readFile(filePath, 'utf8')) as TValue;
+  }
+
+  private manifestPath(runId: string): string {
+    return path.join(this.runPath(runId), 'run.json');
+  }
+
+  private runPath(runId: string): string {
+    return path.join(this.tempRoot, runId);
+  }
+}
+
+async function writeJsonFile(filePath: string, value: unknown): Promise<void> {
+  await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
 function createDocumentationEngine(): DocumentationEngine {

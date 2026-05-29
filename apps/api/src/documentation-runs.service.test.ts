@@ -24,7 +24,7 @@ afterEach(async () => {
 
 describe('DocumentationRunsService', () => {
   it('creates a run, uploads a source, starts generation, and returns downloads', async () => {
-    const created = service.createRun({
+    const created = await service.createRun({
       name: 'Fixture Docs',
       options: {
         outputFormats: ['markdown-tree', 'single-markdown', 'json'],
@@ -76,10 +76,14 @@ describe('DocumentationRunsService', () => {
     const started = await service.startRun(created.runId);
     expect(started.status).toBe('completed');
 
-    const result = service.getResult(created.runId);
+    const result = await service.getResult(created.runId);
     expect(result.documentation.pages).toHaveLength(14);
 
-    const download = service.getDownload(created.runId, 'single-markdown');
+    const restartedService = new DocumentationRunsService();
+    const persistedRun = await restartedService.getRun(created.runId);
+    expect(persistedRun.status).toBe('completed');
+
+    const download = await restartedService.getDownload(created.runId, 'single-markdown');
     expect(download.fileName).toBe('PROJECT_DOCUMENTATION.md');
     expect(download.content.toString()).toContain('# 01. Overview');
   });

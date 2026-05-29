@@ -170,6 +170,20 @@ The API should start simple:
 
 It can run generation in-process first. Worker extraction can be added later without changing the API contract.
 
+Run metadata and generated artifacts are retained under the configured temporary root:
+
+```text
+DOCS_AI_TMP_DIR
+```
+
+Default:
+
+```text
+.tmp/codebase-docs-ai
+```
+
+Each run stores a manifest and rendered result artifacts on disk so a process-local service restart can still read completed run results while the temporary directory exists.
+
 ### Web
 
 ```text
