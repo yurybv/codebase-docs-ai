@@ -84,15 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 6: Renderers.
+Implement Phase 7: API.
 
-Required package:
+Required app:
 
 ```text
-packages/renderers
+apps/api
 ```
 
-The next step should render `DocumentationTree` into markdown tree files, a single markdown file, JSON, and downloadable zip artifacts.
+The next step should add run lifecycle endpoints, multipart upload, temporary run storage, in-process generation through the engine packages, result retrieval, download endpoint, and safe errors.
 
 ## Completed Implementation
 
@@ -210,6 +210,25 @@ pnpm lint
 - Added generated markdown pages for overview, source inventory, API contracts, environment, risks, and source references.
 - Added generic placeholder pages for specialized sections that will be expanded later.
 - Added tests for documentation planning and tree generation.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 6 Renderers
+
+- Added `packages/renderers`.
+- Added Markdown tree renderer.
+- Added single Markdown renderer.
+- Added JSON renderer.
+- Added zip packaging for rendered documentation files.
+- Added shared rendered documentation contracts.
+- Added renderer tests.
 
 Verification:
 

@@ -1,0 +1,71 @@
+import { describe, expect, it } from 'vitest';
+import type { DocumentationTree } from '@codebase-docs-ai/shared';
+import { renderJson } from './json-renderer.js';
+import { findRenderedFile, renderMarkdownTree, renderSingleMarkdown } from './markdown-renderer.js';
+import { renderZip } from './zip-renderer.js';
+
+describe('markdown renderers', () => {
+  it('renders a documentation tree as markdown files', () => {
+    const rendered = renderMarkdownTree(documentationTreeFixture());
+
+    expect(rendered.format).toBe('markdown-tree');
+    expect(rendered.files.map((file) => file.path)).toEqual(['01-overview.md', '02-api.md']);
+    expect(findRenderedFile(rendered, '01-overview.md')?.content).toContain('# Overview');
+  });
+
+  it('renders a documentation tree as a single markdown file', () => {
+    const rendered = renderSingleMarkdown(documentationTreeFixture());
+
+    expect(rendered.files).toHaveLength(1);
+    expect(rendered.files[0]?.path).toBe('PROJECT_DOCUMENTATION.md');
+    expect(rendered.files[0]?.content).toContain('---');
+  });
+});
+
+describe('json renderer', () => {
+  it('renders a documentation tree as JSON', () => {
+    const rendered = renderJson(documentationTreeFixture());
+
+    expect(rendered.files[0]?.path).toBe('documentation-tree.json');
+    expect(JSON.parse(rendered.files[0]?.content ?? '{}')).toMatchObject({
+      title: 'Docs'
+    });
+  });
+});
+
+describe('zip renderer', () => {
+  it('packages rendered files into a zip buffer', () => {
+    const zip = renderZip(renderMarkdownTree(documentationTreeFixture()));
+
+    expect(Buffer.isBuffer(zip)).toBe(true);
+    expect(zip.byteLength).toBeGreaterThan(0);
+  });
+});
+
+function documentationTreeFixture(): DocumentationTree {
+  return {
+    title: 'Docs',
+    summary: 'Summary',
+    pages: [
+      {
+        key: 'api',
+        title: '02. API',
+        order: 2,
+        markdown: '# API',
+        sourceReferences: [],
+        warnings: []
+      },
+      {
+        key: 'overview',
+        title: '01. Overview',
+        order: 1,
+        markdown: '# Overview',
+        sourceReferences: [],
+        warnings: []
+      }
+    ],
+    warnings: [],
+    sourceReferences: [],
+    generatedAt: '2026-05-29T00:00:00.000Z'
+  };
+}

@@ -105,6 +105,19 @@ importers:
         specifier: workspace:*
         version: link:../shared
 
+  packages/renderers:
+    dependencies:
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.17
+    devDependencies:
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.8
+
   packages/repo-analyzer:
     dependencies:
       '@codebase-docs-ai/shared':

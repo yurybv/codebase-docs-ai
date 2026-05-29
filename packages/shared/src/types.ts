@@ -237,6 +237,19 @@ export interface DocumentationPlan {
   warnings: DocumentationWarning[];
 }
 
+export type RenderedDocumentationFormat = 'markdown-tree' | 'single-markdown' | 'json';
+
+export interface RenderedDocumentationFile {
+  path: string;
+  content: string;
+  mediaType: string;
+}
+
+export interface RenderedDocumentation {
+  format: RenderedDocumentationFormat;
+  files: RenderedDocumentationFile[];
+}
+
 export interface DocumentationRunOptions {
   outputFormats: DocumentationOutputFormat[];
   language: 'en';
