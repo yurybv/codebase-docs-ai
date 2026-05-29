@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { link, mkdtemp, mkdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
@@ -6,7 +6,11 @@ import * as tar from 'tar';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadArchiveSource, loadFolderSource } from './load-source.js';
 import { assertSafeRelativePath } from './path-safety.js';
-import { UnsafeArchivePathError, UnsupportedArchiveError } from './source-loader-errors.js';
+import {
+  SourceLimitExceededError,
+  UnsafeArchivePathError,
+  UnsupportedArchiveError
+} from './source-loader-errors.js';
 
 let tempRoot: string;
 
@@ -291,6 +295,67 @@ describe('loadArchiveSource', () => {
     });
   });
 
+  it('rejects tar archives that contain symbolic links', async () => {
+    const archivePath = path.join(tempRoot, 'symlink.tar');
+    await writeTarLinkFixtureArchive(archivePath, 'symbolic');
+
+    await expect(
+      loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-symlink')
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive contains unsupported link: link.txt'
+    });
+  });
+
+  it('rejects tar archives that contain hard links', async () => {
+    const archivePath = path.join(tempRoot, 'hardlink.tar');
+    await writeTarLinkFixtureArchive(archivePath, 'hard');
+
+    await expect(
+      loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-hardlink')
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive contains unsupported link: link.txt'
+    });
+  });
+
+  it('rejects zip archives that contain symbolic links', async () => {
+    const archivePath = path.join(tempRoot, 'symlink.zip');
+    writeZipSymlinkArchive(archivePath);
+
+    const loadPromise = loadArchiveSource({
+      source: {
+        name: 'Backend',
+        role: 'backend'
+      },
+      archivePath,
+      extractionRoot: path.join(tempRoot, 'extract-zip-symlink')
+    });
+
+    await expect(loadPromise).rejects.toBeInstanceOf(SourceLimitExceededError);
+    await expect(loadPromise).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive contains unsupported symlink: link.txt'
+    });
+  });
+
   it('rejects unsafe relative paths before extraction', () => {
     expect(() => assertSafeRelativePath('../escape.ts')).toThrow(UnsafeArchivePathError);
     expect(() => assertSafeRelativePath('/absolute.ts')).toThrow(UnsafeArchivePathError);
@@ -319,6 +384,33 @@ async function writeTarFixtureArchive(archivePath: string, gzip: boolean): Promi
   );
 }
 
+async function writeTarLinkFixtureArchive(
+  archivePath: string,
+  linkKind: 'symbolic' | 'hard'
+): Promise<void> {
+  const sourceRoot = path.join(tempRoot, `fixture-${path.basename(archivePath)}`);
+  await mkdir(sourceRoot, {
+    recursive: true
+  });
+  const targetPath = path.join(sourceRoot, 'target.txt');
+  const linkPath = path.join(sourceRoot, 'link.txt');
+  await writeFile(targetPath, 'target');
+
+  if (linkKind === 'symbolic') {
+    await symlink('target.txt', linkPath);
+  } else {
+    await link(targetPath, linkPath);
+  }
+
+  await tar.c(
+    {
+      cwd: sourceRoot,
+      file: archivePath
+    },
+    ['target.txt', 'link.txt']
+  );
+}
+
 function writeZipArchive(
   archivePath: string,
   entries: Array<{
@@ -330,5 +422,12 @@ function writeZipArchive(
   for (const entry of entries) {
     zip.addFile(entry.path, Buffer.from(entry.content));
   }
+  zip.writeZip(archivePath);
+}
+
+function writeZipSymlinkArchive(archivePath: string): void {
+  const zip = new AdmZip();
+  const entry = zip.addFile('link.txt', Buffer.from('target.txt'));
+  entry.attr = 0o120777 * 0x10000;
   zip.writeZip(archivePath);
 }

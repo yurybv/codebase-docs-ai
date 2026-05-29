@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 62: Source Loader Archive Link Regression Coverage.
+Implement Phase 63: Source Loader Non-Regular Folder File Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/source-loader
 docs
 ```
 
-The next step should add focused source-loader regression coverage for rejecting symbolic links and hard links inside archives.
+The next step should add focused source-loader regression coverage for skipping non-regular files in folder inputs.
 
 ## Completed Implementation
 
@@ -1111,6 +1111,20 @@ pnpm test -- packages/source-loader/src/load-source.test.ts
 - Added source-loader regression coverage for folder per-file size skip behavior.
 - Added source-loader regression coverage for folder total size limits.
 - Kept archive limit coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-29: Phase 62 Source Loader Archive Link Regression Coverage
+
+- Added source-loader regression coverage for tar symbolic link rejection.
+- Added source-loader regression coverage for tar hard link rejection.
+- Added source-loader regression coverage for zip symbolic link rejection.
+- Kept path traversal, folder limit, and archive limit coverage intact.
 
 Verification:
 

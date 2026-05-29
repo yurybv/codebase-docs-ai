@@ -37,13 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 62: Source Loader Archive Link Regression Coverage.
+- Implement Phase 63: Source Loader Non-Regular Folder File Regression Coverage.
 
-Phase 62 goal:
-- Add focused source-loader regression coverage for tar symbolic link rejection.
-- Add focused source-loader regression coverage for tar hard link rejection.
-- Add focused source-loader regression coverage for zip symbolic link rejection if practical with current fixtures.
-- Keep path traversal, folder limit, and archive limit coverage intact.
+Phase 63 goal:
+- Add focused source-loader regression coverage for skipping symbolic links in folder inputs.
+- Add focused source-loader regression coverage for `not_regular_file` skipped-file reporting.
+- Keep archive link rejection and folder limit coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

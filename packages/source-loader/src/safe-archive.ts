@@ -95,12 +95,14 @@ async function extractTarArchive(
   limits: SourceLoadLimits
 ): Promise<void> {
   const entries: ArchiveEntrySummary[] = [];
+  let unsupportedLinkPath: string | undefined;
 
   await tar.t({
     file: archivePath,
     onentry: (entry: ReadEntry) => {
       if (entry.type === 'SymbolicLink' || entry.type === 'Link') {
-        throw new SourceLimitExceededError(`Archive contains unsupported link: ${entry.path}`);
+        unsupportedLinkPath ??= entry.path;
+        return;
       }
 
       entries.push({
@@ -109,6 +111,10 @@ async function extractTarArchive(
       });
     }
   });
+
+  if (unsupportedLinkPath) {
+    throw new SourceLimitExceededError(`Archive contains unsupported link: ${unsupportedLinkPath}`);
+  }
 
   validateArchiveEntries(entries, limits);
 
