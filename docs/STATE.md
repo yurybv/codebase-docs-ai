@@ -84,15 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 7: API.
+Implement Phase 8: Web UI.
 
 Required app:
 
 ```text
-apps/api
+apps/web
 ```
 
-The next step should add run lifecycle endpoints, multipart upload, temporary run storage, in-process generation through the engine packages, result retrieval, download endpoint, and safe errors.
+The next step should add archive upload controls, source role selection, output format selection, run progress/status display, generated page preview, warnings display, and download controls backed by the API.
 
 ## Completed Implementation
 
@@ -229,6 +229,26 @@ pnpm lint
 - Added zip packaging for rendered documentation files.
 - Added shared rendered documentation contracts.
 - Added renderer tests.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 7 API Run Lifecycle
+
+- Added documentation run controller endpoints.
+- Added in-memory run lifecycle service with temporary filesystem storage.
+- Added multipart source upload handling.
+- Added in-process pipeline: source loading, security filtering, repository analysis, system analysis, documentation generation, and rendering.
+- Added result retrieval endpoint support.
+- Added download handling for markdown tree zip, single markdown, and JSON.
+- Added deletion cleanup for temporary run artifacts.
+- Added service test covering create, upload, start, result, and download.
 
 Verification:
 
