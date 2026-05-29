@@ -33,6 +33,32 @@ export interface SourceInputMetadata {
   metadata?: Record<string, unknown>;
 }
 
+export interface SourceLoadLimits {
+  maxFiles: number;
+  maxFileSizeBytes: number;
+  maxTotalSizeBytes: number;
+}
+
+export interface SourceFile {
+  path: string;
+  absolutePath: string;
+  sizeBytes: number;
+  extension: string;
+}
+
+export interface SkippedSourceFile {
+  path: string;
+  reason: string;
+}
+
+export interface LoadedSource {
+  source: SourceInputMetadata;
+  rootPath: string;
+  files: SourceFile[];
+  skippedFiles: SkippedSourceFile[];
+  totalSizeBytes: number;
+}
+
 export interface SourceReference {
   sourceName: string;
   path: string;

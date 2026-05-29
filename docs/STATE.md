@@ -84,16 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 2: Source Loading And Security.
+Continue Phase 2: Security filtering and redaction.
 
 Required packages:
 
 ```text
-packages/source-loader
 packages/security
 ```
 
-Phase 2 should add safe archive/folder loading, file inventory, path traversal protection, file limits, denylist rules, and secret redaction.
+The next step should add denylist rules, generated/binary file filtering, secret detection, secret redaction, and prompt-safety helpers.
 
 ## Completed Implementation
 
@@ -108,6 +107,25 @@ Phase 2 should add safe archive/folder loading, file inventory, path traversal p
 - Added `apps/web` Vite React skeleton.
 - Added `apps/cli` Commander skeleton.
 - Added initial package tests.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 2 Source Loader
+
+- Added `packages/source-loader`.
+- Added local folder loading.
+- Added zip, tar, tar.gz, and tgz extraction support.
+- Added path traversal checks before extraction.
+- Added source file count, per-file size, and total size limits.
+- Added sorted file inventory output.
+- Added tests for folder loading, zip extraction, and unsafe path rejection.
 
 Verification:
 
