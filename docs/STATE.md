@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 73: API Run Sanitization Regression Coverage.
+Implement Phase 74: CLI Generation Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/api
+apps/cli
 docs
 ```
 
-The next step should add HTTP-level regression coverage proving uploaded secret-bearing source archives produce sanitized results and downloads.
+The next step should add CLI-level regression coverage proving local generation output is sanitized for secret-bearing source inputs.
 
 ## Completed Implementation
 
@@ -1263,6 +1263,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/core typecheck
 pnpm test -- packages/core/src/documentation-engine.test.ts
+```
+
+### 2026-05-29: Phase 73 API Run Sanitization Regression Coverage
+
+- Added HTTP lifecycle regression coverage for uploaded source archives containing a fake provider key and denied `.env` file.
+- Verified `/result` payloads expose redacted evidence instead of raw source secrets.
+- Verified downloaded single-Markdown artifacts exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.http.test.ts
 ```
 
 ## Open Questions

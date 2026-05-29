@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 73: API Run Sanitization Regression Coverage.
+- Implement Phase 74: CLI Generation Sanitization Regression Coverage.
 
-Phase 73 goal:
-- Add HTTP-level regression coverage proving uploaded secret-bearing source archives produce sanitized results and downloads.
-- Verify raw denied files and raw secret values are absent from API result payloads and rendered artifacts.
-- Keep core documentation output sanitization and AI provider prompt payload coverage intact.
+Phase 74 goal:
+- Add CLI-level regression coverage proving local generation output is sanitized for secret-bearing source inputs.
+- Verify raw denied files and raw secret values are absent from CLI-written Markdown or JSON artifacts.
+- Keep API run sanitization and core prompt/output sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

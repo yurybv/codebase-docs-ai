@@ -185,6 +185,80 @@ describe('Documentation runs HTTP API', () => {
       }
     });
   });
+
+  it('sanitizes uploaded source content in results and downloads', async () => {
+    const rawOpenAiKey = `sk-${'c'.repeat(24)}`;
+    const created = await fetchJson<{ runId: string; status: string }>(
+      `${apiBaseUrl}/v1/documentation-runs`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'HTTP Sanitized Documentation',
+          options: {
+            outputFormats: ['single-markdown', 'json'],
+            language: 'en',
+            includeSourceReferences: true,
+            includeWarnings: true
+          }
+        })
+      }
+    );
+    expect(created.status).toBe('created');
+
+    const formData = new FormData();
+    formData.append(
+      'metadata',
+      JSON.stringify({
+        sources: [
+          {
+            fileField: 'frontend',
+            name: 'Frontend',
+            role: 'frontend'
+          }
+        ]
+      })
+    );
+    formData.append('frontend', await sanitizationArchiveBlob(rawOpenAiKey), 'frontend.zip');
+
+    const uploaded = await fetchJson<{ status: string }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/sources`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+    expect(uploaded.status).toBe('ready');
+
+    const started = await fetchJson<{ status: string }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/start`,
+      {
+        method: 'POST'
+      }
+    );
+    expect(started.status).toBe('completed');
+
+    const result = await fetchJson<{ documentation: unknown }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`
+    );
+    const resultPayload = JSON.stringify(result);
+    expect(resultPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(resultPayload).not.toContain(rawOpenAiKey);
+    expect(resultPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(resultPayload).not.toContain('.env');
+
+    const downloadResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
+    );
+    const markdown = await downloadResponse.text();
+    expect(downloadResponse.status).toBe(200);
+    expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).not.toContain(rawOpenAiKey);
+    expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
+    expect(markdown).not.toContain('.env');
+  });
 });
 
 async function archiveBlob(): Promise<Blob> {
@@ -210,8 +284,31 @@ async function archiveBlob(): Promise<Blob> {
   });
 }
 
-async function writeArchive(archive: AdmZip): Promise<string> {
-  const archivePath = path.join(tempRoot, 'frontend.zip');
+async function sanitizationArchiveBlob(rawOpenAiKey: string): Promise<Blob> {
+  const archive = new AdmZip();
+  archive.addFile(
+    'package.json',
+    Buffer.from(
+      JSON.stringify({
+        dependencies: {
+          react: 'latest'
+        }
+      })
+    )
+  );
+  archive.addFile(
+    'api.ts',
+    Buffer.from(`fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`)
+  );
+  archive.addFile('.env', Buffer.from('IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'));
+
+  return new Blob([await readFile(await writeArchive(archive, 'sanitized-frontend.zip'))], {
+    type: 'application/zip'
+  });
+}
+
+async function writeArchive(archive: AdmZip, fileName = 'frontend.zip'): Promise<string> {
+  const archivePath = path.join(tempRoot, fileName);
   await new Promise<void>((resolve, reject) => {
     archive.writeZip(archivePath, (error) => {
       if (error) {
