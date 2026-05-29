@@ -135,6 +135,17 @@ Returns:
 
 Uploads one or more source archives.
 
+Supported archive file names:
+
+```text
+.zip
+.tar
+.tar.gz
+.tgz
+```
+
+Unsupported file names throw `CodebaseDocsAIClientError` before multipart request construction. The API upload boundary still performs authoritative validation.
+
 ```ts
 await client.documentationRuns.uploadSources(runId, [
   {
@@ -290,7 +301,7 @@ The returned `run.renderedFormats` and `result.renderedFormats` can be used to s
 
 ## Error Handling
 
-The SDK throws `CodebaseDocsAIClientError` for non-2xx API responses and terminal polling failures.
+The SDK throws `CodebaseDocsAIClientError` for non-2xx API responses, terminal polling failures, and client-side upload preflight failures.
 
 Properties:
 
@@ -313,7 +324,7 @@ try {
 }
 ```
 
-For API responses, `code` and `details` are parsed from the public `{ error: ... }` envelope. Polling timeout and terminal run failures use status `0` because no failing HTTP response exists.
+For API responses, `code` and `details` are parsed from the public `{ error: ... }` envelope. Polling timeout, terminal run failures, and client-side upload preflight failures use status `0` because no failing HTTP response exists.
 
 ## Versioning Boundaries
 

@@ -37,14 +37,14 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 56: SDK Archive Type Validation.
+- Implement Phase 57: CLI API Mode Archive Type Validation.
 
-Phase 56 goal:
-- Use the shared source archive contract in the SDK upload helper.
-- Reject unsupported SDK archive file names before constructing multipart upload requests.
-- Preserve the API upload boundary as authoritative validation.
-- Keep SDK tests aligned with the shared extension list and public error behavior.
-- Update docs if public SDK behavior changes.
+Phase 57 goal:
+- Use the shared source archive contract in CLI API mode.
+- Reject unsupported CLI API mode source file names before API upload.
+- Keep local mode folder support unchanged.
+- Keep CLI tests aligned with the shared extension list and public error behavior.
+- Update docs if CLI behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

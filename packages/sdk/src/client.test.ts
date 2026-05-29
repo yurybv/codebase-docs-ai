@@ -94,6 +94,67 @@ describe('CodebaseDocsAIClient', () => {
     expect(formData.get('source_0')).toBeInstanceOf(File);
   });
 
+  it('rejects unsupported archive uploads before network requests', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(
+      client.documentationRuns.uploadSources('run_123', [
+        {
+          name: 'Notes',
+          role: 'docs',
+          fileName: 'notes.txt',
+          file: new Blob(['text'])
+        }
+      ])
+    ).rejects.toMatchObject({
+      name: 'CodebaseDocsAIClientError',
+      status: 0,
+      code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE',
+      message: 'Unsupported source archive type: notes.txt.',
+      details: {
+        suggestion: 'Upload one of the supported archive types: .zip, .tar, .tar.gz, .tgz.',
+        supportedExtensions: ['.zip', '.tar', '.tar.gz', '.tgz']
+      }
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects unsupported high-level archive generation inputs before creating runs', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(
+      client.documentationRuns.generateFromArchives({
+        name: 'Docs',
+        options: {
+          outputFormats: ['single-markdown'],
+          language: 'en',
+          includeSourceReferences: true,
+          includeWarnings: true
+        },
+        sources: [
+          {
+            name: 'Notes',
+            role: 'docs',
+            fileName: 'notes.txt',
+            file: new Blob(['text'])
+          }
+        ]
+      })
+    ).rejects.toMatchObject({
+      status: 0,
+      code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE'
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('deletes documentation runs through the HTTP API', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({

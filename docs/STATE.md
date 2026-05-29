@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 56: SDK Archive Type Validation.
+Implement Phase 57: CLI API Mode Archive Type Validation.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/cli
 docs
 ```
 
-The next step should use the shared source archive contract in the SDK upload helper so unsupported archive names are rejected before network upload. Keep the API as the authoritative boundary, but make the SDK fail fast with the same supported extension list.
+The next step should use the shared source archive contract in CLI API mode so unsupported source file names are rejected before API upload. Keep local mode folder support unchanged.
 
 ## Completed Implementation
 
@@ -1035,6 +1035,20 @@ pnpm --filter @codebase-docs-ai/api typecheck
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm test -- packages/shared/src/source-archive-contract.test.ts apps/web/src/upload-constraints.test.ts apps/web/src/source-metadata.test.ts apps/cli/src/cli-options.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+```
+
+### 2026-05-29: Phase 56 SDK Archive Type Validation
+
+- Added SDK client-side source archive filename validation using the shared archive contract.
+- Rejected unsupported `uploadSources` inputs before constructing multipart form data or sending network requests.
+- Rejected unsupported `generateFromArchives` inputs before creating a documentation run.
+- Documented supported SDK archive filenames and client-side preflight error behavior.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
 ```
 
 ## Open Questions

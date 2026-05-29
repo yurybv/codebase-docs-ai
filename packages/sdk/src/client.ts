@@ -1,3 +1,8 @@
+import type { ApiErrorPayload, DocumentationRun } from '@codebase-docs-ai/shared';
+import {
+  isSupportedSourceArchiveFileName,
+  supportedSourceArchiveExtensions
+} from '@codebase-docs-ai/shared';
 import type {
   CodebaseDocsAIClientConfig,
   CreateDocumentationRunInput,
@@ -12,7 +17,6 @@ import type {
   UploadDocumentationSourceInput,
   UploadDocumentationSourcesResponse
 } from './sdk-types.js';
-import type { ApiErrorPayload, DocumentationRun } from '@codebase-docs-ai/shared';
 
 export class CodebaseDocsAIClient {
   readonly documentationRuns: DocumentationRunsClient;
@@ -36,10 +40,12 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     });
   }
 
-  uploadSources(
+  async uploadSources(
     runId: string,
     sources: UploadDocumentationSourceInput[]
   ): Promise<UploadDocumentationSourcesResponse> {
+    assertSupportedArchiveSources(sources);
+
     const formData = new FormData();
     formData.append(
       'metadata',
@@ -115,7 +121,11 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     };
   }
 
-  async generateFromArchives(input: GenerateFromArchivesInput): Promise<GenerateFromArchivesResult> {
+  async generateFromArchives(
+    input: GenerateFromArchivesInput
+  ): Promise<GenerateFromArchivesResult> {
+    assertSupportedArchiveSources(input.sources);
+
     const created = await this.create({
       name: input.name,
       options: input.options
@@ -195,6 +205,25 @@ function parseContentDispositionFileName(contentDisposition: string | null): str
 
   const match = contentDisposition.match(/filename="([^"]+)"/);
   return match?.[1] ?? null;
+}
+
+function assertSupportedArchiveSources(sources: UploadDocumentationSourceInput[]): void {
+  const unsupportedSource = sources.find(
+    (source) => !isSupportedSourceArchiveFileName(source.fileName)
+  );
+  if (!unsupportedSource) {
+    return;
+  }
+
+  throw new CodebaseDocsAIClientError(
+    `Unsupported source archive type: ${unsupportedSource.fileName}.`,
+    0,
+    'SOURCE_ARCHIVE_UNSUPPORTED_TYPE',
+    {
+      suggestion: `Upload one of the supported archive types: ${supportedSourceArchiveExtensions.join(', ')}.`,
+      supportedExtensions: [...supportedSourceArchiveExtensions]
+    }
+  );
 }
 
 async function parseErrorResponse(
