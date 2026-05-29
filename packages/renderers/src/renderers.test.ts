@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentationTree } from '@codebase-docs-ai/shared';
+import AdmZip from 'adm-zip';
 import { renderJson } from './json-renderer.js';
 import { findRenderedFile, renderMarkdownTree, renderSingleMarkdown } from './markdown-renderer.js';
 import { renderZip } from './zip-renderer.js';
@@ -39,6 +40,37 @@ describe('zip renderer', () => {
 
     expect(Buffer.isBuffer(zip)).toBe(true);
     expect(zip.byteLength).toBeGreaterThan(0);
+  });
+
+  it('preserves sanitized rendered content in zip files', () => {
+    const rawOpenAiKey = `sk-${'k'.repeat(24)}`;
+    const zip = new AdmZip(
+      renderZip(
+        renderMarkdownTree({
+          ...documentationTreeFixture(),
+          pages: [
+            {
+              key: 'api-contracts',
+              title: '06. API Contracts',
+              order: 1,
+              markdown: '# API Contracts\n\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |',
+              sourceReferences: [],
+              warnings: []
+            }
+          ]
+        })
+      )
+    );
+    const zipContent = zip
+      .getEntries()
+      .filter((entry) => !entry.isDirectory)
+      .map((entry) => entry.getData().toString('utf8'))
+      .join('\n');
+
+    expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).not.toContain(rawOpenAiKey);
+    expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
+    expect(zipContent).not.toContain('.env');
   });
 });
 

@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 84: Renderer Zip Sanitization Regression Coverage.
+Implement Phase 85: Renderer JSON Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/renderers
 docs
 ```
 
-The next step should add renderer regression coverage proving zip packaging preserves sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add renderer regression coverage proving JSON rendering preserves sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1406,6 +1406,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 84 Renderer Zip Sanitization Regression Coverage
+
+- Added renderer regression coverage for zip packaging of sanitized Markdown tree output.
+- Verified renderer-produced zip files preserve redacted source evidence.
+- Verified renderer-produced zip files exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/renderers typecheck
+pnpm test -- packages/renderers/src/renderers.test.ts
 ```
 
 ## Open Questions
