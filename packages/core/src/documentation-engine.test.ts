@@ -79,13 +79,86 @@ describe('DocumentationEngine', () => {
       });
     }
   });
+
+  it('uses filtered and redacted source content for repository analysis', async () => {
+    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'core-engine-sanitized-test-'));
+    const rawOpenAiKey = `sk-${'a'.repeat(24)}`;
+
+    try {
+      await writeFile(
+        path.join(fixtureRoot, 'package.json'),
+        JSON.stringify({
+          dependencies: {
+            react: 'latest'
+          }
+        })
+      );
+      await writeFile(
+        path.join(fixtureRoot, 'api.ts'),
+        `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
+      );
+      await writeFile(
+        path.join(fixtureRoot, '.env'),
+        'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
+      );
+
+      const engine = new DocumentationEngine();
+      const result = await engine.generateDocumentation({
+        title: 'Sanitized Core Engine Test',
+        loadedSources: [
+          await loadedSourceFixture(fixtureRoot, {
+            name: 'Frontend',
+            role: 'frontend'
+          })
+        ],
+        options: {
+          outputFormats: ['json'],
+          language: 'en',
+          includeSourceReferences: true,
+          includeWarnings: true
+        }
+      });
+
+      const repositoryMap = result.repositoryMaps[0];
+      expect(repositoryMap?.apiClientCalls).toEqual([
+        {
+          method: 'POST',
+          path: '/v1/[REDACTED_OPENAI_API_KEY]',
+          sourceReference: {
+            sourceName: 'Frontend',
+            path: 'api.ts'
+          }
+        }
+      ]);
+      expect(repositoryMap?.environmentVariables.map((envVar) => envVar.name)).not.toContain(
+        'SHOULD_NOT_APPEAR'
+      );
+      expect(JSON.stringify(result.repositoryMaps)).not.toContain(rawOpenAiKey);
+    } finally {
+      await rm(fixtureRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
 });
 
-async function loadedSourceFixture(rootPath: string, source: SourceInputMetadata): Promise<LoadedSource> {
-  const files = await Promise.all([
-    sourceFile(rootPath, 'package.json'),
-    sourceFile(rootPath, 'app.tsx')
-  ]);
+async function loadedSourceFixture(
+  rootPath: string,
+  source: SourceInputMetadata
+): Promise<LoadedSource> {
+  const candidateFiles = ['package.json', 'app.tsx', 'api.ts', '.env'];
+  const files = (
+    await Promise.all(
+      candidateFiles.map(async (relativePath) => {
+        try {
+          return await sourceFile(rootPath, relativePath);
+        } catch {
+          return undefined;
+        }
+      })
+    )
+  ).filter((file): file is SourceFile => file !== undefined);
 
   return {
     source,

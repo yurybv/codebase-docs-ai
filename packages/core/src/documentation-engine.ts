@@ -1,8 +1,9 @@
+import { readFile } from 'node:fs/promises';
 import type { AiProvider } from '@codebase-docs-ai/ai-orchestrator';
 import { generateDocumentationTreeWithAi } from '@codebase-docs-ai/documentation-generator';
 import { renderJson, renderMarkdownTree, renderSingleMarkdown } from '@codebase-docs-ai/renderers';
 import { analyzeRepository } from '@codebase-docs-ai/repo-analyzer';
-import { filterLoadedSource } from '@codebase-docs-ai/security';
+import { filterLoadedSource, redactSecrets } from '@codebase-docs-ai/security';
 import { analyzeSystem } from '@codebase-docs-ai/system-analyzer';
 import type {
   DocumentationOutputFormat,
@@ -11,6 +12,7 @@ import type {
   LoadedSource,
   RenderedDocumentation,
   RepositoryMap,
+  SourceFile,
   SourceInputMetadata,
   SystemMap
 } from '@codebase-docs-ai/shared';
@@ -59,14 +61,17 @@ export class DocumentationEngine {
     };
   }
 
-  async generateDocumentation(input: GenerateDocumentationInput): Promise<GenerateDocumentationResult> {
+  async generateDocumentation(
+    input: GenerateDocumentationInput
+  ): Promise<GenerateDocumentationResult> {
     const repositoryMaps = await Promise.all(
       input.loadedSources.map((loadedSource) => {
         const filteredSource = filterLoadedSource(loadedSource);
         return analyzeRepository({
           source: loadedSource.source,
           rootPath: loadedSource.rootPath,
-          files: filteredSource.includedFiles
+          files: filteredSource.includedFiles,
+          readTextFile: readRedactedSourceFile
         });
       })
     );
@@ -86,6 +91,11 @@ export class DocumentationEngine {
       rendered: renderDocumentation(documentationTree, input.options.outputFormats)
     };
   }
+}
+
+async function readRedactedSourceFile(file: SourceFile): Promise<string> {
+  const content = await readFile(file.absolutePath, 'utf8');
+  return redactSecrets(content).text;
 }
 
 export function renderDocumentation(

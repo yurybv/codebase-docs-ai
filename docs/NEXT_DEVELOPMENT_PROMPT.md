@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 69: AI Prompt Sanitization Regression Coverage.
+- Implement Phase 70: Repository Analyzer Reader Injection Regression Coverage.
 
-Phase 69 goal:
-- Add focused regression coverage proving generated source context uses security filtering.
-- Add focused regression coverage proving generated source context uses secret redaction.
-- Verify denied files and raw secrets are not passed toward documentation generation.
+Phase 70 goal:
+- Add focused repository-analyzer regression coverage for injected text readers.
+- Verify package-level analyzer consumers can provide sanitized file content.
+- Keep core prompt sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

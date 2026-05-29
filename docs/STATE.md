@@ -80,18 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 69: AI Prompt Sanitization Regression Coverage.
+Implement Phase 70: Repository Analyzer Reader Injection Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/core
-packages/security
+packages/repo-analyzer
 docs
 ```
 
-The next step should add focused regression coverage proving source context passed toward generation uses filtered and redacted file content, not raw denied or secret-bearing source.
+The next step should add focused repository-analyzer regression coverage for the injected text reader used by core sanitization.
 
 ## Completed Implementation
 
@@ -1212,6 +1211,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/security typecheck
 pnpm test -- packages/security/src/redact-secrets.test.ts
+```
+
+### 2026-05-29: Phase 69 AI Prompt Sanitization Regression Coverage
+
+- Added a repository analyzer text-reader hook so core can provide sanitized source text.
+- Updated the core engine to read source text through `redactSecrets` after security filtering.
+- Added core regression coverage proving denied `.env` content is excluded and raw provider keys are redacted before repository maps reach documentation generation.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/core/src/documentation-engine.test.ts
 ```
 
 ## Open Questions

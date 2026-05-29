@@ -20,6 +20,7 @@ export interface AnalyzeRepositoryInput {
   source: SourceInputMetadata;
   rootPath: string;
   files: SourceFile[];
+  readTextFile?: (file: SourceFile) => Promise<string>;
 }
 
 interface PackageJson {
@@ -41,7 +42,8 @@ const httpMethodDecoratorMap = new Map<string, string>([
 ]);
 
 export async function analyzeRepository(input: AnalyzeRepositoryInput): Promise<RepositoryMap> {
-  const packageJson = await readPackageJson(input.files);
+  const readTextFile = input.readTextFile ?? defaultReadTextFile;
+  const packageJson = await readPackageJson(input.files, readTextFile);
   const dependencies = packageJson ? collectDependencies(packageJson) : [];
   const packageJsonReference = sourceReference(input.source.name, 'package.json');
 
@@ -55,29 +57,34 @@ export async function analyzeRepository(input: AnalyzeRepositoryInput): Promise<
       sourceReference: packageJsonReference
     })),
     routes: detectRoutes(input.source.name, input.files),
-    apiEndpoints: await detectApiEndpoints(input.source.name, input.files),
-    apiClientCalls: await detectApiClientCalls(input.source.name, input.files),
-    environmentVariables: await detectEnvironmentVariables(input.source.name, input.files),
+    apiEndpoints: await detectApiEndpoints(input.source.name, input.files, readTextFile),
+    apiClientCalls: await detectApiClientCalls(input.source.name, input.files, readTextFile),
+    environmentVariables: await detectEnvironmentVariables(
+      input.source.name,
+      input.files,
+      readTextFile
+    ),
     configFiles: detectConfigFiles(input.source.name, input.files),
     risks: collectRisks(packageJson, input.files),
     generatedAt: new Date().toISOString()
   };
 }
 
-async function readPackageJson(files: SourceFile[]): Promise<PackageJson | null> {
+async function readPackageJson(
+  files: SourceFile[],
+  readTextFile: (file: SourceFile) => Promise<string>
+): Promise<PackageJson | null> {
   const packageJsonFile = files.find((file) => file.path === 'package.json');
   if (!packageJsonFile) {
     return null;
   }
 
-  const raw = await readFile(packageJsonFile.absolutePath, 'utf8');
+  const raw = await readTextFile(packageJsonFile);
   return JSON.parse(raw) as PackageJson;
 }
 
 function detectPackageManager(sourceName: string, files: SourceFile[]): PackageManagerInfo {
-  const evidence = (fileName: string): SourceReference[] => [
-    sourceReference(sourceName, fileName)
-  ];
+  const evidence = (fileName: string): SourceReference[] => [sourceReference(sourceName, fileName)];
 
   if (hasFile(files, 'pnpm-lock.yaml')) {
     return {
@@ -242,20 +249,24 @@ function detectRoutes(sourceName: string, files: SourceFile[]): RouteInfo[] {
 
 async function detectApiEndpoints(
   sourceName: string,
-  files: SourceFile[]
+  files: SourceFile[],
+  readTextFile: (file: SourceFile) => Promise<string>
 ): Promise<ApiEndpointInfo[]> {
   const controllerFiles = files.filter((file) => file.path.endsWith('.controller.ts'));
   const endpoints: ApiEndpointInfo[] = [];
 
   for (const file of controllerFiles) {
-    const content = await readFile(file.absolutePath, 'utf8');
+    const content = await readTextFile(file);
     const controllerPrefix = extractDecoratorPath(content, 'Controller') ?? '';
     const controllerName = path.basename(file.path, '.ts');
 
     for (const [decorator, method] of httpMethodDecoratorMap) {
       const pattern = new RegExp(`@${decorator}\\(([^)]*)\\)`, 'g');
       for (const match of content.matchAll(pattern)) {
-        const endpointPath = joinRouteParts(controllerPrefix, parseDecoratorArgument(match[1] ?? ''));
+        const endpointPath = joinRouteParts(
+          controllerPrefix,
+          parseDecoratorArgument(match[1] ?? '')
+        );
         endpoints.push({
           method,
           path: endpointPath,
@@ -271,13 +282,14 @@ async function detectApiEndpoints(
 
 async function detectApiClientCalls(
   sourceName: string,
-  files: SourceFile[]
+  files: SourceFile[],
+  readTextFile: (file: SourceFile) => Promise<string>
 ): Promise<ApiClientCallInfo[]> {
   const sourceFiles = files.filter((file) => /\.(ts|tsx|js|jsx)$/.test(file.path));
   const calls: ApiClientCallInfo[] = [];
 
   for (const file of sourceFiles) {
-    const content = await readFile(file.absolutePath, 'utf8');
+    const content = await readTextFile(file);
     const fetchPattern = /fetch\(\s*['"`]([^'"`]+)['"`]\s*(?:,\s*(\{[\s\S]*?\}))?\s*\)/g;
     const axiosPattern = /axios\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/g;
 
@@ -303,17 +315,15 @@ async function detectApiClientCalls(
 
 async function detectEnvironmentVariables(
   sourceName: string,
-  files: SourceFile[]
+  files: SourceFile[],
+  readTextFile: (file: SourceFile) => Promise<string>
 ): Promise<RepositoryMap['environmentVariables']> {
   const sourceFiles = files.filter((file) => /\.(ts|tsx|js|jsx|json|yml|yaml)$/.test(file.path));
   const referencesByName = new Map<string, SourceReference[]>();
 
   for (const file of sourceFiles) {
-    const content = await readFile(file.absolutePath, 'utf8');
-    const patterns = [
-      /process\.env\.([A-Z0-9_]+)/g,
-      /import\.meta\.env\.([A-Z0-9_]+)/g
-    ];
+    const content = await readTextFile(file);
+    const patterns = [/process\.env\.([A-Z0-9_]+)/g, /import\.meta\.env\.([A-Z0-9_]+)/g];
 
     for (const pattern of patterns) {
       for (const match of content.matchAll(pattern)) {
@@ -487,4 +497,8 @@ function dedupeSourceReferences(sourceReferences: SourceReference[]): SourceRefe
   }
 
   return deduped;
+}
+
+async function defaultReadTextFile(file: SourceFile): Promise<string> {
+  return readFile(file.absolutePath, 'utf8');
 }
