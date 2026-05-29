@@ -48,6 +48,14 @@ Cover:
 - API run lifecycle;
 - result download.
 
+The API package includes HTTP-level lifecycle coverage:
+
+```text
+apps/api/src/documentation-runs.http.test.ts
+```
+
+This test boots the real Nest app on an ephemeral port and verifies public request/response behavior for create, upload, start, result, download, delete, and standardized error envelopes.
+
 ## Documentation Quality Fixture
 
 The core package includes a representative frontend/backend quality fixture:

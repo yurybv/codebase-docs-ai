@@ -78,17 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 30: API Lifecycle Integration Tests.
+Implement Phase 31: Docker Runtime Smoke Test.
 
 Required package:
 
 ```text
-apps/api
-scripts
+Dockerfile
+docker-compose.yml
 docs
 ```
 
-The next step should add focused HTTP-level API lifecycle tests around create, upload, start, result, download, delete, and standardized error envelopes without relying only on the broader smoke harness.
+The next step should run API and Web containers from the built Docker images and verify `/health` plus Web reachability, then document any runtime caveats.
 
 ## Completed Implementation
 
@@ -634,6 +634,20 @@ Verification:
 ```text
 docker build --target api -t codebase-docs-ai-api:local .
 docker build --target web --build-arg VITE_WEB_API_BASE_URL=http://localhost:3000 -t codebase-docs-ai-web:local .
+pnpm verify
+```
+
+### 2026-05-29: Phase 30 API Lifecycle Integration Tests
+
+- Extracted shared Nest app bootstrap configuration for runtime and tests.
+- Added an HTTP-level API lifecycle test that boots the real Nest app on an ephemeral port.
+- Verified create, upload, start, result, download, delete, and not-found behavior through public HTTP calls.
+- Verified standardized API error envelopes for invalid requests.
+- Documented the API lifecycle test in the testing guide.
+
+Verification:
+
+```text
 pnpm verify
 ```
 
