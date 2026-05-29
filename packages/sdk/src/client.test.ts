@@ -429,6 +429,41 @@ describe('CodebaseDocsAIClient', () => {
     expect(json).not.toContain('.env');
   });
 
+  it('preserves sanitized single-Markdown downloads', async () => {
+    const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
+    const sanitizedMarkdown = [
+      '# 06. API Contracts',
+      '',
+      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+    ].join('\n');
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(sanitizedMarkdown, {
+        status: 200,
+        headers: {
+          'content-disposition': 'attachment; filename="PROJECT_DOCUMENTATION.md"',
+          'content-type': 'text/markdown'
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const download = await client.documentationRuns.download({
+      runId: 'run_123',
+      format: 'single-markdown'
+    });
+    const markdown = await download.content.text();
+
+    expect(download.fileName).toBe('PROJECT_DOCUMENTATION.md');
+    expect(download.contentType).toContain('text/markdown');
+    expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).not.toContain(rawOpenAiKey);
+    expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
+    expect(markdown).not.toContain('.env');
+  });
+
   it('preserves sanitized markdown-tree zip downloads', async () => {
     const rawOpenAiKey = `sk-${'j'.repeat(24)}`;
     const sanitizedZip = new AdmZip();

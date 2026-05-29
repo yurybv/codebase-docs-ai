@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 89: SDK Single Markdown Direct Download Sanitization Regression Coverage.
+Implement Phase 90: CLI Markdown Tree Output Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/cli
 docs
 ```
 
-The next step should add SDK direct download regression coverage proving single-Markdown artifacts returned through the TypeScript client preserve sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add CLI-level regression coverage proving local markdown-tree output preserves sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1465,6 +1465,19 @@ pnpm test -- packages/renderers/src/renderers.test.ts
 - Added SDK direct download regression coverage for sanitized JSON artifacts.
 - Verified SDK-downloaded JSON artifacts preserve redacted source evidence.
 - Verified SDK-downloaded JSON artifacts exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 89 SDK Single Markdown Direct Download Sanitization Regression Coverage
+
+- Added SDK direct download regression coverage for sanitized single-Markdown artifacts.
+- Verified SDK-downloaded single-Markdown artifacts preserve redacted source evidence.
+- Verified SDK-downloaded single-Markdown artifacts exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:
 
