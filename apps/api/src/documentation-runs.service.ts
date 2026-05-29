@@ -15,7 +15,9 @@ import { renderZip } from '@codebase-docs-ai/renderers';
 import {
   createDocumentationRunSchema,
   documentationOutputFormatSchema,
-  sourceInputMetadataSchema
+  isSupportedSourceArchiveFileName,
+  sourceInputMetadataSchema,
+  supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
 import type {
   DocumentationOutputFormat,
@@ -82,7 +84,6 @@ const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready
 const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
 const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
-const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'] as const;
 
 @Injectable()
 export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
@@ -284,9 +285,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     return (await this.requireRun(runId)).run;
   }
 
-  async getResult(
-    runId: string
-  ): Promise<{
+  async getResult(runId: string): Promise<{
     runId: string;
     status: DocumentationRunStatus;
     renderedFormats: DocumentationOutputFormat[];
@@ -299,7 +298,9 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         message: 'Documentation result is not ready yet.'
       });
     }
-    const documentationTree = await this.readJsonFile<DocumentationTree>(storedRun.documentationTreePath);
+    const documentationTree = await this.readJsonFile<DocumentationTree>(
+      storedRun.documentationTreePath
+    );
 
     return {
       runId,
@@ -581,16 +582,14 @@ function availableRenderedFormats(storedRun: StoredRun): DocumentationOutputForm
 }
 
 function assertSupportedArchiveFile(fileName: string): void {
-  const lowerFileName = fileName.toLowerCase();
-  const isSupported = supportedArchiveExtensions.some((extension) => lowerFileName.endsWith(extension));
-  if (isSupported) {
+  if (isSupportedSourceArchiveFileName(fileName)) {
     return;
   }
 
   throw new BadRequestException({
     code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE',
     message: `Unsupported source archive type: ${fileName}.`,
-    suggestion: `Upload one of the supported archive types: ${supportedArchiveExtensions.join(', ')}.`
+    suggestion: `Upload one of the supported archive types: ${supportedSourceArchiveExtensions.join(', ')}.`
   });
 }
 

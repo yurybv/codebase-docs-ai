@@ -1,6 +1,14 @@
 import path from 'node:path';
-import { documentationOutputFormatSchema, sourceRoleSchema } from '@codebase-docs-ai/shared';
-import type { DocumentationOutputFormat, SourceInputMetadata, SourceRole } from '@codebase-docs-ai/shared';
+import {
+  documentationOutputFormatSchema,
+  sourceRoleSchema,
+  stripSupportedSourceArchiveExtension
+} from '@codebase-docs-ai/shared';
+import type {
+  DocumentationOutputFormat,
+  SourceInputMetadata,
+  SourceRole
+} from '@codebase-docs-ai/shared';
 import { CliError } from './cli-error.js';
 
 export type CliOutputFormat = DocumentationOutputFormat | 'zip';
@@ -93,7 +101,7 @@ function parseSourceRole(value: string): SourceRole {
 
 function sourceNameFromPath(inputPath: string): string {
   const baseName = path.basename(inputPath);
-  return baseName.replace(/(\.tar\.gz|\.tgz|\.zip|\.tar)$/i, '') || 'source';
+  return stripSupportedSourceArchiveExtension(baseName) || 'source';
 }
 
 function assertHttpUrl(value: string): void {

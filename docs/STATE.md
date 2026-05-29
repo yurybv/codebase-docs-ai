@@ -80,19 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 55: Shared Archive Type Contract.
+Implement Phase 56: SDK Archive Type Validation.
 
 Required package:
 
 ```text
 packages/shared
-packages/source-loader
-apps/api
-apps/web
+packages/sdk
 docs
 ```
 
-The next step should centralize supported source archive extensions in a shared contract and update source-loader, API, and Web usage to depend on that single definition.
+The next step should use the shared source archive contract in the SDK upload helper so unsupported archive names are rejected before network upload. Keep the API as the authoritative boundary, but make the SDK fail fast with the same supported extension list.
 
 ## Completed Implementation
 
@@ -1018,6 +1016,25 @@ Verification:
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/upload-constraints.test.ts apps/web/src/main.test.ts
 Browser check at http://localhost:5173/
+```
+
+### 2026-05-29: Phase 55 Shared Archive Type Contract
+
+- Added a shared source archive contract for supported extensions, accept strings, labels, detection, and extension stripping.
+- Updated source-loader archive extraction, API upload validation, Web upload guidance/validation, Web source-name inference, and CLI source-name inference to depend on the shared contract.
+- Added shared contract tests for supported extension publication, case-insensitive detection, matched extension lookup, and extension stripping.
+- Added the shared package as a Web dependency so browser-facing upload behavior uses the same contract as API and package code.
+- Updated the API contract error example to include `.tgz`.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/shared build
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- packages/shared/src/source-archive-contract.test.ts apps/web/src/upload-constraints.test.ts apps/web/src/source-metadata.test.ts apps/cli/src/cli-options.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 ```
 
 ## Open Questions

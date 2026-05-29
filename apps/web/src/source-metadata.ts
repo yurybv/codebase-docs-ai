@@ -1,11 +1,7 @@
-export type SourceRole =
-  | 'frontend'
-  | 'backend'
-  | 'shared'
-  | 'infra'
-  | 'mobile'
-  | 'docs'
-  | 'unknown';
+import { stripSupportedSourceArchiveExtension } from '@codebase-docs-ai/shared';
+import type { SourceRole } from '@codebase-docs-ai/shared';
+
+export type { SourceRole } from '@codebase-docs-ai/shared';
 
 export interface SourceDraft {
   id: string;
@@ -33,8 +29,5 @@ export function buildSourceUploadMetadata(sources: SourceDraft[]): SourceUploadM
 }
 
 export function inferSourceName(fileName: string): string {
-  return fileName
-    .replace(/\.(zip|tar|tar\.gz|tgz)$/i, '')
-    .replace(/[-_]+/g, ' ')
-    .trim();
+  return stripSupportedSourceArchiveExtension(fileName).replace(/[-_]+/g, ' ').trim();
 }

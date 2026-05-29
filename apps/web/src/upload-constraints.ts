@@ -1,3 +1,10 @@
+import {
+  isSupportedSourceArchiveFileName,
+  supportedSourceArchiveAccept,
+  supportedSourceArchiveExtensions,
+  supportedSourceArchiveLabel
+} from '@codebase-docs-ai/shared';
+
 export interface UploadConstraints {
   maxFiles: number;
   maxFileSizeBytes: number;
@@ -13,9 +20,9 @@ export const defaultUploadConstraints: UploadConstraints = {
   maxFileSizeBytes: 100 * 1024 * 1024
 };
 
-export const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'] as const;
-export const supportedArchiveAccept = supportedArchiveExtensions.join(',');
-export const supportedArchiveLabel = `Supports ${supportedArchiveExtensions.join(', ')}`;
+export const supportedArchiveExtensions = supportedSourceArchiveExtensions;
+export const supportedArchiveAccept = supportedSourceArchiveAccept;
+export const supportedArchiveLabel = supportedSourceArchiveLabel;
 
 export function validateSelectedFiles(
   existingFileCount: number,
@@ -51,8 +58,7 @@ export function validateSelectedFiles(
 }
 
 export function isSupportedArchiveFile(fileName: string): boolean {
-  const lowerFileName = fileName.toLowerCase();
-  return supportedArchiveExtensions.some((extension) => lowerFileName.endsWith(extension));
+  return isSupportedSourceArchiveFileName(fileName);
 }
 
 export function formatBytes(bytes: number): string {
@@ -67,9 +73,14 @@ export function formatBytes(bytes: number): string {
   return `${bytes} B`;
 }
 
-export function uploadConstraintsFromEnv(env: Record<string, string | undefined>): UploadConstraints {
+export function uploadConstraintsFromEnv(
+  env: Record<string, string | undefined>
+): UploadConstraints {
   return {
-    maxFiles: parsePositiveInteger(env.VITE_WEB_UPLOAD_MAX_FILES, defaultUploadConstraints.maxFiles),
+    maxFiles: parsePositiveInteger(
+      env.VITE_WEB_UPLOAD_MAX_FILES,
+      defaultUploadConstraints.maxFiles
+    ),
     maxFileSizeBytes: parsePositiveInteger(
       env.VITE_WEB_UPLOAD_MAX_FILE_SIZE_BYTES,
       defaultUploadConstraints.maxFileSizeBytes

@@ -248,7 +248,7 @@ All non-2xx JSON API errors use the same envelope:
   "error": {
     "code": "SOURCE_ARCHIVE_INVALID",
     "message": "The uploaded archive could not be extracted safely.",
-    "suggestion": "Upload a valid .zip, .tar, or .tar.gz archive."
+    "suggestion": "Upload a valid .zip, .tar, .tar.gz, or .tgz archive."
   }
 }
 ```

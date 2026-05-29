@@ -37,13 +37,14 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 55: Shared Archive Type Contract.
+- Implement Phase 56: SDK Archive Type Validation.
 
-Phase 55 goal:
-- Centralize supported source archive extensions in a shared contract.
-- Update source-loader, API, and Web usage to depend on that single definition.
-- Keep tests aligned with the shared contract.
-- Update docs if public contracts change.
+Phase 56 goal:
+- Use the shared source archive contract in the SDK upload helper.
+- Reject unsupported SDK archive file names before constructing multipart upload requests.
+- Preserve the API upload boundary as authoritative validation.
+- Keep SDK tests aligned with the shared extension list and public error behavior.
+- Update docs if public SDK behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

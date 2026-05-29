@@ -3,12 +3,12 @@ import path from 'node:path';
 import AdmZip from 'adm-zip';
 import * as tar from 'tar';
 import type { ReadEntry } from 'tar';
-import type { SourceLoadLimits } from '@codebase-docs-ai/shared';
-import { assertPathInsideRoot, assertSafeRelativePath } from './path-safety.js';
 import {
-  SourceLimitExceededError,
-  UnsupportedArchiveError
-} from './source-loader-errors.js';
+  getSupportedSourceArchiveExtension,
+  type SourceLoadLimits
+} from '@codebase-docs-ai/shared';
+import { assertPathInsideRoot, assertSafeRelativePath } from './path-safety.js';
+import { SourceLimitExceededError, UnsupportedArchiveError } from './source-loader-errors.js';
 
 export interface SafeExtractArchiveInput {
   archivePath: string;
@@ -29,15 +29,17 @@ export async function safeExtractArchive(input: SafeExtractArchiveInput): Promis
     recursive: true
   });
 
-  if (archivePath.endsWith('.zip')) {
+  const archiveExtension = getSupportedSourceArchiveExtension(archivePath);
+
+  if (archiveExtension === '.zip') {
     await extractZipArchive(archivePath, destinationPath, input.limits);
     return;
   }
 
   if (
-    archivePath.endsWith('.tar') ||
-    archivePath.endsWith('.tar.gz') ||
-    archivePath.endsWith('.tgz')
+    archiveExtension === '.tar' ||
+    archiveExtension === '.tar.gz' ||
+    archiveExtension === '.tgz'
   ) {
     await extractTarArchive(archivePath, destinationPath, input.limits);
     return;
@@ -74,7 +76,9 @@ async function extractZipArchive(
     }
 
     if (isZipSymlink(entry.header.attr)) {
-      throw new SourceLimitExceededError(`Archive contains unsupported symlink: ${entry.entryName}`);
+      throw new SourceLimitExceededError(
+        `Archive contains unsupported symlink: ${entry.entryName}`
+      );
     }
 
     await mkdir(path.dirname(targetPath), {
