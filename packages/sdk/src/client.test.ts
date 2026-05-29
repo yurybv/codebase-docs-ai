@@ -329,6 +329,51 @@ describe('CodebaseDocsAIClient', () => {
     expect(downloadedMarkdown).not.toContain('SHOULD_NOT_APPEAR');
   });
 
+  it('preserves sanitized documentation trees from direct result retrieval', async () => {
+    const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runId: 'run_123',
+        status: 'completed',
+        renderedFormats: ['json'],
+        documentation: {
+          title: 'Sanitized Result Tree',
+          summary: 'Generated',
+          pages: [
+            {
+              key: 'api-contracts',
+              title: '06. API Contracts',
+              order: 6,
+              markdown: '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |',
+              sourceReferences: [],
+              warnings: []
+            }
+          ],
+          warnings: [],
+          sourceReferences: [],
+          generatedAt: '2026-05-29T00:00:00.000Z'
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const result = await client.documentationRuns.getResult('run_123');
+    const payload = JSON.stringify(result.documentation);
+
+    expect(result.renderedFormats).toEqual(['json']);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs/run_123/result',
+      undefined
+    );
+  });
+
   it('surfaces failed run messages while polling', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({

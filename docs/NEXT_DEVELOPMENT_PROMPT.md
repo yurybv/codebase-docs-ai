@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 78: SDK Result Tree Sanitization Regression Coverage.
+- Implement Phase 79: Web Result Sanitization Regression Coverage.
 
-Phase 78 goal:
-- Add SDK regression coverage proving direct result retrieval preserves sanitized documentation trees without exposing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from SDK-returned `DocumentationTree` payloads.
-- Keep SDK download, CLI JSON, single-Markdown, and zip output sanitization coverage intact.
+Phase 79 goal:
+- Add Web regression coverage proving mocked completed API results render sanitized documentation without exposing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from rendered preview text and warning/result UI.
+- Keep SDK result/download and CLI output sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

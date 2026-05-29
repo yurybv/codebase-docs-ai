@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 78: SDK Result Tree Sanitization Regression Coverage.
+Implement Phase 79: Web Result Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should add SDK regression coverage proving direct result retrieval preserves sanitized documentation trees without exposing raw secret-bearing source content.
+The next step should add Web regression coverage proving mocked completed API results render sanitized documentation without exposing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1322,6 +1322,19 @@ pnpm test -- apps/cli/src/generate-command.test.ts
 - Added SDK high-level archive generation regression coverage for sanitized downloaded artifacts.
 - Verified SDK-returned documentation payloads preserve redacted API evidence.
 - Verified SDK-returned download blobs exclude raw provider keys and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 78 SDK Result Tree Sanitization Regression Coverage
+
+- Added SDK direct `getResult` regression coverage for sanitized documentation trees.
+- Verified SDK-returned `DocumentationTree` payloads preserve redacted API evidence.
+- Verified direct SDK result retrieval excludes raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:
 
