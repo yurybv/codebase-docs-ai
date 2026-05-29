@@ -2,7 +2,7 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentationRunsService } from './documentation-runs.service.js';
 
 let tempRoot: string;
@@ -15,12 +15,15 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  service.onModuleDestroy();
+  vi.useRealTimers();
   await rm(tempRoot, {
     recursive: true,
     force: true
   });
   delete process.env.DOCS_AI_TMP_DIR;
   delete process.env.DOCS_AI_RUN_RETENTION_MS;
+  delete process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS;
 });
 
 describe('DocumentationRunsService', () => {
@@ -255,6 +258,49 @@ describe('DocumentationRunsService', () => {
 
     expect(cleanup.deletedRunIds).toEqual([created.runId]);
     await expect(service.getRun(created.runId)).rejects.toThrow();
+  });
+
+  it('runs expired run cleanup when the module starts and on the configured interval', async () => {
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '1000';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    const cleanupExpiredRuns = vi.spyOn(service, 'cleanupExpiredRuns').mockResolvedValue({
+      deletedRunIds: []
+    });
+
+    await service.onModuleInit();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(cleanupExpiredRuns).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not schedule expired run cleanup when the interval is disabled', async () => {
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '0';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    const cleanupExpiredRuns = vi.spyOn(service, 'cleanupExpiredRuns').mockResolvedValue({
+      deletedRunIds: []
+    });
+
+    await service.onModuleInit();
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(cleanupExpiredRuns).not.toHaveBeenCalled();
+  });
+
+  it('clears the expired run cleanup interval when the module shuts down', async () => {
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '1000';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    const cleanupExpiredRuns = vi.spyOn(service, 'cleanupExpiredRuns').mockResolvedValue({
+      deletedRunIds: []
+    });
+
+    await service.onModuleInit();
+    service.onModuleDestroy();
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(cleanupExpiredRuns).toHaveBeenCalledTimes(1);
   });
 });
 

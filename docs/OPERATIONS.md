@@ -93,7 +93,10 @@ Run retention:
 
 ```bash
 export DOCS_AI_RUN_RETENTION_MS=86400000
+export DOCS_AI_RUN_CLEANUP_INTERVAL_MS=3600000
 ```
+
+`DOCS_AI_RUN_RETENTION_MS` controls when a run is old enough to delete. `DOCS_AI_RUN_CLEANUP_INTERVAL_MS` controls how often the API scans for expired runs. Set `DOCS_AI_RUN_CLEANUP_INTERVAL_MS=0` to disable the runtime scheduler when cleanup is owned by the host platform.
 
 ## Upload Limits
 
@@ -266,7 +269,7 @@ extracted/
 results/
 ```
 
-The cleanup boundary removes run directories whose `updatedAt` is older than `DOCS_AI_RUN_RETENTION_MS`.
+The cleanup boundary removes run directories whose `updatedAt` is older than `DOCS_AI_RUN_RETENTION_MS`. The API runs this cleanup once on module startup and then every `DOCS_AI_RUN_CLEANUP_INTERVAL_MS` milliseconds unless the interval is set to `0`.
 
 ## Security Notes
 

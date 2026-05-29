@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 43: Web Completed-State Browser Verification.
+- Implement Phase 45: Web Completed-State Regression Coverage.
 
-Phase 43 goal:
-- Verify the Web UI after a successful generation with source rows, page navigation, Markdown preview, and download buttons rendered in desktop and mobile viewports.
-- Use real local API and Web services or an equivalent browser-level test path.
-- If layout, overflow, accessibility, or interaction issues are found, fix them.
+Phase 45 goal:
+- Make completed-state Web verification repeatable through an automated Web/API regression path.
+- Cover multi-archive upload, source role selection, page navigation, Markdown preview, and at least one download action.
+- Prefer a script or test path that can run locally without private source archives.
 - Update docs/WEB_QA.md and docs/STATE.md with the result.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

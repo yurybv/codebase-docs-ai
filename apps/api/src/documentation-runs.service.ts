@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  type OnModuleDestroy,
+  type OnModuleInit
+} from '@nestjs/common';
 import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
 import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
@@ -73,15 +80,44 @@ const generationSteps = [
 
 const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready'];
 const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
+const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
+const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
 
 @Injectable()
-export class DocumentationRunsService {
+export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(DocumentationRunsService.name);
   private readonly engine = createDocumentationEngine();
   private readonly tempRoot = path.resolve(process.env.DOCS_AI_TMP_DIR ?? '.tmp/codebase-docs-ai');
-  private readonly runRetentionMs = Number.parseInt(
-    process.env.DOCS_AI_RUN_RETENTION_MS ?? String(24 * 60 * 60 * 1000),
-    10
+  private readonly runRetentionMs = parseDurationMs(
+    process.env.DOCS_AI_RUN_RETENTION_MS,
+    defaultRunRetentionMs
   );
+  private readonly runCleanupIntervalMs = parseDurationMs(
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS,
+    defaultRunCleanupIntervalMs
+  );
+  private cleanupInterval: ReturnType<typeof setInterval> | undefined;
+
+  async onModuleInit(): Promise<void> {
+    if (this.runCleanupIntervalMs <= 0) {
+      return;
+    }
+
+    await this.runCleanupCycle();
+    this.cleanupInterval = setInterval(() => {
+      void this.runCleanupCycle();
+    }, this.runCleanupIntervalMs);
+    this.cleanupInterval.unref?.();
+  }
+
+  onModuleDestroy(): void {
+    if (!this.cleanupInterval) {
+      return;
+    }
+
+    clearInterval(this.cleanupInterval);
+    this.cleanupInterval = undefined;
+  }
 
   async createRun(body: unknown): Promise<{ runId: string; status: DocumentationRunStatus }> {
     const parsed = createDocumentationRunSchema.safeParse(body);
@@ -345,6 +381,18 @@ export class DocumentationRunsService {
     };
   }
 
+  private async runCleanupCycle(): Promise<void> {
+    try {
+      const cleanup = await this.cleanupExpiredRuns();
+      if (cleanup.deletedRunIds.length > 0) {
+        this.logger.log(`Deleted ${cleanup.deletedRunIds.length} expired documentation run(s).`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown cleanup failure.';
+      this.logger.warn(`Documentation run cleanup failed: ${message}`);
+    }
+  }
+
   private async requireRun(runId: string): Promise<StoredRun> {
     try {
       return await this.readJsonFile<StoredRun>(this.manifestPath(runId));
@@ -516,6 +564,19 @@ function parseJson(value: string): unknown {
       message: 'Expected valid JSON metadata.'
     });
   }
+}
+
+function parseDurationMs(value: string | undefined, fallback: number): number {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+
+  return parsed;
 }
 
 function assertRunStatus(

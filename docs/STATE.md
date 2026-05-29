@@ -80,16 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 44: API Run Retention Scheduler.
+Implement Phase 45: Web Completed-State Regression Coverage.
 
 Required package:
 
 ```text
-apps/api
+apps/web
+scripts
 docs
 ```
 
-The next step should wire the existing expired-run cleanup method into the API runtime with a configurable scheduler, document the operational behavior, and add focused tests for interval setup, disabled scheduling, and shutdown cleanup.
+The next step should make the completed-state browser verification repeatable by adding an automated Web/API regression path that covers multi-archive upload, source role selection, page navigation, Markdown preview, and at least one download action.
 
 ## Completed Implementation
 
@@ -839,6 +840,24 @@ Verification:
 ```text
 browser check at http://localhost:5173 with API at http://localhost:3300
 pnpm lint
+```
+
+### 2026-05-29: Phase 44 API Run Retention Scheduler
+
+- Wired expired documentation run cleanup into the Nest module lifecycle.
+- Added startup cleanup followed by a configurable interval scheduler.
+- Added `DOCS_AI_RUN_CLEANUP_INTERVAL_MS` with `0` as the host-owned cleanup disable switch.
+- Cleared the scheduler interval on module shutdown.
+- Kept cleanup failures non-fatal and logged them for operators.
+- Added service tests for startup cleanup, interval cleanup, disabled scheduling, and shutdown cleanup.
+- Documented cleanup interval configuration in operations and deployment docs.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test apps/api/src/documentation-runs.service.test.ts
+pnpm verify
 ```
 
 ## Open Questions
