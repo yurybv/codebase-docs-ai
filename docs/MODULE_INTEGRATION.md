@@ -92,6 +92,19 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
 
 The CLI accepts folders and archives. It runs the source loading, security filtering, repository analysis, system analysis, documentation generation, and rendering pipeline locally.
 
+The CLI can also operate against a running API service:
+
+```bash
+pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
+  --api-url http://localhost:3000 \
+  --source ./frontend.zip:frontend \
+  --source ./backend.zip:backend \
+  --output ./generated-docs \
+  --format single-markdown
+```
+
+In API mode, source inputs must be archive files because the HTTP API upload boundary accepts archives.
+
 ### 4. Web UI
 
 Useful for:

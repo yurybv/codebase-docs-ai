@@ -333,6 +333,21 @@ Done when:
 - Node/TypeScript consumers can use one SDK method for common archive generation flow;
 - SDK tests cover polling, failed runs, upload flow, and optional download.
 
+## Phase 20: CLI API Mode
+
+Deliverables:
+
+- CLI `--api-url` option;
+- SDK-backed remote generation path;
+- downloaded artifact writing for API mode;
+- smoke coverage for CLI operating against a running API service.
+
+Done when:
+
+- CLI local mode still works for folders and archives;
+- CLI API mode works for archive inputs;
+- smoke harness verifies CLI API mode through the real API server.
+
 ## Cross-Cutting Work
 
 During all phases:

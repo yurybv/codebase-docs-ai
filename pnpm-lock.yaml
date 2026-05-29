@@ -99,6 +99,9 @@ importers:
       '@codebase-docs-ai/renderers':
         specifier: workspace:*
         version: link:../../packages/renderers
+      '@codebase-docs-ai/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared

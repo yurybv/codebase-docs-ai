@@ -14,6 +14,7 @@ export interface GenerateCommandOptions {
   output: string;
   format: CliOutputFormat;
   name: string;
+  apiUrl?: string;
 }
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
@@ -25,18 +26,24 @@ export function parseGenerateOptions(options: {
   output?: string;
   format?: string;
   name?: string;
+  apiUrl?: string;
 }): GenerateCommandOptions {
   const sources = options.source ?? [];
   if (sources.length === 0) {
     throw new Error('At least one --source path:role input is required.');
   }
 
-  return {
+  const parsedOptions: GenerateCommandOptions = {
     source: sources,
     output: options.output ?? './generated-docs',
     format: parseCliOutputFormat(options.format ?? 'markdown-tree'),
     name: options.name ?? 'Generated Project Documentation'
   };
+  if (options.apiUrl) {
+    parsedOptions.apiUrl = options.apiUrl;
+  }
+
+  return parsedOptions;
 }
 
 export function parseCliSourceInput(value: string): CliSourceInput {

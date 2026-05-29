@@ -17,7 +17,8 @@ program
   .option('--output <path>', 'Output directory', './generated-docs')
   .option('--format <format>', 'Output format: markdown-tree, single-markdown, json, or zip', 'markdown-tree')
   .option('--name <name>', 'Documentation title', 'Generated Project Documentation')
-  .action(async (options: { source?: string[]; output?: string; format?: string; name?: string }) => {
+  .option('--api-url <url>', 'Run through a remote codebase-docs-ai API instead of local analysis')
+  .action(async (options: { source?: string[]; output?: string; format?: string; name?: string; apiUrl?: string }) => {
     const result = await runGenerateCommand(parseGenerateOptions(options));
     console.log(
       JSON.stringify(

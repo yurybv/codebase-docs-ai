@@ -1,9 +1,10 @@
-import { mkdtemp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
 import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
+import { CodebaseDocsAIClient } from '@codebase-docs-ai/sdk';
 import type { DocumentationOutputFormat, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
 import { loadArchiveSource, loadFolderSource } from '@codebase-docs-ai/source-loader';
 import { parseCliSourceInput, type GenerateCommandOptions } from './cli-options.js';
@@ -18,6 +19,10 @@ export interface GenerateCommandResult {
 }
 
 export async function runGenerateCommand(options: GenerateCommandOptions): Promise<GenerateCommandResult> {
+  if (options.apiUrl) {
+    return runApiGenerateCommand(options);
+  }
+
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-'));
 
   try {
@@ -62,6 +67,48 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
   }
 }
 
+async function runApiGenerateCommand(options: GenerateCommandOptions): Promise<GenerateCommandResult> {
+  if (!options.apiUrl) {
+    throw new Error('API URL is required for API mode.');
+  }
+
+  const client = new CodebaseDocsAIClient({
+    apiBaseUrl: options.apiUrl
+  });
+  const sources = await Promise.all(options.source.map(loadApiArchiveSource));
+  const result = await client.documentationRuns.generateFromArchives({
+    name: options.name,
+    options: {
+      outputFormats: [coreOutputFormat(options.format)],
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    },
+    sources,
+    poll: {
+      intervalMs: 1000,
+      timeoutMs: 120000
+    },
+    downloadFormat: coreOutputFormat(options.format)
+  });
+  const downloadedFile = result.download
+    ? await writeDownloadedOutput({
+        outputPath: options.output,
+        fileName: result.download.fileName ?? defaultDownloadFileName(options.format),
+        content: result.download.content
+      })
+    : undefined;
+
+  return {
+    status: 'completed',
+    outputPath: path.resolve(options.output),
+    format: options.format,
+    sourceCount: sources.length,
+    fileCount: downloadedFile ? 1 : 0,
+    files: downloadedFile ? [downloadedFile] : []
+  };
+}
+
 function createDocumentationEngine(): DocumentationEngine {
   const aiProvider = createOpenAiCompatibleProviderFromEnv();
   return new DocumentationEngine(aiProvider ? { aiProvider } : {});
@@ -88,6 +135,29 @@ async function loadCliSource(sourceInput: string, tempRoot: string): Promise<Loa
   }
 
   throw new Error(`Unsupported source path type: ${parsedSource.inputPath}`);
+}
+
+async function loadApiArchiveSource(
+  sourceInput: string
+): Promise<{
+  name: string;
+  role: ReturnType<typeof parseCliSourceInput>['metadata']['role'];
+  file: Blob;
+  fileName: string;
+}> {
+  const parsedSource = parseCliSourceInput(sourceInput);
+  const inputPath = path.resolve(parsedSource.inputPath);
+  const inputStat = await stat(inputPath);
+  if (!inputStat.isFile()) {
+    throw new Error('API mode only accepts archive file sources. Use local mode for folder sources.');
+  }
+
+  return {
+    name: parsedSource.metadata.name,
+    role: parsedSource.metadata.role,
+    fileName: path.basename(inputPath),
+    file: new Blob([await readFile(inputPath)])
+  };
 }
 
 function coreOutputFormat(format: GenerateCommandOptions['format']): DocumentationOutputFormat {
@@ -123,6 +193,20 @@ async function writeOutput(input: {
   return writtenFiles;
 }
 
+async function writeDownloadedOutput(input: {
+  outputPath: string;
+  fileName: string;
+  content: Blob;
+}): Promise<string> {
+  const outputRoot = path.resolve(input.outputPath);
+  await mkdir(outputRoot, {
+    recursive: true
+  });
+  const targetPath = assertOutputPathInsideRoot(outputRoot, input.fileName);
+  await writeFile(targetPath, Buffer.from(await input.content.arrayBuffer()));
+  return targetPath;
+}
+
 function assertOutputPathInsideRoot(outputRoot: string, relativeFilePath: string): string {
   const targetPath = path.resolve(outputRoot, relativeFilePath);
   if (targetPath !== outputRoot && !targetPath.startsWith(`${outputRoot}${path.sep}`)) {
@@ -130,4 +214,16 @@ function assertOutputPathInsideRoot(outputRoot: string, relativeFilePath: string
   }
 
   return targetPath;
+}
+
+function defaultDownloadFileName(format: GenerateCommandOptions['format']): string {
+  if (format === 'json') {
+    return 'documentation-tree.json';
+  }
+
+  if (format === 'single-markdown') {
+    return 'PROJECT_DOCUMENTATION.md';
+  }
+
+  return 'documentation.zip';
 }

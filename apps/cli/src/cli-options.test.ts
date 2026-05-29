@@ -23,4 +23,13 @@ describe('CLI option parsing', () => {
   it('requires at least one source', () => {
     expect(() => parseGenerateOptions({ source: [] })).toThrow('At least one --source');
   });
+
+  it('parses API mode URL when provided', () => {
+    expect(
+      parseGenerateOptions({
+        source: ['/tmp/frontend.zip:frontend'],
+        apiUrl: 'http://localhost:3000'
+      }).apiUrl
+    ).toBe('http://localhost:3000');
+  });
 });

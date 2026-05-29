@@ -30,6 +30,7 @@ async function main(): Promise<void> {
     await waitForHttp(`${apiBaseUrl}/health`);
     await waitForHttp(webBaseUrl);
     await runApiLifecycle(tempRoot);
+    await runCliApiMode(tempRoot);
     const webHtml = await fetchText(webBaseUrl);
     assert(webHtml.includes('root'), 'Web app root did not render.');
 
@@ -53,6 +54,32 @@ async function main(): Promise<void> {
       force: true
     });
   }
+}
+
+async function runCliApiMode(tempRoot: string): Promise<void> {
+  const outputPath = path.join(tempRoot, 'cli-api-output');
+  await runCommand('pnpm', [
+    '--filter',
+    '@codebase-docs-ai/cli',
+    'exec',
+    'tsx',
+    'src/main.ts',
+    'generate',
+    '--api-url',
+    apiBaseUrl,
+    '--source',
+    `${path.join(tempRoot, 'frontend.tar')}:frontend`,
+    '--source',
+    `${path.join(tempRoot, 'backend.tar')}:backend`,
+    '--output',
+    outputPath,
+    '--format',
+    'single-markdown',
+    '--name',
+    'CLI API Smoke Documentation'
+  ]);
+  const markdown = await readFile(path.join(outputPath, 'PROJECT_DOCUMENTATION.md'), 'utf8');
+  assert(markdown.includes('/api/users'), 'CLI API mode Markdown did not contain the matched API path.');
 }
 
 async function createFixtureArchives(tempRoot: string): Promise<void> {

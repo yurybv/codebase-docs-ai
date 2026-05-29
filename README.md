@@ -78,6 +78,19 @@ zip
 
 `zip` is a CLI convenience format that packages the Markdown tree as `documentation.zip`.
 
+Run the same CLI against a running API service:
+
+```bash
+pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
+  --api-url http://localhost:3000 \
+  --source ./frontend.zip:frontend \
+  --source ./backend.zip:backend \
+  --output ./generated-docs \
+  --format single-markdown
+```
+
+API mode accepts archive files. Use local mode when you want to pass local folders directly.
+
 ## Optional AI Provider
 
 The product runs deterministically without AI credentials.

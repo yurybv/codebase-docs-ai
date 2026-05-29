@@ -17,6 +17,9 @@
       "path": "../../packages/renderers"
     },
     {
+      "path": "../../packages/sdk"
+    },
+    {
       "path": "../../packages/shared"
     },
     {

@@ -77,16 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 20: CLI API Mode.
+Implement Phase 21: API Retention Cleanup.
 
 Required package:
 
 ```text
-apps/cli
-packages/sdk
+apps/api
 ```
 
-The next step should add a CLI API mode that can call a running API service instead of running local analysis in-process. This will make the CLI useful both for local generation and for operating the module as a separate service.
+The next step should add retention cleanup for old temporary API run artifacts. Start with configurable run TTL and a service method that removes expired run directories without changing public API behavior.
 
 ## Completed Implementation
 
@@ -478,6 +477,24 @@ Verification:
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
 pnpm lint
+```
+
+### 2026-05-29: Phase 20 CLI API Mode
+
+- Added CLI `--api-url` option.
+- Added SDK-backed API mode for remote documentation generation.
+- Kept local mode available for folder and archive inputs.
+- Added downloaded artifact writing for API mode.
+- Documented CLI API mode in README and module integration docs.
+- Expanded `pnpm smoke:e2e` to verify CLI API mode against a running API server.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/cli-options.test.ts
+pnpm lint
+pnpm smoke:e2e
 ```
 
 ## Open Questions
