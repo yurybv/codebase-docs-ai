@@ -71,6 +71,9 @@ const generationSteps = [
   'completed'
 ] as const;
 
+const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready'];
+const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
+
 @Injectable()
 export class DocumentationRunsService {
   private readonly engine = createDocumentationEngine();
@@ -121,6 +124,12 @@ export class DocumentationRunsService {
     metadataJson: string
   ): Promise<{ runId: string; status: DocumentationRunStatus; sources: SourceInputMetadata[] }> {
     const storedRun = await this.requireRun(runId);
+    assertRunStatus(
+      storedRun,
+      sourceUploadAllowedStatuses,
+      'RUN_SOURCE_UPLOAD_NOT_ALLOWED',
+      'Source uploads are only allowed before a documentation run starts.'
+    );
     const parsedMetadata = uploadSourcesMetadataSchema.safeParse(parseJson(metadataJson));
     if (!parsedMetadata.success) {
       throw new BadRequestException({
@@ -131,6 +140,7 @@ export class DocumentationRunsService {
     }
 
     const uploadPath = path.join(storedRun.tempPath, 'uploads');
+    await this.resetSourceArtifacts(storedRun);
     await mkdir(uploadPath, {
       recursive: true
     });
@@ -182,6 +192,12 @@ export class DocumentationRunsService {
         message: 'Upload at least one source archive before starting the run.'
       });
     }
+    assertRunStatus(
+      storedRun,
+      startAllowedStatuses,
+      'RUN_START_NOT_ALLOWED',
+      'Documentation runs can only be started from the ready status.'
+    );
 
     try {
       await this.setGenerationStatus(storedRun, 'running');
@@ -401,6 +417,25 @@ export class DocumentationRunsService {
     await this.writeRun(storedRun);
   }
 
+  private async resetSourceArtifacts(storedRun: StoredRun): Promise<void> {
+    delete storedRun.documentationTreePath;
+    delete storedRun.renderedPaths;
+    await Promise.all([
+      rm(path.join(storedRun.tempPath, 'uploads'), {
+        recursive: true,
+        force: true
+      }),
+      rm(path.join(storedRun.tempPath, 'extracted'), {
+        recursive: true,
+        force: true
+      }),
+      rm(path.join(storedRun.tempPath, 'results'), {
+        recursive: true,
+        force: true
+      })
+    ]);
+  }
+
   private async writeRun(storedRun: StoredRun): Promise<void> {
     await mkdir(storedRun.tempPath, {
       recursive: true
@@ -481,4 +516,24 @@ function parseJson(value: string): unknown {
       message: 'Expected valid JSON metadata.'
     });
   }
+}
+
+function assertRunStatus(
+  storedRun: StoredRun,
+  allowedStatuses: DocumentationRunStatus[],
+  code: string,
+  message: string
+): void {
+  if (allowedStatuses.includes(storedRun.run.status)) {
+    return;
+  }
+
+  throw new BadRequestException({
+    code,
+    message,
+    details: {
+      status: storedRun.run.status,
+      allowedStatuses
+    }
+  });
 }

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
@@ -140,6 +140,96 @@ describe('DocumentationRunsService', () => {
     expect(failedRun.progress?.currentStep).toBe('Failed');
   });
 
+  it('rejects source uploads and restarts after completion', async () => {
+    const created = await service.createRun({
+      name: 'Completed Fixture Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const archive = frontendArchive();
+
+    await service.uploadSources(
+      created.runId,
+      [
+        {
+          fieldname: 'frontend',
+          originalname: 'frontend.zip',
+          buffer: archive.toBuffer()
+        }
+      ],
+      sourceMetadata()
+    );
+    await service.startRun(created.runId);
+
+    await expect(
+      service.uploadSources(
+        created.runId,
+        [
+          {
+            fieldname: 'frontend',
+            originalname: 'frontend.zip',
+            buffer: archive.toBuffer()
+          }
+        ],
+        sourceMetadata()
+      )
+    ).rejects.toMatchObject({
+      response: {
+        code: 'RUN_SOURCE_UPLOAD_NOT_ALLOWED'
+      }
+    });
+    await expect(service.startRun(created.runId)).rejects.toMatchObject({
+      response: {
+        code: 'RUN_START_NOT_ALLOWED'
+      }
+    });
+  });
+
+  it('cleans old source artifacts when replacing ready-state uploads', async () => {
+    const created = await service.createRun({
+      name: 'Replace Sources Fixture Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await service.uploadSources(
+      created.runId,
+      [
+        {
+          fieldname: 'frontend',
+          originalname: 'frontend-a.zip',
+          buffer: frontendArchive().toBuffer()
+        }
+      ],
+      sourceMetadata()
+    );
+    const uploadPath = path.join(tempRoot, created.runId, 'uploads');
+    expect(await readdir(uploadPath)).toHaveLength(1);
+
+    await service.uploadSources(
+      created.runId,
+      [
+        {
+          fieldname: 'frontend',
+          originalname: 'frontend-b.zip',
+          buffer: frontendArchive().toBuffer()
+        }
+      ],
+      sourceMetadata()
+    );
+
+    const uploads = await readdir(uploadPath);
+    expect(uploads).toHaveLength(1);
+    expect(uploads[0]).toContain('frontend-b.zip');
+  });
+
   it('cleans up expired run artifacts from the temp store', async () => {
     process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
     service = new DocumentationRunsService();
@@ -167,3 +257,35 @@ describe('DocumentationRunsService', () => {
     await expect(service.getRun(created.runId)).rejects.toThrow();
   });
 });
+
+function frontendArchive(): AdmZip {
+  const archive = new AdmZip();
+  archive.addFile(
+    'package.json',
+    Buffer.from(
+      JSON.stringify({
+        scripts: {
+          dev: 'next dev'
+        },
+        dependencies: {
+          next: '^15.0.0',
+          react: '^18.0.0'
+        }
+      })
+    )
+  );
+  archive.addFile('app/page.tsx', Buffer.from('export default function Page() {}'));
+  return archive;
+}
+
+function sourceMetadata(): string {
+  return JSON.stringify({
+    sources: [
+      {
+        fileField: 'frontend',
+        name: 'Frontend',
+        role: 'frontend'
+      }
+    ]
+  });
+}

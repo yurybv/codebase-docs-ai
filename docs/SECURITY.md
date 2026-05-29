@@ -88,6 +88,9 @@ Extraction must reject:
 - Validate all request bodies with schemas or DTOs.
 - Validate uploaded files before extraction.
 - Limit uploaded file count and size at the HTTP boundary.
+- Only allow source upload before a run starts.
+- Only allow generation start from the `ready` status.
+- Clear replaced ready-state upload artifacts before accepting replacement sources.
 - Return safe error messages.
 - Do not expose local filesystem paths.
 - Add rate limits for public deployments.

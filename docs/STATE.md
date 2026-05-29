@@ -78,17 +78,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 32: API Security And Abuse Limits Review.
+Implement Phase 33: API Rate Limit Adapter Planning.
 
 Required package:
 
 ```text
 apps/api
-packages/security
 docs
 ```
 
-The next step should review API abuse controls around upload limits, run lifecycle misuse, temporary storage growth, and safe error exposure before external-host usage.
+The next step should decide whether rate limiting belongs in the standalone API service, host gateway, or optional adapter, then document the first deployable strategy without hardcoding a product-host assumption.
 
 ## Completed Implementation
 
@@ -662,6 +661,21 @@ Verification:
 
 ```text
 pnpm docker:smoke
+pnpm verify
+```
+
+### 2026-05-29: Phase 32 API Security And Abuse Limits Review
+
+- Added run status guards for source uploads and generation starts.
+- Blocked source upload after a run has started or completed.
+- Blocked repeated start calls after completion.
+- Cleared old upload, extraction, and result artifacts when replacing sources in the ready state.
+- Documented lifecycle misuse controls in the security guide.
+- Added API service tests for lifecycle misuse and ready-state upload replacement cleanup.
+
+Verification:
+
+```text
 pnpm verify
 ```
 
