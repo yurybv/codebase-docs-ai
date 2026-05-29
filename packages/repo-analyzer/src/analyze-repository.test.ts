@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { SourceFile } from '@codebase-docs-ai/shared';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { analyzeRepository } from './analyze-repository.js';
 
 let tempRoot: string;
@@ -123,6 +123,116 @@ describe('analyzeRepository', () => {
     expect(repositoryMap.environmentVariables.map((envVar) => envVar.name)).toEqual([
       'DATABASE_URL'
     ]);
+  });
+
+  it('uses injected text readers for content-backed analysis', async () => {
+    await writeFixtureFile(
+      'package.json',
+      JSON.stringify({
+        scripts: {
+          dev: 'next dev'
+        },
+        dependencies: {
+          next: '^15.0.0'
+        }
+      })
+    );
+    await writeFixtureFile(
+      'src/users.controller.ts',
+      `
+        import { Controller, Get } from '@nestjs/common';
+
+        @Controller('raw')
+        export class UsersController {
+          @Get('leak')
+          getUser() {
+            return process.env.RAW_DISK_ENV;
+          }
+        }
+      `
+    );
+    await writeFixtureFile(
+      'src/client.ts',
+      `
+        fetch("/raw-disk-path", { method: "DELETE" });
+        axios.get("/raw-disk-axios");
+        console.log(process.env.RAW_CLIENT_ENV);
+      `
+    );
+
+    const files = await fixtureFiles(['package.json', 'src/users.controller.ts', 'src/client.ts']);
+    const injectedContentByPath = new Map<string, string>([
+      [
+        'package.json',
+        JSON.stringify({
+          scripts: {
+            start: 'node dist/main.js'
+          },
+          dependencies: {
+            '@nestjs/core': '^10.0.0',
+            axios: '^1.0.0'
+          }
+        })
+      ],
+      [
+        'src/users.controller.ts',
+        `
+          import { Controller, Get } from '@nestjs/common';
+
+          @Controller('users')
+          export class UsersController {
+            @Get(':id')
+            getUser() {
+              return process.env.SAFE_ENV;
+            }
+          }
+        `
+      ],
+      [
+        'src/client.ts',
+        `
+          fetch("/api/[REDACTED_OPENAI_API_KEY]", { method: "POST" });
+          axios.patch("/api/profile");
+          console.log(import.meta.env.PUBLIC_API_URL);
+        `
+      ]
+    ]);
+    const readTextFile = vi.fn(async (file: SourceFile) => {
+      const content = injectedContentByPath.get(file.path);
+
+      if (!content) {
+        throw new Error(`Unexpected file read: ${file.path}`);
+      }
+
+      return content;
+    });
+
+    const repositoryMap = await analyzeRepository({
+      source: {
+        name: 'Injected',
+        role: 'backend'
+      },
+      rootPath: tempRoot,
+      files,
+      readTextFile
+    });
+
+    expect(repositoryMap.frameworks.map((framework) => framework.name)).toEqual(['NestJS']);
+    expect(repositoryMap.scripts.map((script) => script.name)).toEqual(['start']);
+    expect(repositoryMap.apiEndpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual([
+      'GET /users/:id'
+    ]);
+    expect(repositoryMap.apiClientCalls.map((call) => `${call.method} ${call.path}`)).toEqual([
+      'POST /api/[REDACTED_OPENAI_API_KEY]',
+      'PATCH /api/profile'
+    ]);
+    expect(repositoryMap.environmentVariables.map((envVar) => envVar.name)).toEqual([
+      'PUBLIC_API_URL',
+      'SAFE_ENV'
+    ]);
+    expect(JSON.stringify(repositoryMap)).not.toContain('RAW_');
+    expect(JSON.stringify(repositoryMap)).not.toContain('/raw-disk');
+    expect(readTextFile).toHaveBeenCalled();
   });
 });
 

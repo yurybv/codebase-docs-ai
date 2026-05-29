@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 70: Repository Analyzer Reader Injection Regression Coverage.
+- Implement Phase 71: Documentation Output Sanitization Regression Coverage.
 
-Phase 70 goal:
-- Add focused repository-analyzer regression coverage for injected text readers.
-- Verify package-level analyzer consumers can provide sanitized file content.
-- Keep core prompt sanitization coverage intact.
+Phase 71 goal:
+- Add regression coverage proving generated documentation output does not contain raw denied or secret-bearing source content.
+- Verify sanitized repository maps remain the only source evidence used by documentation generation.
+- Keep core prompt sanitization and repository-analyzer reader injection coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

@@ -80,17 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 70: Repository Analyzer Reader Injection Regression Coverage.
+Implement Phase 71: Documentation Output Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/repo-analyzer
+packages/core
+packages/documentation-generator
 docs
 ```
 
-The next step should add focused repository-analyzer regression coverage for the injected text reader used by core sanitization.
+The next step should add regression coverage proving generated documentation output does not contain raw denied or secret-bearing source content after sanitized analysis.
 
 ## Completed Implementation
 
@@ -1224,6 +1225,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/core typecheck
 pnpm test -- packages/core/src/documentation-engine.test.ts
+```
+
+### 2026-05-29: Phase 70 Repository Analyzer Reader Injection Regression Coverage
+
+- Added repository-analyzer regression coverage for injected text readers.
+- Verified package metadata, NestJS endpoints, API client calls, and environment variables use injected source text instead of raw disk contents.
+- Confirmed package-level analyzer consumers can provide sanitized content without leaking raw source evidence into `RepositoryMap`.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/repo-analyzer typecheck
+pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts
 ```
 
 ## Open Questions
