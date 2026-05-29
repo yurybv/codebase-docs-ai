@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 81: API JSON Download Sanitization Regression Coverage.
+- Implement Phase 82: API Markdown Tree Zip Sanitization Regression Coverage.
 
-Phase 81 goal:
-- Add API regression coverage proving JSON downloads from secret-bearing source archives are sanitized.
-- Verify raw denied files and raw secret values are absent from downloaded `documentation-tree.json` API artifacts.
-- Keep Web result/download, SDK result/download, and CLI output sanitization coverage intact.
+Phase 82 goal:
+- Add API regression coverage proving markdown-tree zip downloads from secret-bearing source archives are sanitized.
+- Verify raw denied files and raw secret values are absent from files inside downloaded markdown-tree zip API artifacts.
+- Keep API JSON/single-Markdown, Web result/download, SDK result/download, and CLI output sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

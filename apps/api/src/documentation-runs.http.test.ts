@@ -258,6 +258,20 @@ describe('Documentation runs HTTP API', () => {
     expect(markdown).not.toContain(rawOpenAiKey);
     expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
     expect(markdown).not.toContain('.env');
+
+    const jsonDownloadResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=json`
+    );
+    const json = await jsonDownloadResponse.text();
+    expect(jsonDownloadResponse.status).toBe(200);
+    expect(jsonDownloadResponse.headers.get('content-type')).toContain('application/json');
+    expect(JSON.parse(json)).toMatchObject({
+      title: 'HTTP Sanitized Documentation'
+    });
+    expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(json).not.toContain(rawOpenAiKey);
+    expect(json).not.toContain('SHOULD_NOT_APPEAR');
+    expect(json).not.toContain('.env');
   });
 });
 

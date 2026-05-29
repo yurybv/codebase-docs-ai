@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 81: API JSON Download Sanitization Regression Coverage.
+Implement Phase 82: API Markdown Tree Zip Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/api
 docs
 ```
 
-The next step should add API regression coverage proving JSON downloads from secret-bearing source archives are sanitized.
+The next step should add API regression coverage proving markdown-tree zip downloads from secret-bearing source archives are sanitized.
 
 ## Completed Implementation
 
@@ -1367,6 +1367,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/main.test.ts
+```
+
+### 2026-05-29: Phase 81 API JSON Download Sanitization Regression Coverage
+
+- Extended API HTTP sanitization coverage to download the rendered JSON artifact.
+- Verified downloaded `documentation-tree.json` contains redacted source evidence instead of raw provider keys.
+- Verified downloaded JSON artifacts exclude denied `.env` evidence and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.http.test.ts
 ```
 
 ## Open Questions
