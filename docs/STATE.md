@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 92: API Run Failure Error Sanitization Regression Coverage.
+Implement Phase 93: API Error Envelope Secret Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/api
 docs
 ```
 
-The next step should add API regression coverage proving failed documentation run error messages do not expose raw secret-bearing source content.
+The next step should add API regression coverage proving public error envelopes do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1510,6 +1510,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm test -- apps/cli/src/generate-command.test.ts
+```
+
+### 2026-05-29: Phase 92 API Run Failure Error Sanitization Regression Coverage
+
+- Changed failed documentation runs to persist the documented generic failure summary instead of raw exception messages.
+- Added API service regression coverage for internal failures containing a fake provider key and denied `.env` evidence.
+- Verified API-visible failed run state excludes raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
 ```
 
 ## Open Questions

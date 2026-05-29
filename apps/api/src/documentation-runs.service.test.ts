@@ -146,6 +146,47 @@ describe('DocumentationRunsService', () => {
     expect(failedRun.progress?.currentStep).toBe('Failed');
   });
 
+  it('does not persist raw secret-bearing failure details in run state', async () => {
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const created = await service.createRun({
+      name: 'Secret Failure Fixture Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const archive = frontendArchive();
+    (service as unknown as { engine: { generateDocumentation: () => Promise<never> } }).engine = {
+      generateDocumentation: async () => {
+        throw new Error(`Generation failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR`);
+      }
+    };
+
+    await service.uploadSources(
+      created.runId,
+      [
+        {
+          fieldname: 'frontend',
+          originalname: 'frontend.zip',
+          buffer: archive.toBuffer()
+        }
+      ],
+      sourceMetadata()
+    );
+
+    await expect(service.startRun(created.runId)).rejects.toThrow();
+    const failedRun = await service.getRun(created.runId);
+    const failurePayload = JSON.stringify(failedRun.error);
+
+    expect(failedRun.status).toBe('failed');
+    expect(failedRun.error?.message).toBe('Documentation generation failed.');
+    expect(failurePayload).not.toContain(rawOpenAiKey);
+    expect(failurePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(failurePayload).not.toContain('.env');
+  });
+
   it('rejects source uploads and restarts after completion', async () => {
     const created = await service.createRun({
       name: 'Completed Fixture Docs',

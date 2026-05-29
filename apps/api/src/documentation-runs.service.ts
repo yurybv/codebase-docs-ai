@@ -271,7 +271,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       await this.writeResultArtifacts(storedRun, result.documentationTree, result.rendered);
       await this.setGenerationStatus(storedRun, 'completed');
     } catch (error) {
-      await this.failRun(storedRun, error);
+      await this.failRun(storedRun);
       throw error;
     }
 
@@ -448,8 +448,8 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private async failRun(storedRun: StoredRun, error: unknown): Promise<void> {
-    storedRun.run.error = safeRunError(error);
+  private async failRun(storedRun: StoredRun): Promise<void> {
+    storedRun.run.error = safeRunError();
     await this.setStatus(storedRun, 'failed', {
       currentStep: 'Failed',
       completedSteps: storedRun.run.progress?.completedSteps ?? 0,
@@ -560,13 +560,7 @@ function generationStepLabel(status: (typeof generationSteps)[number]): string {
   }
 }
 
-function safeRunError(error: unknown): DocumentationRunError {
-  if (error instanceof Error) {
-    return {
-      message: error.message
-    };
-  }
-
+function safeRunError(): DocumentationRunError {
   return {
     message: 'Documentation generation failed.'
   };
