@@ -6,7 +6,7 @@ This file is the durable handoff for future sessions.
 
 Monorepo foundation implemented.
 
-Application code has started. The repository now contains a pnpm workspace with API, Web, CLI, shared contracts, and core engine skeleton packages.
+Application code has started. The repository now contains a pnpm workspace with API, Web, CLI, SDK, shared contracts, source loading, security filtering, repository/system analysis, documentation generation, renderers, and an end-to-end Web/API documentation run flow.
 
 ## Product Decision Log
 
@@ -71,28 +71,21 @@ Decision:
 
 ## Next Required User Approval
 
-Before generating application code, confirm:
+None at the moment.
 
-1. The full product direction is correct.
-2. Documentation should remain English-only.
-3. The implementation should start from the monorepo foundation.
-4. The first executable product slice should be:
-
-```text
-Web UI upload -> API run -> source extraction -> analysis -> documentation tree -> Markdown download
-```
+Continue autonomous development until a product, architecture, credential, provider, or deployment decision cannot be made safely from repository context.
 
 ## Next Implementation Step
 
-Implement Phase 9: SDK.
+Implement Phase 10: CLI.
 
-Required package:
+Required app:
 
 ```text
-packages/sdk
+apps/cli
 ```
 
-The next step should add a typed HTTP client for creating runs, uploading archives, starting runs, polling status, retrieving results, and getting download URLs/content.
+The next step should add a local `generate` command that accepts one or more source archives/folders, runs the same core pipeline without the API server, and writes Markdown tree, single Markdown, JSON, or zip output to disk.
 
 ## Completed Implementation
 
@@ -278,6 +271,24 @@ pnpm typecheck
 pnpm test
 pnpm lint
 Browser smoke test at http://localhost:5173/
+```
+
+### 2026-05-29: Phase 9 SDK
+
+- Added `packages/sdk`.
+- Added typed HTTP client for documentation run lifecycle operations.
+- Added create, upload, start, get, result, download, and delete methods.
+- Added multipart source upload support.
+- Added typed SDK error handling.
+- Added SDK tests for create and upload behavior.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
 ```
 
 ## Open Questions

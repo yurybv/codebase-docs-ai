@@ -158,6 +158,12 @@ importers:
         specifier: workspace:*
         version: link:../shared
 
+  packages/sdk:
+    dependencies:
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+
   packages/security:
     dependencies:
       '@codebase-docs-ai/shared':
