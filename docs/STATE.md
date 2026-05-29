@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 59: Source Loader Unsupported Archive Regression Coverage.
+Implement Phase 60: Source Loader Archive Limit Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/source-loader
 docs
 ```
 
-The next step should add focused source-loader regression coverage for unsupported archive filenames so package-level behavior is protected alongside API, Web, SDK, and CLI validation.
+The next step should add focused source-loader regression coverage for archive file count, per-file size, and total size limits.
 
 ## Completed Implementation
 
@@ -1070,6 +1070,19 @@ pnpm test -- apps/cli/src/generate-command.test.ts apps/cli/src/cli-options.test
 - Added direct source-loader extraction coverage for `.tar`, `.tar.gz`, and `.tgz` archives.
 - Kept existing zip extraction coverage intact.
 - Used synthetic fixture archives only; no private source or uploaded artifacts were committed.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-29: Phase 59 Source Loader Unsupported Archive Regression Coverage
+
+- Added source-loader regression coverage for unsupported archive filenames.
+- Rejected unsupported archive filenames with `UnsupportedArchiveError` before creating extraction directories.
+- Kept supported zip, tar, tar.gz, and tgz extraction coverage intact.
 
 Verification:
 

@@ -24,12 +24,15 @@ interface ArchiveEntrySummary {
 export async function safeExtractArchive(input: SafeExtractArchiveInput): Promise<void> {
   const archivePath = path.resolve(input.archivePath);
   const destinationPath = path.resolve(input.destinationPath);
+  const archiveExtension = getSupportedSourceArchiveExtension(archivePath);
+
+  if (!archiveExtension) {
+    throw new UnsupportedArchiveError(input.archivePath);
+  }
 
   await mkdir(destinationPath, {
     recursive: true
   });
-
-  const archiveExtension = getSupportedSourceArchiveExtension(archivePath);
 
   if (archiveExtension === '.zip') {
     await extractZipArchive(archivePath, destinationPath, input.limits);
@@ -44,8 +47,6 @@ export async function safeExtractArchive(input: SafeExtractArchiveInput): Promis
     await extractTarArchive(archivePath, destinationPath, input.limits);
     return;
   }
-
-  throw new UnsupportedArchiveError(input.archivePath);
 }
 
 async function extractZipArchive(

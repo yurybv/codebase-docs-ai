@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 59: Source Loader Unsupported Archive Regression Coverage.
+- Implement Phase 60: Source Loader Archive Limit Regression Coverage.
 
-Phase 59 goal:
-- Add focused source-loader regression coverage for unsupported archive filenames.
-- Verify package-level unsupported archive behavior stays aligned with API, Web, SDK, and CLI validation.
-- Keep supported archive extraction coverage intact.
+Phase 60 goal:
+- Add focused source-loader regression coverage for archive file count limits.
+- Add focused source-loader regression coverage for per-file size limits.
+- Add focused source-loader regression coverage for total size limits.
+- Keep supported and unsupported archive format coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

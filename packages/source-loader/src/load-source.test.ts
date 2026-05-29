@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
@@ -6,7 +6,7 @@ import * as tar from 'tar';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadArchiveSource, loadFolderSource } from './load-source.js';
 import { assertSafeRelativePath } from './path-safety.js';
-import { UnsafeArchivePathError } from './source-loader-errors.js';
+import { UnsafeArchivePathError, UnsupportedArchiveError } from './source-loader-errors.js';
 
 let tempRoot: string;
 
@@ -91,6 +91,31 @@ describe('loadArchiveSource', () => {
 
     expect(loaded.rootPath).toContain('backend');
     expect(loaded.files.map((file) => file.path)).toEqual(['src/main.ts']);
+  });
+
+  it('rejects unsupported archive file names before creating an extraction directory', async () => {
+    const archivePath = path.join(tempRoot, 'notes.txt');
+    const extractionRoot = path.join(tempRoot, 'unsupported-extract');
+    await writeFile(archivePath, 'not an archive');
+
+    const loadPromise = loadArchiveSource({
+      source: {
+        name: 'Notes',
+        role: 'docs'
+      },
+      archivePath,
+      extractionRoot
+    });
+
+    await expect(loadPromise).rejects.toBeInstanceOf(UnsupportedArchiveError);
+    await expect(loadPromise).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'UNSUPPORTED_ARCHIVE_TYPE',
+      message: `Unsupported archive type: ${archivePath}`
+    });
+    await expect(stat(path.join(extractionRoot, 'notes'))).rejects.toMatchObject({
+      code: 'ENOENT'
+    });
   });
 
   it('rejects unsafe relative paths before extraction', () => {
