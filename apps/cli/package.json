@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@codebase-docs-ai/ai-orchestrator": "workspace:*",
     "@codebase-docs-ai/core": "workspace:*",
     "@codebase-docs-ai/renderers": "workspace:*",
     "@codebase-docs-ai/shared": "workspace:*",

@@ -16,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@codebase-docs-ai/ai-orchestrator": "workspace:*",
     "@codebase-docs-ai/documentation-generator": "workspace:*",
     "@codebase-docs-ai/renderers": "workspace:*",
     "@codebase-docs-ai/repo-analyzer": "workspace:*",

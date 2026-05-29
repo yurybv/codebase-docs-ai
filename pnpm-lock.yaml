@@ -35,6 +35,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@codebase-docs-ai/ai-orchestrator':
+        specifier: workspace:*
+        version: link:../../packages/ai-orchestrator
       '@codebase-docs-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -81,6 +84,9 @@ importers:
 
   apps/cli:
     dependencies:
+      '@codebase-docs-ai/ai-orchestrator':
+        specifier: workspace:*
+        version: link:../../packages/ai-orchestrator
       '@codebase-docs-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -122,10 +128,17 @@ importers:
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.29)
 
-  packages/ai-orchestrator: {}
+  packages/ai-orchestrator:
+    dependencies:
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
 
   packages/core:
     dependencies:
+      '@codebase-docs-ai/ai-orchestrator':
+        specifier: workspace:*
+        version: link:../ai-orchestrator
       '@codebase-docs-ai/documentation-generator':
         specifier: workspace:*
         version: link:../documentation-generator
@@ -147,9 +160,15 @@ importers:
 
   packages/documentation-generator:
     dependencies:
+      '@codebase-docs-ai/ai-orchestrator':
+        specifier: workspace:*
+        version: link:../ai-orchestrator
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../shared
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
 
   packages/renderers:
     dependencies:

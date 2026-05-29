@@ -1,4 +1,5 @@
-import { generateDocumentationTree } from '@codebase-docs-ai/documentation-generator';
+import type { AiProvider } from '@codebase-docs-ai/ai-orchestrator';
+import { generateDocumentationTreeWithAi } from '@codebase-docs-ai/documentation-generator';
 import { renderJson, renderMarkdownTree, renderSingleMarkdown } from '@codebase-docs-ai/renderers';
 import { analyzeRepository } from '@codebase-docs-ai/repo-analyzer';
 import { filterLoadedSource } from '@codebase-docs-ai/security';
@@ -40,7 +41,13 @@ export interface GenerateDocumentationResult {
   rendered: Map<DocumentationOutputFormat, RenderedDocumentation>;
 }
 
+export interface DocumentationEngineConfig {
+  aiProvider?: AiProvider;
+}
+
 export class DocumentationEngine {
+  constructor(private readonly config: DocumentationEngineConfig = {}) {}
+
   createRunPlan(input: CreateDocumentationEngineRunInput): DocumentationEngineRunPlan {
     const uniqueRoles = [...new Set(input.sources.map((source) => source.role))];
 
@@ -66,9 +73,10 @@ export class DocumentationEngine {
     const systemMap = analyzeSystem({
       repositories: repositoryMaps
     });
-    const documentationTree = generateDocumentationTree({
+    const documentationTree = await generateDocumentationTreeWithAi({
       title: input.title,
-      systemMap
+      systemMap,
+      ...(this.config.aiProvider ? { aiProvider: this.config.aiProvider } : {})
     });
 
     return {

@@ -77,3 +77,23 @@ zip
 ```
 
 `zip` is a CLI convenience format that packages the Markdown tree as `documentation.zip`.
+
+## Optional AI Provider
+
+The product runs deterministically without AI credentials.
+
+To enable OpenAI-compatible page generation in API and CLI runs, set:
+
+```bash
+export DOCS_AI_OPENAI_API_KEY="..."
+export DOCS_AI_OPENAI_MODEL="..."
+```
+
+Optional:
+
+```bash
+export DOCS_AI_OPENAI_BASE_URL="https://api.openai.com/v1"
+export DOCS_AI_OPENAI_TEMPERATURE="0.2"
+```
+
+No default model is hardcoded. The operator must choose the model explicitly.

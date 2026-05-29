@@ -74,6 +74,29 @@ Input:
 }
 ```
 
+## Provider Contract
+
+The first provider adapter is OpenAI-compatible and uses Chat Completions JSON mode.
+
+Runtime configuration:
+
+```text
+DOCS_AI_OPENAI_API_KEY
+DOCS_AI_OPENAI_MODEL
+DOCS_AI_OPENAI_BASE_URL
+DOCS_AI_OPENAI_TEMPERATURE
+```
+
+Rules:
+
+- `DOCS_AI_OPENAI_MODEL` is required when AI generation is enabled;
+- no default model is hardcoded;
+- if API key or model is missing, the product uses deterministic local generation;
+- AI output is parsed as JSON and validated with Zod before it becomes a documentation page;
+- invalid AI output fails the generation step instead of silently publishing malformed documentation.
+
+The adapter intentionally keeps deterministic generation available for tests, local usage, and environments without credentials.
+
 Output:
 
 ```json

@@ -1,6 +1,7 @@
 import { mkdtemp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
 import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
 import type { DocumentationOutputFormat, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
@@ -23,7 +24,7 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
     const loadedSources = await Promise.all(
       options.source.map((sourceInput) => loadCliSource(sourceInput, tempRoot))
     );
-    const engine = new DocumentationEngine();
+    const engine = createDocumentationEngine();
     const engineResult = await engine.generateDocumentation({
       title: options.name,
       loadedSources,
@@ -59,6 +60,11 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
       force: true
     });
   }
+}
+
+function createDocumentationEngine(): DocumentationEngine {
+  const aiProvider = createOpenAiCompatibleProviderFromEnv();
+  return new DocumentationEngine(aiProvider ? { aiProvider } : {});
 }
 
 async function loadCliSource(sourceInput: string, tempRoot: string): Promise<LoadedSource> {

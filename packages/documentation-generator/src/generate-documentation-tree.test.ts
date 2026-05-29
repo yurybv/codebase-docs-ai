@@ -1,7 +1,11 @@
+import { LocalJsonProvider } from '@codebase-docs-ai/ai-orchestrator';
 import type { SystemMap } from '@codebase-docs-ai/shared';
 import { describe, expect, it } from 'vitest';
 import { createDocumentationPlan } from './documentation-plan.js';
-import { generateDocumentationTree } from './generate-documentation-tree.js';
+import {
+  generateDocumentationTree,
+  generateDocumentationTreeWithAi
+} from './generate-documentation-tree.js';
 
 describe('createDocumentationPlan', () => {
   it('creates the default documentation page set', () => {
@@ -10,6 +14,33 @@ describe('createDocumentationPlan', () => {
     expect(plan.pages).toHaveLength(14);
     expect(plan.pages[0]?.title).toBe('01. Overview');
     expect(plan.pages.at(-1)?.title).toBe('14. Source References');
+  });
+
+  it('can generate pages through an AI provider with schema validation', async () => {
+    const provider = new LocalJsonProvider((input) => ({
+      key: 'overview',
+      title: '01. Overview',
+      markdown: `# AI Page\n\nGenerated from ${input.schemaName}.`,
+      sourceReferences: [
+        {
+          sourceName: 'Frontend',
+          path: 'package.json'
+        }
+      ],
+      warnings: []
+    }));
+    const documentationTree = await generateDocumentationTreeWithAi({
+      title: 'Customer Portal Documentation',
+      systemMap: systemMapFixture(),
+      aiProvider: provider
+    });
+
+    expect(documentationTree.pages).toHaveLength(14);
+    expect(documentationTree.pages[0]?.markdown).toContain('Generated from DocumentationPage');
+    expect(documentationTree.pages[0]?.sourceReferences).toContainEqual({
+      sourceName: 'Frontend',
+      path: 'package.json'
+    });
   });
 });
 

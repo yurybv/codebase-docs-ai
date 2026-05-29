@@ -77,16 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 12: AI Provider Integration And Prompt-Backed Documentation.
+Implement Phase 13: Persistence And Run Artifact Retention.
 
 Required package:
 
 ```text
-packages/ai-orchestrator
-packages/documentation-generator
+apps/api
+packages/shared
 ```
 
-The next step should add an OpenAI-compatible provider adapter, wire optional AI-assisted page generation behind the existing deterministic documentation generator, keep deterministic fallback behavior for tests/local usage, and preserve schema validation for generated documentation content.
+The next step should replace the API's purely in-memory run store with a small persistence boundary. Start with filesystem-backed run metadata and rendered artifact retention under `.tmp/codebase-docs-ai`, then keep the API contract unchanged.
 
 ## Completed Implementation
 
@@ -323,6 +323,27 @@ CLI smoke generation with local frontend/backend fixtures
 - Removed analyzer/generator orchestration dependencies from API and CLI adapters.
 - Added core engine generation tests.
 - Updated architecture and implementation plan docs.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+CLI smoke generation with local frontend/backend fixtures
+```
+
+### 2026-05-29: Phase 12 AI Provider Integration And Prompt-Backed Documentation
+
+- Added an OpenAI-compatible AI provider adapter.
+- Added environment-based AI provider configuration.
+- Required explicit model configuration instead of hardcoding a default model.
+- Added optional AI-assisted documentation page generation behind deterministic fallback behavior.
+- Added Zod validation for AI-generated documentation pages.
+- Wired API and CLI engines to use the provider when credentials and model are configured.
+- Added mocked provider tests and AI-backed documentation generator tests.
+- Updated prompt contract and README configuration docs.
 
 Verification:
 

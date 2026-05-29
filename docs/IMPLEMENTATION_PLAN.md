@@ -266,6 +266,23 @@ Done when:
 - CLI smoke generation still passes;
 - API and CLI depend on the same core generation method.
 
+## Phase 12: AI Provider Integration
+
+Deliverables:
+
+- OpenAI-compatible provider adapter;
+- environment-based provider configuration;
+- optional AI-assisted documentation page generation;
+- deterministic fallback when no provider is configured;
+- schema validation for AI page output.
+
+Done when:
+
+- local generation works without credentials;
+- AI provider behavior is covered by mocked tests;
+- documentation generator validates AI page output before rendering;
+- API and CLI can use the provider when credentials are configured.
+
 ## Cross-Cutting Work
 
 During all phases:

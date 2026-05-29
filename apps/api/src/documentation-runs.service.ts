@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
 import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
 import {
@@ -57,7 +58,7 @@ const uploadSourcesMetadataSchema = z.object({
 @Injectable()
 export class DocumentationRunsService {
   private readonly runs = new Map<string, StoredRun>();
-  private readonly engine = new DocumentationEngine();
+  private readonly engine = createDocumentationEngine();
   private readonly tempRoot = path.resolve(process.env.DOCS_AI_TMP_DIR ?? '.tmp/codebase-docs-ai');
 
   createRun(body: unknown): { runId: string; status: DocumentationRunStatus } {
@@ -284,6 +285,11 @@ export class DocumentationRunsService {
     storedRun.run.status = status;
     storedRun.run.updatedAt = new Date().toISOString();
   }
+}
+
+function createDocumentationEngine(): DocumentationEngine {
+  const aiProvider = createOpenAiCompatibleProviderFromEnv();
+  return new DocumentationEngine(aiProvider ? { aiProvider } : {});
 }
 
 function parseJson(value: string): unknown {

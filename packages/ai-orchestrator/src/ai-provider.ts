@@ -2,6 +2,7 @@ export interface GenerateObjectInput {
   systemPrompt: string;
   userPrompt: string;
   schemaName: string;
+  jsonSchema?: unknown;
 }
 
 export interface AiProvider {
