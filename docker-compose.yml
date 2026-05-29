@@ -1,0 +1,33 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      API_PORT: "3000"
+      DOCS_AI_TMP_DIR: /data/codebase-docs-ai
+      DOCS_AI_RUN_RETENTION_MS: "86400000"
+      DOCS_AI_UPLOAD_MAX_FILES: "5"
+      DOCS_AI_UPLOAD_MAX_FILE_SIZE_BYTES: "104857600"
+    ports:
+      - "3000:3000"
+    volumes:
+      - codebase_docs_ai_tmp:/data/codebase-docs-ai
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        VITE_WEB_API_BASE_URL: http://localhost:3000
+    environment:
+      WEB_PORT: "5173"
+      VITE_WEB_UPLOAD_MAX_FILES: "5"
+      VITE_WEB_UPLOAD_MAX_FILE_SIZE_BYTES: "104857600"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  codebase_docs_ai_tmp:

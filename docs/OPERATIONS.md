@@ -44,6 +44,12 @@ Run the Web UI only:
 pnpm --filter @codebase-docs-ai/web dev
 ```
 
+Run API and Web through Docker Compose:
+
+```bash
+docker compose up --build
+```
+
 ## API Runtime
 
 Default API port:

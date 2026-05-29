@@ -46,6 +46,7 @@ Start with:
 - [Product Features](./docs/FEATURES.md)
 - [Module Integration](./docs/MODULE_INTEGRATION.md)
 - [Packaging And Public Boundaries](./docs/PACKAGING.md)
+- [Deployment](./docs/DEPLOYMENT.md)
 - [Development Workflow](./docs/DEVELOPMENT_WORKFLOW.md)
 - [Security](./docs/SECURITY.md)
 - [Testing](./docs/TESTING.md)

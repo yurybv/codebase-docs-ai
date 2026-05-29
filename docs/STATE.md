@@ -78,17 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 27: Release And Deployment Packaging.
+Implement Phase 28: Documentation Quality Golden Fixture Review.
 
 Required package:
 
 ```text
-Docker/deployment manifests
-packages/sdk
+scripts
+packages/documentation-generator
 docs
 ```
 
-The next step should prepare deployable service packaging for the API/Web module and clarify how external hosts should run the module in development, CI, and production-like environments.
+The next step should add or review representative frontend/backend fixtures and assert that generated documentation contains useful architecture, API, environment, testing, and operations sections for a real multi-repository system.
 
 ## Completed Implementation
 
@@ -591,6 +591,22 @@ pnpm verify
 Verification:
 
 ```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 27 Release And Deployment Packaging
+
+- Added Docker service packaging with separate API and Web targets.
+- Added Docker Compose for local external-module operation.
+- Added Docker ignore rules for leaner build context.
+- Configured Web preview to bind to container-friendly host and port settings.
+- Documented API/Web deployment shape, runtime variables, compose usage, and production notes.
+- Added deployment documentation to README and operations references.
+
+Verification:
+
+```text
+docker compose config
 pnpm verify
 ```
 

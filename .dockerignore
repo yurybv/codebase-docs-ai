@@ -1,0 +1,10 @@
+.git
+.tmp
+.playwright-mcp
+coverage
+dist
+node_modules
+**/node_modules
+**/dist
+*.log
+.DS_Store
