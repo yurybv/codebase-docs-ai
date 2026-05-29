@@ -91,6 +91,26 @@ The smoke harness starts local API and Web dev servers, creates frontend/backend
 
 This harness is intentionally lightweight. It does not replace full browser automation, but it protects server startup, multipart upload, API lifecycle, artifact download, and Web/API environment wiring.
 
+## Web Completed-State Regression
+
+Run:
+
+```bash
+pnpm web:completed-state
+```
+
+The completed-state regression renders the Web app in jsdom with API-shaped mocked responses and verifies:
+
+- multi-archive upload;
+- frontend/backend role selection;
+- metadata sent to the upload API;
+- completed run status and progress;
+- generated page navigation;
+- Markdown preview updates;
+- JSON download URL generation.
+
+This test is not a visual browser replacement. It protects the Web operator flow at the DOM/API-contract boundary and keeps the manual browser checks in `docs/WEB_QA.md` repeatable enough to catch regressions before manual QA.
+
 ## Snapshot Tests
 
 Use snapshots carefully for generated docs and rendered output. Prefer stable snapshots based on fixture projects.

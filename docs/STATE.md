@@ -80,17 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 45: Web Completed-State Regression Coverage.
+Implement Phase 46: Web Generated Warnings Display.
 
 Required package:
 
 ```text
 apps/web
-scripts
 docs
 ```
 
-The next step should make the completed-state browser verification repeatable by adding an automated Web/API regression path that covers multi-archive upload, source role selection, page navigation, Markdown preview, and at least one download action.
+The next step should render generated documentation warnings in the Web completed state, add accessible warning semantics, and cover warning display with Web tests.
 
 ## Completed Implementation
 
@@ -858,6 +857,23 @@ Verification:
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test apps/api/src/documentation-runs.service.test.ts
 pnpm verify
+```
+
+### 2026-05-29: Phase 45 Web Completed-State Regression Coverage
+
+- Added automated Web completed-state regression coverage.
+- Covered multi-archive upload through the Web file input.
+- Covered frontend/backend role selection before generation.
+- Verified upload metadata sent to the API-shaped contract.
+- Verified completed progress rendering, generated page navigation, Markdown preview switching, and JSON download URL generation.
+- Added a standalone `pnpm web:completed-state` command.
+- Documented the completed-state regression in Web QA and testing docs.
+
+Verification:
+
+```text
+pnpm web:completed-state
+pnpm --filter @codebase-docs-ai/web typecheck
 ```
 
 ## Open Questions

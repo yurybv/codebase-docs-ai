@@ -88,4 +88,217 @@ describe('App API error handling', () => {
       )?.getAttribute('aria-label')
     ).toBe('Generate documentation');
   });
+
+  it('runs the completed documentation UI flow against the API contract', async () => {
+    let uploadedMetadata:
+      | {
+          sources: Array<{
+            name: string;
+            role: string;
+          }>;
+        }
+      | undefined;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        return jsonResponse({
+          runId: 'run_completed_ui',
+          status: 'created'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_completed_ui/sources')) {
+        expect(init?.method).toBe('POST');
+        expect(init?.body).toBeInstanceOf(FormData);
+        uploadedMetadata = JSON.parse(String((init?.body as FormData).get('metadata'))) as {
+          sources: Array<{
+            name: string;
+            role: string;
+          }>;
+        };
+
+        return jsonResponse({
+          runId: 'run_completed_ui',
+          status: 'ready'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_completed_ui/start')) {
+        expect(init?.method).toBe('POST');
+        return jsonResponse({
+          runId: 'run_completed_ui',
+          status: 'completed'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_completed_ui')) {
+        return jsonResponse({
+          id: 'run_completed_ui',
+          status: 'completed',
+          progress: {
+            currentStep: 'Documentation run completed',
+            completedSteps: 7,
+            totalSteps: 7
+          }
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_completed_ui/result')) {
+        return jsonResponse({
+          runId: 'run_completed_ui',
+          status: 'completed',
+          documentation: {
+            pages: completedDocumentationPages(),
+            warnings: []
+          }
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File(['frontend'], 'frontend.tar', {
+          type: 'application/x-tar'
+        }),
+        new File(['backend'], 'backend.tar', {
+          type: 'application/x-tar'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const roleSelects = Array.from(document.querySelectorAll('select'));
+    expect(roleSelects).toHaveLength(2);
+    const [frontendRoleSelect] = roleSelects as [HTMLSelectElement, HTMLSelectElement];
+    frontendRoleSelect.value = 'frontend';
+    await act(async () => {
+      frontendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const backendRoleSelect = document.querySelectorAll('select')[1] as HTMLSelectElement;
+    backendRoleSelect.value = 'backend';
+    await act(async () => {
+      backendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Documentation generated.');
+
+    expect(uploadedMetadata?.sources).toEqual([
+      expect.objectContaining({
+        name: 'frontend',
+        role: 'frontend'
+      }),
+      expect.objectContaining({
+        name: 'backend',
+        role: 'backend'
+      })
+    ]);
+    expect(document.body.textContent).toContain('Documentation run completed (7/7)');
+    expect(document.body.textContent).toContain('01. Overview');
+    expect(document.body.textContent).toContain('14. Source References');
+    expect(document.body.textContent).toContain('| frontend | frontend |');
+    expect(document.body.textContent).toContain('| backend | backend |');
+
+    await act(async () => {
+      getButtonByText('06. API Contracts').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(document.querySelector('pre')?.textContent).toContain('GET');
+    expect(document.querySelector('pre')?.textContent).toContain('/api/users');
+    expect(document.querySelector('pre')?.textContent).toContain('matched');
+
+    await act(async () => {
+      getButtonByText('json').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(openMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs/run_completed_ui/download?format=json',
+      '_blank'
+    );
+  });
 });
+
+function jsonResponse(value: unknown): Response {
+  return new Response(JSON.stringify(value), {
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+}
+
+function completedDocumentationPages(): Array<{ key: string; title: string; markdown: string }> {
+  const pageRows: Array<[string, string, string]> = [
+    ['overview', '01. Overview', '# 01. Overview\n\n| Source | Role |\n| --- | --- |\n| frontend | frontend |\n| backend | backend |'],
+    ['system-architecture', '02. System Architecture', '# 02. System Architecture'],
+    ['source-inventory', '03. Source Inventory', '# 03. Source Inventory'],
+    ['frontend', '04. Frontend', '# 04. Frontend'],
+    ['backend', '05. Backend', '# 05. Backend'],
+    [
+      'api-contracts',
+      '06. API Contracts',
+      '# 06. API Contracts\n\n| Method | Path | Status |\n| --- | --- | --- |\n| GET | /api/users | matched |'
+    ],
+    ['authentication-and-authorization', '07. Authentication and Authorization', '# 07. Authentication and Authorization'],
+    ['environment-variables', '08. Environment Variables', '# 08. Environment Variables'],
+    ['local-development', '09. Local Development', '# 09. Local Development'],
+    ['testing', '10. Testing', '# 10. Testing'],
+    ['build-and-deployment', '11. Build and Deployment', '# 11. Build and Deployment'],
+    ['external-integrations', '12. External Integrations', '# 12. External Integrations'],
+    ['risks-and-unknowns', '13. Risks and Unknowns', '# 13. Risks and Unknowns'],
+    ['source-references', '14. Source References', '# 14. Source References']
+  ];
+
+  return pageRows.map(([key, title, markdown]) => ({
+    key,
+    title,
+    markdown
+  }));
+}
+
+function getButtonByText(text: string): HTMLButtonElement {
+  const button = Array.from(document.querySelectorAll('button')).find(
+    (candidate) => candidate.textContent?.trim() === text
+  );
+  if (!button) {
+    throw new Error(`Button not found: ${text}`);
+  }
+
+  return button;
+}
+
+async function waitForText(text: string): Promise<void> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 1000) {
+    if (document.body.textContent?.includes(text)) {
+      return;
+    }
+
+    await act(async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10);
+      });
+    });
+  }
+
+  throw new Error(`Timed out waiting for text: ${text}. Current text: ${document.body.textContent ?? ''}`);
+}

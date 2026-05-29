@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 45: Web Completed-State Regression Coverage.
+- Implement Phase 46: Web Generated Warnings Display.
 
-Phase 45 goal:
-- Make completed-state Web verification repeatable through an automated Web/API regression path.
-- Cover multi-archive upload, source role selection, page navigation, Markdown preview, and at least one download action.
-- Prefer a script or test path that can run locally without private source archives.
+Phase 46 goal:
+- Render generated documentation warnings in the Web completed state.
+- Add accessible warning semantics that operators can scan without opening JSON output.
+- Cover warning display with Web tests.
 - Update docs/WEB_QA.md and docs/STATE.md with the result.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

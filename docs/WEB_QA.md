@@ -75,3 +75,22 @@ Verified:
 - JSON download starts from the API and returns `documentation-tree.json`;
 - desktop completed state has no obvious first-viewport overlap;
 - mobile completed state stacks source rows, status, page navigation, downloads, and preview without horizontal overflow.
+
+## Automated Completed-State Regression
+
+Run:
+
+```bash
+pnpm web:completed-state
+```
+
+Covered:
+
+- multi-archive selection in the Web upload control;
+- source role changes before generation;
+- upload metadata sent to the API contract;
+- completed status and progress rendering;
+- generated page navigation and Markdown preview updates;
+- JSON download URL generation.
+
+This regression complements the manual browser verification above. It runs without private archives and uses API-shaped mocked responses to catch Web flow regressions quickly.
