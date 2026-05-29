@@ -78,17 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 26: API Contract Response Shape Alignment.
+Implement Phase 27: Release And Deployment Packaging.
 
 Required package:
 
 ```text
-apps/api
+Docker/deployment manifests
 packages/sdk
 docs
 ```
 
-The next step should align documented API response shapes, NestJS error bodies, SDK error parsing, and contract tests so external hosts can depend on predictable success and failure payloads.
+The next step should prepare deployable service packaging for the API/Web module and clarify how external hosts should run the module in development, CI, and production-like environments.
 
 ## Completed Implementation
 
@@ -572,6 +572,21 @@ docs-only change
 - Documented internal package boundaries for core, shared contracts, analyzers, generation, rendering, and deployable apps.
 - Clarified that all packages remain private until release and publication decisions are made.
 - Added packaging and public boundary documentation to the README index.
+
+Verification:
+
+```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 26 API Contract Response Shape Alignment
+
+- Added a global API exception filter that wraps HTTP and unhandled exceptions in the public `{ error: ... }` envelope.
+- Aligned multipart upload limit failures with the same error envelope.
+- Added shared API error payload contracts.
+- Extended the SDK error class to preserve API `code` and `details` fields.
+- Documented the stable API error response shape and SDK error accessors.
+- Added focused API and SDK tests for error response normalization and parsing.
 
 Verification:
 

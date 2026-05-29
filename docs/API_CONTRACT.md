@@ -212,6 +212,8 @@ Deletes temporary files and run artifacts.
 
 ## Error Response
 
+All non-2xx JSON API errors use the same envelope:
+
 ```json
 {
   "error": {
@@ -221,6 +223,17 @@ Deletes temporary files and run artifacts.
   }
 }
 ```
+
+Fields:
+
+- `error.code`: stable machine-readable error code;
+- `error.message`: safe human-readable summary;
+- `error.details`: optional validation details;
+- `error.suggestion`: optional remediation hint.
+
+The API must not return raw server paths, internal stack traces, uploaded source content, or prompt payloads inside error responses.
+
+The SDK exposes this envelope through `CodebaseDocsAIClientError.status`, `CodebaseDocsAIClientError.code`, and `CodebaseDocsAIClientError.details`.
 
 ## API Rules
 

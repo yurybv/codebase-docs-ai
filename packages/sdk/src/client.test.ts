@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CodebaseDocsAIClient } from './client.js';
+import { CodebaseDocsAIClient, CodebaseDocsAIClientError } from './client.js';
 
 describe('CodebaseDocsAIClient', () => {
   it('creates documentation runs through the HTTP API', async () => {
@@ -168,6 +168,48 @@ describe('CodebaseDocsAIClient', () => {
         timeoutMs: 10
       })
     ).rejects.toThrow('Generation failed.');
+  });
+
+  it('preserves API error codes and details', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 'INVALID_SOURCE_METADATA',
+            message: 'Source upload metadata is invalid.',
+            details: {
+              fieldErrors: {
+                sources: ['Required']
+              }
+            }
+          }
+        }),
+        {
+          status: 400,
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    try {
+      await client.documentationRuns.get('run_123');
+      throw new Error('Expected request to fail.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+      expect((error as CodebaseDocsAIClientError).status).toBe(400);
+      expect((error as CodebaseDocsAIClientError).code).toBe('INVALID_SOURCE_METADATA');
+      expect((error as CodebaseDocsAIClientError).details).toEqual({
+        fieldErrors: {
+          sources: ['Required']
+        }
+      });
+    }
   });
 });
 

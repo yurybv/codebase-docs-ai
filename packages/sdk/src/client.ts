@@ -12,7 +12,7 @@ import type {
   UploadDocumentationSourceInput,
   UploadDocumentationSourcesResponse
 } from './sdk-types.js';
-import type { DocumentationRun } from '@codebase-docs-ai/shared';
+import type { ApiErrorPayload, DocumentationRun } from '@codebase-docs-ai/shared';
 
 export class CodebaseDocsAIClient {
   readonly documentationRuns: DocumentationRunsClient;
@@ -163,10 +163,12 @@ class HttpClient {
     const response = await this.fetchImpl(`${this.apiBaseUrl}${path}`, init);
 
     if (!response.ok) {
-      const message = await parseErrorMessage(response);
+      const error = await parseErrorResponse(response);
       throw new CodebaseDocsAIClientError(
-        message || `Request failed with status ${response.status}`,
-        response.status
+        error.message || `Request failed with status ${response.status}`,
+        response.status,
+        error.code,
+        error.details
       );
     }
 
@@ -177,7 +179,9 @@ class HttpClient {
 export class CodebaseDocsAIClientError extends Error {
   constructor(
     message: string,
-    readonly status: number
+    readonly status: number,
+    readonly code?: string,
+    readonly details?: unknown
   ) {
     super(message);
     this.name = 'CodebaseDocsAIClientError';
@@ -193,13 +197,29 @@ function parseContentDispositionFileName(contentDisposition: string | null): str
   return match?.[1] ?? null;
 }
 
-async function parseErrorMessage(response: Response): Promise<string> {
+async function parseErrorResponse(
+  response: Response
+): Promise<Pick<ApiErrorPayload, 'message'> & Partial<Pick<ApiErrorPayload, 'code' | 'details'>>> {
   const text = await response.text();
   try {
-    const parsed = JSON.parse(text) as { message?: string; error?: { message?: string } };
-    return parsed.error?.message ?? parsed.message ?? text;
+    const parsed = JSON.parse(text) as unknown;
+    if (!isRecord(parsed)) {
+      return {
+        message: text
+      };
+    }
+
+    const nestedError = isRecord(parsed.error) ? parsed.error : undefined;
+    const source = nestedError ?? parsed;
+    return {
+      message: typeof source.message === 'string' ? source.message : text,
+      ...(typeof source.code === 'string' ? { code: source.code } : {}),
+      ...('details' in source ? { details: source.details } : {})
+    };
   } catch {
-    return text;
+    return {
+      message: text
+    };
   }
 }
 
@@ -207,4 +227,8 @@ async function delay(ms: number): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

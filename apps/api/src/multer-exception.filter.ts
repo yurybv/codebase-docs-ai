@@ -1,5 +1,6 @@
 import { Catch, HttpStatus } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
+import type { ApiErrorResponse } from '@codebase-docs-ai/shared';
 import type { Response } from 'express';
 
 @Catch()
@@ -10,10 +11,13 @@ export class MulterExceptionFilter implements ExceptionFilter {
     }
 
     const response = host.switchToHttp().getResponse<Response>();
-    response.status(HttpStatus.BAD_REQUEST).json({
-      code: 'SOURCE_UPLOAD_INVALID',
-      message: uploadErrorMessage(exception.code)
-    });
+    const body: ApiErrorResponse = {
+      error: {
+        code: 'SOURCE_UPLOAD_INVALID',
+        message: uploadErrorMessage(exception.code)
+      }
+    };
+    response.status(HttpStatus.BAD_REQUEST).json(body);
   }
 }
 

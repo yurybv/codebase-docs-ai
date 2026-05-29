@@ -268,6 +268,17 @@ export interface DocumentationRunError {
   code?: string;
 }
 
+export interface ApiErrorPayload {
+  code: string;
+  message: string;
+  details?: unknown;
+  suggestion?: string;
+}
+
+export interface ApiErrorResponse {
+  error: ApiErrorPayload;
+}
+
 export interface DocumentationRun {
   id: string;
   name: string;
