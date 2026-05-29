@@ -59,6 +59,82 @@ export interface LoadedSource {
   totalSizeBytes: number;
 }
 
+export type PackageManagerName = 'pnpm' | 'npm' | 'yarn' | 'bun' | 'unknown';
+
+export interface PackageManagerInfo {
+  name: PackageManagerName;
+  evidence: SourceReference[];
+}
+
+export interface FrameworkInfo {
+  name: string;
+  category: 'frontend' | 'backend' | 'fullstack' | 'runtime' | 'tooling';
+  evidence: SourceReference[];
+}
+
+export interface PackageScript {
+  name: string;
+  command: string;
+  sourceReference: SourceReference;
+}
+
+export interface DependencyInfo {
+  name: string;
+  version: string;
+  scope: 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+  sourceReference: SourceReference;
+}
+
+export interface RouteInfo {
+  kind: 'next-app-route' | 'next-pages-route';
+  path: string;
+  sourceReference: SourceReference;
+}
+
+export interface ApiEndpointInfo {
+  method: string;
+  path: string;
+  controller?: string;
+  sourceReference: SourceReference;
+}
+
+export interface ApiClientCallInfo {
+  method: string;
+  path: string;
+  sourceReference: SourceReference;
+}
+
+export interface EnvironmentVariableInfo {
+  name: string;
+  sourceReferences: SourceReference[];
+}
+
+export interface ConfigFileInfo {
+  kind: string;
+  sourceReference: SourceReference;
+}
+
+export interface RepositoryRisk {
+  level: WarningLevel;
+  message: string;
+  sourceReferences?: SourceReference[];
+}
+
+export interface RepositoryMap {
+  source: SourceInputMetadata;
+  packageManager: PackageManagerInfo;
+  frameworks: FrameworkInfo[];
+  scripts: PackageScript[];
+  dependencies: DependencyInfo[];
+  routes: RouteInfo[];
+  apiEndpoints: ApiEndpointInfo[];
+  apiClientCalls: ApiClientCallInfo[];
+  environmentVariables: EnvironmentVariableInfo[];
+  configFiles: ConfigFileInfo[];
+  risks: RepositoryRisk[];
+  generatedAt: string;
+}
+
 export interface SourceReference {
   sourceName: string;
   path: string;

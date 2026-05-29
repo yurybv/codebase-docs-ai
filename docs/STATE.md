@@ -84,15 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 3: Per-Source Analyzer.
+Implement Phase 4: System Analyzer.
 
 Required package:
 
 ```text
-packages/repo-analyzer
+packages/system-analyzer
 ```
 
-The next step should add package manager detection, framework detection, script/dependency extraction, route/controller/API client detection, environment variable detection, and `RepositoryMap` output.
+The next step should correlate multiple `RepositoryMap` objects, match frontend API calls to backend endpoints, detect source relationships, connect environment variables, and produce `SystemMap`.
 
 ## Completed Implementation
 
@@ -145,6 +145,29 @@ pnpm lint
 - Added prompt file size filtering.
 - Added secret redaction for private keys, database URLs, OpenAI keys, GitHub tokens, JWTs, and secret-like assignments.
 - Added tests for file filtering and secret redaction.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 3 Repository Analyzer
+
+- Added `packages/repo-analyzer`.
+- Added package manager detection.
+- Added package script and dependency extraction.
+- Added framework detection for Next.js, React, NestJS, Express, Vite, and TypeScript.
+- Added Next.js app/pages route detection.
+- Added NestJS controller endpoint detection.
+- Added frontend API client call detection for `fetch` and `axios`.
+- Added environment variable detection for `process.env` and `import.meta.env`.
+- Added config file detection for TypeScript, Next, Nest, Docker, GitHub Actions, and Prisma.
+- Added repository risk output for missing metadata/readme evidence.
+- Added tests for frontend and backend fixture analysis.
 
 Verification:
 
