@@ -1,0 +1,74 @@
+import { describe, expect, it } from 'vitest';
+import type { LoadedSource } from '@codebase-docs-ai/shared';
+import { decideSourceFile, filterLoadedSource } from './file-filter.js';
+
+const baseFile = {
+  absolutePath: '/tmp/source/file.ts',
+  sizeBytes: 100,
+  extension: '.ts'
+};
+
+describe('decideSourceFile', () => {
+  it('skips denylisted env files', () => {
+    const decision = decideSourceFile({
+      ...baseFile,
+      path: '.env'
+    });
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('denylisted_path');
+  });
+
+  it('skips generated paths', () => {
+    const decision = decideSourceFile({
+      ...baseFile,
+      path: 'node_modules/react/index.js',
+      extension: '.js'
+    });
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('generated_path');
+  });
+
+  it('skips binary extensions', () => {
+    const decision = decideSourceFile({
+      ...baseFile,
+      path: 'public/logo.png',
+      extension: '.png'
+    });
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('binary_extension');
+  });
+});
+
+describe('filterLoadedSource', () => {
+  it('returns included and skipped files separately', () => {
+    const source: LoadedSource = {
+      source: {
+        name: 'Frontend',
+        role: 'frontend'
+      },
+      rootPath: '/tmp/source',
+      totalSizeBytes: 200,
+      skippedFiles: [],
+      files: [
+        {
+          ...baseFile,
+          path: 'src/main.ts'
+        },
+        {
+          ...baseFile,
+          path: '.env'
+        }
+      ]
+    };
+
+    const filtered = filterLoadedSource(source);
+
+    expect(filtered.includedFiles.map((file) => file.path)).toEqual(['src/main.ts']);
+    expect(filtered.skippedFiles.map((decision) => decision.reason)).toEqual([
+      'denylisted_path'
+    ]);
+  });
+});

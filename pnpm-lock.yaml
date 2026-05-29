@@ -97,6 +97,15 @@ importers:
         specifier: workspace:*
         version: link:../shared
 
+  packages/security:
+    dependencies:
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+      minimatch:
+        specifier: ^10.0.1
+        version: 10.2.5
+
   packages/shared:
     dependencies:
       zod:

@@ -84,15 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Continue Phase 2: Security filtering and redaction.
+Implement Phase 3: Per-Source Analyzer.
 
-Required packages:
+Required package:
 
 ```text
-packages/security
+packages/repo-analyzer
 ```
 
-The next step should add denylist rules, generated/binary file filtering, secret detection, secret redaction, and prompt-safety helpers.
+The next step should add package manager detection, framework detection, script/dependency extraction, route/controller/API client detection, environment variable detection, and `RepositoryMap` output.
 
 ## Completed Implementation
 
@@ -126,6 +126,25 @@ pnpm lint
 - Added source file count, per-file size, and total size limits.
 - Added sorted file inventory output.
 - Added tests for folder loading, zip extraction, and unsafe path rejection.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 2 Security Filtering And Redaction
+
+- Added `packages/security`.
+- Added denylist filtering for env files, credentials, keys, and secret files.
+- Added generated path filtering for `node_modules`, `dist`, `build`, `.next`, coverage, cache, and `.git`.
+- Added binary extension filtering.
+- Added prompt file size filtering.
+- Added secret redaction for private keys, database URLs, OpenAI keys, GitHub tokens, JWTs, and secret-like assignments.
+- Added tests for file filtering and secret redaction.
 
 Verification:
 
