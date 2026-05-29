@@ -79,7 +79,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 40: Web API Error UI Smoke Coverage.
+Implement Phase 41: Web UI Accessibility And Interaction Review.
 
 Required package:
 
@@ -88,7 +88,7 @@ apps/web
 docs
 ```
 
-The next step should add a browser or smoke-level check that the Web UI presents standardized API error messages clearly during failed upload or generation paths.
+The next step should review Web UI accessibility, keyboard flow, aria labels, status semantics, and responsive interaction details before the UI is treated as the operator test surface.
 
 ## Completed Implementation
 
@@ -771,6 +771,19 @@ pnpm lint
 - Preserved defensive parsing for legacy flat error bodies and non-JSON responses.
 - Included API error codes in operator-facing Web messages.
 - Added Web unit tests for API error parsing and formatting.
+
+Verification:
+
+```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 40 Web API Error UI Smoke Coverage
+
+- Exported the Web `App` component for direct UI tests.
+- Guarded root mounting so tests can import the app without a production root node.
+- Added a jsdom Web UI test for failed generation with a standardized API error envelope.
+- Verified the UI presents the API error code and message to the operator.
 
 Verification:
 

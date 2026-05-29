@@ -18,7 +18,7 @@ import {
 
 const uploadConstraints = uploadConstraintsFromEnv(import.meta.env);
 
-function App(): JSX.Element {
+export function App(): JSX.Element {
   const [sources, setSources] = useState<SourceDraft[]>([]);
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
   const [runState, setRunState] = useState<RunState>({
@@ -381,8 +381,11 @@ async function failedRunDetails(runId: string | undefined): Promise<Pick<RunStat
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
