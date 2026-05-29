@@ -418,6 +418,119 @@ describe('App API error handling', () => {
     );
   });
 
+  it('renders sanitized completed results without raw secret-bearing source content', async () => {
+    const rawOpenAiKey = `sk-${'i'.repeat(24)}`;
+    const sanitizedMarkdown =
+      '# 01. Overview\n\n| Method | Path |\n| --- | --- |\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |';
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        return jsonResponse({
+          runId: 'run_sanitized_result',
+          status: 'created'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_sanitized_result/sources')) {
+        return jsonResponse({
+          runId: 'run_sanitized_result',
+          status: 'ready'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_sanitized_result/start')) {
+        return jsonResponse({
+          runId: 'run_sanitized_result',
+          status: 'completed'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_sanitized_result')) {
+        return jsonResponse({
+          id: 'run_sanitized_result',
+          status: 'completed',
+          renderedFormats: ['json'],
+          progress: {
+            currentStep: 'Documentation run completed',
+            completedSteps: 7,
+            totalSteps: 7
+          }
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_sanitized_result/result')) {
+        return jsonResponse({
+          runId: 'run_sanitized_result',
+          status: 'completed',
+          renderedFormats: ['json'],
+          documentation: {
+            pages: [
+              {
+                key: 'overview',
+                title: '01. Overview',
+                markdown: sanitizedMarkdown
+              }
+            ],
+            warnings: [
+              {
+                level: 'medium',
+                message: 'A source reference contained [REDACTED_OPENAI_API_KEY].'
+              }
+            ]
+          }
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File(
+          [
+            `fetch("https://api.example.com/v1/${rawOpenAiKey}");\n`,
+            'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
+          ],
+          'frontend.tar',
+          {
+            type: 'application/x-tar'
+          }
+        )
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Documentation generated.');
+
+    const previewText = document.querySelector('pre')?.textContent ?? '';
+    const warningText =
+      document.querySelector('[aria-label="Generated documentation warnings"]')?.textContent ?? '';
+    const renderedText = document.body.textContent ?? '';
+
+    expect(previewText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(warningText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(renderedText).not.toContain('.env');
+  });
+
   it('requires at least one selected output format', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
 

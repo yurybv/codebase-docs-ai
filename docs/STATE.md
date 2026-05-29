@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 79: Web Result Sanitization Regression Coverage.
+Implement Phase 80: Web Download Sanitization Boundary Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/web
 docs
 ```
 
-The next step should add Web regression coverage proving mocked completed API results render sanitized documentation without exposing raw secret-bearing source content.
+The next step should add Web regression coverage proving completed-state download controls target rendered API artifacts without embedding raw secret-bearing source content in browser-visible URLs.
 
 ## Completed Implementation
 
@@ -1341,6 +1341,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 79 Web Result Sanitization Regression Coverage
+
+- Added Web completed-state regression coverage for sanitized API result payloads.
+- Verified the generated Markdown preview renders redacted source evidence.
+- Verified warning/result UI excludes raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/main.test.ts
 ```
 
 ## Open Questions

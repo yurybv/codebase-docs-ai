@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 79: Web Result Sanitization Regression Coverage.
+- Implement Phase 80: Web Download Sanitization Boundary Coverage.
 
-Phase 79 goal:
-- Add Web regression coverage proving mocked completed API results render sanitized documentation without exposing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from rendered preview text and warning/result UI.
-- Keep SDK result/download and CLI output sanitization coverage intact.
+Phase 80 goal:
+- Add Web regression coverage proving completed-state download controls target rendered API artifacts without embedding raw secret-bearing source content in browser-visible URLs.
+- Verify download URLs contain only run id and format, not raw source values or denied file names.
+- Keep Web result rendering, SDK result/download, and CLI output sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
