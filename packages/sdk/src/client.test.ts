@@ -593,6 +593,56 @@ describe('CodebaseDocsAIClient', () => {
     }
   });
 
+  it('sanitizes secret-bearing API errors before throwing', async () => {
+    const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 'SOURCE_UPLOAD_INVALID',
+            message: `Upload failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
+            details: {
+              fieldErrors: {
+                sources: [`Remove ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
+              }
+            }
+          }
+        }),
+        {
+          status: 400,
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    try {
+      await client.documentationRuns.get('run_123');
+      throw new Error('Expected request to fail.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+      expect((error as CodebaseDocsAIClientError).message).toContain(
+        '[REDACTED_OPENAI_API_KEY]'
+      );
+      expect((error as CodebaseDocsAIClientError).details).toEqual({
+        fieldErrors: {
+          sources: [
+            'Remove [REDACTED_OPENAI_API_KEY] from [REDACTED_DENIED_FILE] [REDACTED_DENIED_VALUE].'
+          ]
+        }
+      });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      expect(payload).not.toContain('.env');
+    }
+  });
+
   it('preserves legacy flat API error shapes defensively', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(

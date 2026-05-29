@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 95: SDK API Error Message Sanitization Regression Coverage.
+Implement Phase 96: CLI API Error Output Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/cli
 docs
 ```
 
-The next step should add SDK regression coverage proving API error messages surfaced by the TypeScript client do not expose raw secret-bearing source content.
+The next step should add CLI regression coverage proving API-mode failures printed by the CLI do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1549,6 +1549,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/main.test.ts
+```
+
+### 2026-05-29: Phase 95 SDK API Error Message Sanitization Regression Coverage
+
+- Added SDK-side sanitization for API error messages and nested details before throwing client errors.
+- Added SDK regression coverage for raw provider keys and denied `.env` evidence in API error envelopes.
+- Verified SDK-thrown API errors preserve redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
 ```
 
 ## Open Questions

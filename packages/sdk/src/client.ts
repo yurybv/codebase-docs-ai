@@ -234,20 +234,23 @@ async function parseErrorResponse(
     const parsed = JSON.parse(text) as unknown;
     if (!isRecord(parsed)) {
       return {
-        message: text
+        message: sanitizePublicString(text, 'Request failed.')
       };
     }
 
     const nestedError = isRecord(parsed.error) ? parsed.error : undefined;
     const source = nestedError ?? parsed;
     return {
-      message: typeof source.message === 'string' ? source.message : text,
+      message:
+        typeof source.message === 'string'
+          ? sanitizePublicString(source.message, 'Request failed.')
+          : sanitizePublicString(text, 'Request failed.'),
       ...(typeof source.code === 'string' ? { code: source.code } : {}),
-      ...('details' in source ? { details: source.details } : {})
+      ...('details' in source ? { details: sanitizePublicValue(source.details) } : {})
     };
   } catch {
     return {
-      message: text
+      message: sanitizePublicString(text, 'Request failed.')
     };
   }
 }
@@ -260,4 +263,31 @@ async function delay(ms: number): Promise<void> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function sanitizePublicValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return sanitizePublicString(value, '[REDACTED]');
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizePublicValue(entry));
+  }
+
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, sanitizePublicValue(entry)])
+    );
+  }
+
+  return value;
+}
+
+function sanitizePublicString(value: string, fallback: string): string {
+  const sanitized = value
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
+    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
+
+  return sanitized.length > 0 ? sanitized : fallback;
 }
