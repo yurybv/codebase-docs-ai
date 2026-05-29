@@ -52,6 +52,7 @@ Start with:
 - [Security](./docs/SECURITY.md)
 - [Rate Limiting](./docs/RATE_LIMITING.md)
 - [Testing](./docs/TESTING.md)
+- [Web QA](./docs/WEB_QA.md)
 - [Operations](./docs/OPERATIONS.md)
 - [Prompt Contracts](./docs/PROMPT_CONTRACTS.md)
 - [Generation Prompt](./docs/GENERATION_PROMPT.md)

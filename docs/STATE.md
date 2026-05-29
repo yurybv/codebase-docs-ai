@@ -79,7 +79,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 42: Web Responsive Browser Verification.
+Implement Phase 43: Web Completed-State Browser Verification.
 
 Required package:
 
@@ -88,7 +88,7 @@ apps/web
 docs
 ```
 
-The next step should run browser-level checks across desktop and mobile widths and address any layout, overflow, or text fitting issues in the operator UI.
+The next step should verify the Web UI after a successful generation with source rows, page navigation, Markdown preview, and download buttons rendered in desktop and mobile viewports.
 
 ## Completed Implementation
 
@@ -805,6 +805,21 @@ Verification:
 ```text
 pnpm verify
 browser check at http://localhost:5173
+```
+
+### 2026-05-29: Phase 42 Web Responsive Browser Verification
+
+- Verified the Web UI at desktop viewport `1440x900`.
+- Verified the Web UI at mobile viewport `390x844`.
+- Confirmed initial upload, generate, and status surfaces render without obvious first-viewport overlap.
+- Added Web QA documentation for responsive and accessibility checks.
+- Linked Web QA documentation from the README index.
+
+Verification:
+
+```text
+browser check at http://localhost:5173
+pnpm lint
 ```
 
 ## Open Questions
