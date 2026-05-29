@@ -29,6 +29,7 @@ Application code has started. The repository now contains a pnpm workspace with 
 - Architecture: `docs/ARCHITECTURE.md`
 - API contract: `docs/API_CONTRACT.md`
 - Implementation plan: `docs/IMPLEMENTATION_PLAN.md`
+- Packaging and public boundaries: `docs/PACKAGING.md`
 - Security: `docs/SECURITY.md`
 - Testing: `docs/TESTING.md`
 - Prompt contracts: `docs/PROMPT_CONTRACTS.md`
@@ -77,16 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 25: Packaging And Public API Boundaries Review.
+Implement Phase 26: API Contract Response Shape Alignment.
 
 Required package:
 
 ```text
-package manifests
+apps/api
+packages/sdk
 docs
 ```
 
-The next step should review package exports, public SDK/API boundaries, bin scripts, README entry points, and package manifests so the module can be consumed cleanly from other projects.
+The next step should align documented API response shapes, NestJS error bodies, SDK error parsing, and contract tests so external hosts can depend on predictable success and failure payloads.
 
 ## Completed Implementation
 
@@ -560,6 +562,21 @@ Verification:
 
 ```text
 docs-only change
+```
+
+### 2026-05-29: Phase 25 Packaging And Public API Boundaries Review
+
+- Added the canonical `pnpm verify` repository check.
+- Declared the supported Node.js runtime floor.
+- Documented public product surfaces for HTTP API, SDK, CLI, and Web UI.
+- Documented internal package boundaries for core, shared contracts, analyzers, generation, rendering, and deployable apps.
+- Clarified that all packages remain private until release and publication decisions are made.
+- Added packaging and public boundary documentation to the README index.
+
+Verification:
+
+```text
+pnpm verify
 ```
 
 ## Open Questions

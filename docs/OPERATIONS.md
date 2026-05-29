@@ -20,6 +20,12 @@ pnpm lint
 pnpm smoke:e2e
 ```
 
+Run the canonical full repository verification:
+
+```bash
+pnpm verify
+```
+
 Run API and Web together:
 
 ```bash
