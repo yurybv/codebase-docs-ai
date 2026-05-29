@@ -198,7 +198,7 @@ describe('Documentation runs HTTP API', () => {
         body: JSON.stringify({
           name: 'HTTP Sanitized Documentation',
           options: {
-            outputFormats: ['single-markdown', 'json'],
+            outputFormats: ['markdown-tree', 'single-markdown', 'json'],
             language: 'en',
             includeSourceReferences: true,
             includeWarnings: true
@@ -272,6 +272,22 @@ describe('Documentation runs HTTP API', () => {
     expect(json).not.toContain(rawOpenAiKey);
     expect(json).not.toContain('SHOULD_NOT_APPEAR');
     expect(json).not.toContain('.env');
+
+    const markdownTreeDownloadResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=markdown-tree`
+    );
+    const zip = new AdmZip(Buffer.from(await markdownTreeDownloadResponse.arrayBuffer()));
+    const zipContent = zip
+      .getEntries()
+      .filter((entry) => !entry.isDirectory)
+      .map((entry) => entry.getData().toString('utf8'))
+      .join('\n');
+    expect(markdownTreeDownloadResponse.status).toBe(200);
+    expect(markdownTreeDownloadResponse.headers.get('content-type')).toContain('application/zip');
+    expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).not.toContain(rawOpenAiKey);
+    expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
+    expect(zipContent).not.toContain('.env');
   });
 });
 
