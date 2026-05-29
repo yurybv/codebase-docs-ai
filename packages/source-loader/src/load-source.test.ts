@@ -381,6 +381,36 @@ describe('loadArchiveSource', () => {
     });
   });
 
+  it('sanitizes secret-bearing unsafe archive path errors', async () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const archivePath = path.join(tempRoot, 'unsafe-secret-path.tar');
+    await writeTarUnsafePathArchive(
+      archivePath,
+      `../${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR.ts`
+    );
+
+    try {
+      await loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-unsafe-secret-path')
+      });
+      throw new Error('Expected archive loading to fail.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      expect(error).toBeInstanceOf(UnsafeArchivePathError);
+      expect(message).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(message).toContain('[REDACTED_DENIED_FILE]');
+      expect(message).toContain('[REDACTED_DENIED_VALUE]');
+      expect(message).not.toContain(rawOpenAiKey);
+      expect(message).not.toContain('.env');
+      expect(message).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('rejects unsafe relative paths before extraction', () => {
     expect(() => assertSafeRelativePath('../escape.ts')).toThrow(UnsafeArchivePathError);
     expect(() => assertSafeRelativePath('/absolute.ts')).toThrow(UnsafeArchivePathError);
@@ -453,6 +483,22 @@ function writeZipSymlinkArchive(archivePath: string): void {
   const entry = zip.addFile('link.txt', Buffer.from('target.txt'));
   entry.attr = 0o120777 * 0x10000;
   zip.writeZip(archivePath);
+}
+
+async function writeTarUnsafePathArchive(archivePath: string, entryPath: string): Promise<void> {
+  const content = Buffer.from('export const ignored = true;');
+  await writeFile(
+    archivePath,
+    Buffer.concat([
+      createTarHeader({
+        name: entryPath,
+        size: content.byteLength,
+        typeFlag: '0'
+      }),
+      padTarData(content),
+      Buffer.alloc(1024)
+    ])
+  );
 }
 
 function createTarHeader(input: {

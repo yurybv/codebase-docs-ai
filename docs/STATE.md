@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 97: Source Loader Extraction Error Sanitization Regression Coverage.
+Implement Phase 98: Core Engine Error Propagation Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/source-loader
+packages/core
 docs
 ```
 
-The next step should add source-loader regression coverage proving archive extraction failures do not expose raw secret-bearing source content.
+The next step should add core regression coverage proving lower-layer generation errors propagated through the engine do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1575,6 +1575,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm test -- apps/cli/src/cli-options.test.ts
+```
+
+### 2026-05-29: Phase 97 Source Loader Extraction Error Sanitization Regression Coverage
+
+- Added source-loader error sanitization for unsafe archive paths, unsupported archive paths, and source limit messages.
+- Added source-loader regression coverage for unsafe archive entry paths containing a fake provider key and denied `.env` evidence.
+- Verified source-loader extraction errors preserve redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
 ```
 
 ## Open Questions

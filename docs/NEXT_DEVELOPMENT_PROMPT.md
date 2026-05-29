@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 97: Source Loader Extraction Error Sanitization Regression Coverage.
+- Implement Phase 98: Core Engine Error Propagation Sanitization Regression Coverage.
 
-Phase 97 goal:
-- Add source-loader regression coverage proving archive extraction failures do not expose raw secret-bearing source content.
-- Sanitize source-loader extraction errors if needed so raw denied files and raw secret values are absent from thrown errors.
-- Keep API/CLI/SDK/Web/renderer sanitization coverage intact.
+Phase 98 goal:
+- Add core regression coverage proving lower-layer generation errors propagated through the engine do not expose raw secret-bearing source content.
+- Sanitize core-level propagated errors if needed so raw denied files and raw secret values are absent from thrown errors.
+- Keep source-loader and API/CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
