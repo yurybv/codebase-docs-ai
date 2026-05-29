@@ -48,6 +48,29 @@ Cover:
 - API run lifecycle;
 - result download.
 
+## Documentation Quality Fixture
+
+The core package includes a representative frontend/backend quality fixture:
+
+```text
+packages/core/src/documentation-quality.test.ts
+```
+
+This fixture creates a small Next.js-style frontend and NestJS-style backend, runs the real engine pipeline, and asserts that generated documentation covers:
+
+- system architecture;
+- matched API contracts;
+- frontend routes;
+- backend endpoints;
+- environment variables;
+- local test scripts;
+- deployment evidence;
+- external integrations;
+- auth evidence;
+- rendered Markdown and JSON artifacts.
+
+Use this test as the minimum quality bar for product documentation output when changing analyzers, system mapping, generation, or renderers.
+
 ## Smoke Harness
 
 Run:
