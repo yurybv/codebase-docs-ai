@@ -66,4 +66,9 @@ describe('loadArchiveSource', () => {
     expect(() => assertSafeRelativePath('../escape.ts')).toThrow(UnsafeArchivePathError);
     expect(() => assertSafeRelativePath('/absolute.ts')).toThrow(UnsafeArchivePathError);
   });
+
+  it('allows directory entries with trailing slashes', () => {
+    expect(assertSafeRelativePath('src/')).toBe('src');
+    expect(assertSafeRelativePath('src/controllers/')).toBe('src/controllers');
+  });
 });

@@ -270,7 +270,8 @@ interface DocumentationRunResult {
 
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
 const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
-const apiBaseUrl = import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
+const apiBaseUrl =
+  import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 
 async function createRun(): Promise<{ runId: string; status: string }> {
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs`, {

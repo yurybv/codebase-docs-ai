@@ -2,7 +2,7 @@ import path from 'node:path';
 import { UnsafeArchivePathError } from './source-loader-errors.js';
 
 export function assertSafeRelativePath(inputPath: string): string {
-  const normalized = inputPath.replaceAll('\\', '/');
+  const normalized = inputPath.replaceAll('\\', '/').replace(/\/+$/, '');
 
   if (!normalized || normalized.startsWith('/') || path.isAbsolute(normalized)) {
     throw new UnsafeArchivePathError(inputPath);

@@ -48,6 +48,18 @@ Cover:
 - API run lifecycle;
 - result download.
 
+## Smoke Harness
+
+Run:
+
+```bash
+pnpm smoke:e2e
+```
+
+The smoke harness starts local API and Web dev servers, creates frontend/backend fixture archives, uploads them through the HTTP API, starts generation, verifies the result, verifies Markdown download content, and checks that the Web root is reachable.
+
+This harness is intentionally lightweight. It does not replace full browser automation, but it protects server startup, multipart upload, API lifecycle, artifact download, and Web/API environment wiring.
+
 ## Snapshot Tests
 
 Use snapshots carefully for generated docs and rendered output. Prefer stable snapshots based on fixture projects.

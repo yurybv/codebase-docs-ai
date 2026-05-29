@@ -77,16 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 16: End-To-End API/Web Integration Test Harness.
+Implement Phase 17: Documentation Quality Expansion.
 
 Required package:
 
 ```text
-apps/api
-apps/web
+packages/documentation-generator
+packages/repo-analyzer
 ```
 
-The next step should add an automated integration harness that starts API and Web locally, uploads fixture archives through the browser, waits for generation, and verifies preview/download behavior. This should reduce reliance on manual smoke checks.
+The next step should expand deterministic documentation page content beyond placeholders, especially local development, testing, build/deployment, frontend, backend, auth, and integrations pages. Use existing repository and system maps first, then let AI enrich when configured.
 
 ## Completed Implementation
 
@@ -403,6 +403,24 @@ Verification:
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm --filter @codebase-docs-ai/web build
 Browser smoke test at http://localhost:5173/
+```
+
+### 2026-05-29: Phase 16 End-To-End API/Web Integration Test Harness
+
+- Added `pnpm smoke:e2e`.
+- Added a Node smoke harness that starts API and Web dev servers.
+- Added fixture frontend/backend archive creation.
+- Verified HTTP create, upload, start, result, and download lifecycle against the running API.
+- Verified Web root reachability with API base URL wiring.
+- Added required Nest validation runtime dependencies.
+- Fixed source-loader path safety to allow normal directory archive entries with trailing slashes while still blocking unsafe paths.
+- Added source-loader coverage for trailing slash directory entries.
+- Documented the smoke harness in testing docs.
+
+Verification:
+
+```text
+pnpm smoke:e2e
 ```
 
 ## Open Questions
