@@ -53,6 +53,25 @@ export interface DownloadDocumentationResult {
   content: Blob;
 }
 
+export interface PollDocumentationRunOptions {
+  intervalMs?: number;
+  timeoutMs?: number;
+}
+
+export interface GenerateFromArchivesInput {
+  name: string;
+  options: DocumentationRunOptions;
+  sources: UploadDocumentationSourceInput[];
+  poll?: PollDocumentationRunOptions;
+  downloadFormat?: DocumentationOutputFormat;
+}
+
+export interface GenerateFromArchivesResult {
+  run: DocumentationRun;
+  result: DocumentationRunResult;
+  download?: DownloadDocumentationResult;
+}
+
 export interface DocumentationRunsClient {
   create(input: CreateDocumentationRunInput): Promise<CreateDocumentationRunResponse>;
   uploadSources(
@@ -61,7 +80,9 @@ export interface DocumentationRunsClient {
   ): Promise<UploadDocumentationSourcesResponse>;
   start(runId: string): Promise<CreateDocumentationRunResponse>;
   get(runId: string): Promise<DocumentationRun>;
+  waitUntilComplete(runId: string, options?: PollDocumentationRunOptions): Promise<DocumentationRun>;
   getResult(runId: string): Promise<DocumentationRunResult>;
   download(input: DownloadDocumentationInput): Promise<DownloadDocumentationResult>;
+  generateFromArchives(input: GenerateFromArchivesInput): Promise<GenerateFromArchivesResult>;
   delete(runId: string): Promise<{ runId: string; deleted: boolean }>;
 }

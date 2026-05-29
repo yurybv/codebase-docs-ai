@@ -319,6 +319,20 @@ Done when:
 - system analyzer tests cover scoped auth and integration dependencies;
 - generated documentation receives richer evidence without API contract changes.
 
+## Phase 19: SDK Polling And High-Level Generation Helper
+
+Deliverables:
+
+- polling helper for run completion;
+- safe handling of failed/cancelled/expired runs;
+- high-level helper that creates, uploads, starts, polls, fetches result, and optionally downloads output;
+- SDK documentation example.
+
+Done when:
+
+- Node/TypeScript consumers can use one SDK method for common archive generation flow;
+- SDK tests cover polling, failed runs, upload flow, and optional download.
+
 ## Cross-Cutting Work
 
 During all phases:

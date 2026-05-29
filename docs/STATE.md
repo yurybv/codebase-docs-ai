@@ -77,15 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 19: SDK Polling And High-Level Generate Helper.
+Implement Phase 20: CLI API Mode.
 
 Required package:
 
 ```text
+apps/cli
 packages/sdk
 ```
 
-The next step should add SDK ergonomics for external modules: polling until completion/failure and a high-level `generateFromArchives` helper that creates a run, uploads archives, starts generation, polls, and returns the documentation tree or downloaded artifact.
+The next step should add a CLI API mode that can call a running API service instead of running local analysis in-process. This will make the CLI useful both for local generation and for operating the module as a separate service.
 
 ## Completed Implementation
 
@@ -459,6 +460,23 @@ Verification:
 pnpm --filter @codebase-docs-ai/repo-analyzer typecheck
 pnpm --filter @codebase-docs-ai/system-analyzer typecheck
 pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts packages/system-analyzer/src/analyze-system.test.ts
+pnpm lint
+```
+
+### 2026-05-29: Phase 19 SDK Polling And High-Level Generate Helper
+
+- Added SDK polling for documentation run completion.
+- Added failed/cancelled/expired run handling with persisted run error messages.
+- Added `generateFromArchives` helper for create, upload, start, poll, result, and optional download flow.
+- Improved SDK API error parsing for JSON error bodies.
+- Added SDK tests for high-level generation and failed polling.
+- Documented SDK integration usage.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
 pnpm lint
 ```
 

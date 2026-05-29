@@ -82,4 +82,100 @@ describe('CodebaseDocsAIClient', () => {
     expect(init?.method).toBe('POST');
     expect(init?.body).toBeInstanceOf(FormData);
   });
+
+  it('polls and runs the high-level archive generation flow', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'created' }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'ready', sources: [] }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'running' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'run_123', status: 'running' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'run_123', status: 'completed' }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runId: 'run_123',
+          status: 'completed',
+          documentation: {
+            title: 'Docs',
+            summary: 'Generated',
+            pages: [],
+            warnings: [],
+            sourceReferences: [],
+            generatedAt: '2026-05-29T00:00:00.000Z'
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response('markdown', {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="PROJECT_DOCUMENTATION.md"',
+            'content-type': 'text/markdown'
+          }
+        })
+      );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const result = await client.documentationRuns.generateFromArchives({
+      name: 'Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      },
+      sources: [
+        {
+          name: 'Frontend',
+          role: 'frontend',
+          fileName: 'frontend.zip',
+          file: new Blob(['zip'])
+        }
+      ],
+      poll: {
+        intervalMs: 0,
+        timeoutMs: 1000
+      },
+      downloadFormat: 'single-markdown'
+    });
+
+    expect(result.run.status).toBe('completed');
+    expect(result.result.documentation.title).toBe('Docs');
+    expect(result.download?.fileName).toBe('PROJECT_DOCUMENTATION.md');
+  });
+
+  it('surfaces failed run messages while polling', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        id: 'run_123',
+        status: 'failed',
+        error: {
+          message: 'Generation failed.'
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(
+      client.documentationRuns.waitUntilComplete('run_123', {
+        intervalMs: 0,
+        timeoutMs: 10
+      })
+    ).rejects.toThrow('Generation failed.');
+  });
 });
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+}

@@ -2,10 +2,13 @@ import type {
   CodebaseDocsAIClientConfig,
   CreateDocumentationRunInput,
   CreateDocumentationRunResponse,
+  GenerateFromArchivesInput,
+  GenerateFromArchivesResult,
   DocumentationRunResult,
   DocumentationRunsClient,
   DownloadDocumentationInput,
   DownloadDocumentationResult,
+  PollDocumentationRunOptions,
   UploadDocumentationSourceInput,
   UploadDocumentationSourcesResponse
 } from './sdk-types.js';
@@ -69,6 +72,33 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     return this.http.json(`/v1/documentation-runs/${runId}`);
   }
 
+  async waitUntilComplete(
+    runId: string,
+    options: PollDocumentationRunOptions = {}
+  ): Promise<DocumentationRun> {
+    const intervalMs = options.intervalMs ?? 1000;
+    const timeoutMs = options.timeoutMs ?? 120000;
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt <= timeoutMs) {
+      const run = await this.get(runId);
+      if (run.status === 'completed') {
+        return run;
+      }
+
+      if (run.status === 'failed' || run.status === 'cancelled' || run.status === 'expired') {
+        throw new CodebaseDocsAIClientError(
+          run.error?.message ?? `Documentation run ended with status ${run.status}.`,
+          0
+        );
+      }
+
+      await delay(intervalMs);
+    }
+
+    throw new CodebaseDocsAIClientError(`Timed out waiting for documentation run ${runId}.`, 0);
+  }
+
   getResult(runId: string): Promise<DocumentationRunResult> {
     return this.http.json(`/v1/documentation-runs/${runId}/result`);
   }
@@ -82,6 +112,29 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
       fileName: parseContentDispositionFileName(response.headers.get('content-disposition')),
       contentType: response.headers.get('content-type'),
       content: await response.blob()
+    };
+  }
+
+  async generateFromArchives(input: GenerateFromArchivesInput): Promise<GenerateFromArchivesResult> {
+    const created = await this.create({
+      name: input.name,
+      options: input.options
+    });
+    await this.uploadSources(created.runId, input.sources);
+    await this.start(created.runId);
+    const run = await this.waitUntilComplete(created.runId, input.poll);
+    const result = await this.getResult(created.runId);
+    const download = input.downloadFormat
+      ? await this.download({
+          runId: created.runId,
+          format: input.downloadFormat
+        })
+      : undefined;
+
+    return {
+      run,
+      result,
+      ...(download ? { download } : {})
     };
   }
 
@@ -110,7 +163,7 @@ class HttpClient {
     const response = await this.fetchImpl(`${this.apiBaseUrl}${path}`, init);
 
     if (!response.ok) {
-      const message = await response.text();
+      const message = await parseErrorMessage(response);
       throw new CodebaseDocsAIClientError(
         message || `Request failed with status ${response.status}`,
         response.status
@@ -138,4 +191,20 @@ function parseContentDispositionFileName(contentDisposition: string | null): str
 
   const match = contentDisposition.match(/filename="([^"]+)"/);
   return match?.[1] ?? null;
+}
+
+async function parseErrorMessage(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const parsed = JSON.parse(text) as { message?: string; error?: { message?: string } };
+    return parsed.error?.message ?? parsed.message ?? text;
+  } catch {
+    return text;
+  }
+}
+
+async function delay(ms: number): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }

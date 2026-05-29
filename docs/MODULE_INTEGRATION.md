@@ -35,6 +35,41 @@ The SDK wraps HTTP API calls by default.
 
 Optional local engine mode can be added later for Node.js projects that want to run the engine in-process.
 
+Example:
+
+```ts
+import { CodebaseDocsAIClient } from '@codebase-docs-ai/sdk';
+
+const client = new CodebaseDocsAIClient({
+  apiBaseUrl: 'http://localhost:3000'
+});
+
+const result = await client.documentationRuns.generateFromArchives({
+  name: 'Generated Project Documentation',
+  options: {
+    outputFormats: ['single-markdown'],
+    language: 'en',
+    includeSourceReferences: true,
+    includeWarnings: true
+  },
+  sources: [
+    {
+      name: 'Frontend',
+      role: 'frontend',
+      fileName: 'frontend.zip',
+      file: frontendArchiveBlob
+    }
+  ],
+  poll: {
+    intervalMs: 1000,
+    timeoutMs: 120000
+  },
+  downloadFormat: 'single-markdown'
+});
+```
+
+The helper creates a run, uploads archives, starts generation, polls until completion, retrieves the documentation tree, and optionally downloads a rendered artifact.
+
 ### 3. CLI
 
 Useful for:
