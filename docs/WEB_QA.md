@@ -131,3 +131,16 @@ Rendered format browser verification:
 - uploaded a synthetic archive through the browser file input and completed the run flow;
 - confirmed the completed status and Markdown preview rendered;
 - confirmed the completed download row displayed only `single-markdown`.
+
+## Supported Archive Guidance
+
+Expected behavior:
+
+- the upload control accepts `.zip`, `.tar`, `.tar.gz`, and `.tgz`;
+- visible upload guidance lists the same archive types supported by the API.
+
+Browser verification:
+
+- checked the running Web app at `http://localhost:5173/`;
+- confirmed the file input `accept` attribute is `.zip,.tar,.tar.gz,.tgz`;
+- confirmed the dropzone displays `Supports .zip, .tar, .tar.gz, .tgz`.

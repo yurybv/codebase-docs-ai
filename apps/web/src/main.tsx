@@ -176,13 +176,14 @@ export function App(): JSX.Element {
           <label className="dropzone">
             <Upload size={24} />
             <span>Upload source archives</span>
+            <small>{supportedArchiveLabel}</small>
             <small>
               {uploadConstraints.maxFiles} files max, {formatBytes(uploadConstraints.maxFileSizeBytes)} each
             </small>
             <input
               type="file"
               multiple
-              accept=".zip,.tar,.gz,.tgz"
+              accept={supportedArchiveAccept}
               aria-label="Upload source archives"
               onChange={(event) => addFiles(event.currentTarget.files)}
             />
@@ -392,6 +393,9 @@ const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mo
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
+const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'];
+const supportedArchiveAccept = supportedArchiveExtensions.join(',');
+const supportedArchiveLabel = `Supports ${supportedArchiveExtensions.join(', ')}`;
 const apiBaseUrl =
   import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 

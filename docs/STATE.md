@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 53: Web Supported Archive Guidance Alignment.
+Implement Phase 54: Web Client-Side Archive Type Validation.
 
 Required package:
 
@@ -89,7 +89,7 @@ apps/web
 docs
 ```
 
-The next step should align the Web upload accept list and operator guidance with the API-supported archive types: `.zip`, `.tar`, `.tar.gz`, and `.tgz`.
+The next step should add client-side selected-file validation for supported archive file names so unsupported files are rejected in the Web UI before upload, matching the API boundary.
 
 ## Completed Implementation
 
@@ -984,6 +984,21 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts apps/api/src/api-exception.filter.test.ts
+```
+
+### 2026-05-29: Phase 53 Web Supported Archive Guidance Alignment
+
+- Aligned the Web upload file input accept list with API-supported archive types.
+- Added visible upload guidance for `.zip`, `.tar`, `.tar.gz`, and `.tgz`.
+- Added Web regression coverage for the file input accept list and visible archive guidance.
+- Verified the running Web app displays the updated guidance.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm web:completed-state
+Browser check at http://localhost:5173/
 ```
 
 ## Open Questions

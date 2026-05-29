@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 53: Web Supported Archive Guidance Alignment.
+- Implement Phase 54: Web Client-Side Archive Type Validation.
 
-Phase 53 goal:
-- Align the Web upload accept list with API-supported archive types.
-- Show operator guidance for `.zip`, `.tar`, `.tar.gz`, and `.tgz`.
-- Update Web tests/docs if needed.
+Phase 54 goal:
+- Add client-side selected-file validation for supported archive file names.
+- Reject unsupported files in the Web UI before upload.
+- Keep Web validation aligned with the API-supported archive types.
+- Update Web tests/docs.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

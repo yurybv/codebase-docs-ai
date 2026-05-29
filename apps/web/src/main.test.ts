@@ -82,6 +82,10 @@ describe('App API error handling', () => {
     expect(document.querySelector('input[type="file"]')?.getAttribute('aria-label')).toBe(
       'Upload source archives'
     );
+    expect(document.querySelector('input[type="file"]')?.getAttribute('accept')).toBe(
+      '.zip,.tar,.tar.gz,.tgz'
+    );
+    expect(document.body.textContent).toContain('Supports .zip, .tar, .tar.gz, .tgz');
     expect(
       Array.from(document.querySelectorAll('button')).find((button) =>
         button.textContent?.includes('Generate')
