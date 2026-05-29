@@ -84,16 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 5: Documentation Generation.
+Implement Phase 6: Renderers.
 
-Required packages:
+Required package:
 
 ```text
-packages/ai-orchestrator
-packages/documentation-generator
+packages/renderers
 ```
 
-The next step should add AI provider abstractions, prompt contracts in code, documentation plan generation, deterministic fallback page generation where possible, schema validation, and `DocumentationTree` output.
+The next step should render `DocumentationTree` into markdown tree files, a single markdown file, JSON, and downloadable zip artifacts.
 
 ## Completed Implementation
 
@@ -190,6 +189,27 @@ pnpm lint
 - Added known integration detection from dependencies.
 - Added system risks for unmatched consumer/provider API contracts.
 - Added tests for matched and unmatched frontend/backend contracts.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 5 AI Orchestration And Documentation Generator
+
+- Added `packages/ai-orchestrator`.
+- Added AI provider contract and local JSON provider for deterministic tests/future adapters.
+- Added `packages/documentation-generator`.
+- Added shared documentation plan contracts.
+- Added default 14-page documentation plan.
+- Added deterministic `DocumentationTree` generation from `SystemMap`.
+- Added generated markdown pages for overview, source inventory, API contracts, environment, risks, and source references.
+- Added generic placeholder pages for specialized sections that will be expanded later.
+- Added tests for documentation planning and tree generation.
 
 Verification:
 

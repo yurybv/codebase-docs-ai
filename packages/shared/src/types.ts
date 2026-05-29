@@ -223,6 +223,20 @@ export interface DocumentationTree {
   generatedAt: string;
 }
 
+export interface DocumentationPagePlan {
+  key: string;
+  title: string;
+  order: number;
+  purpose: string;
+  requiredEvidence: string[];
+  warnings: DocumentationWarning[];
+}
+
+export interface DocumentationPlan {
+  pages: DocumentationPagePlan[];
+  warnings: DocumentationWarning[];
+}
+
 export interface DocumentationRunOptions {
   outputFormats: DocumentationOutputFormat[];
   language: 'en';

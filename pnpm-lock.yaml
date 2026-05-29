@@ -91,7 +91,15 @@ importers:
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.29)
 
+  packages/ai-orchestrator: {}
+
   packages/core:
+    dependencies:
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  packages/documentation-generator:
     dependencies:
       '@codebase-docs-ai/shared':
         specifier: workspace:*
