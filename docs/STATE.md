@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 76: CLI JSON Output Sanitization Regression Coverage.
+Implement Phase 77: SDK Download Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+packages/sdk
 docs
 ```
 
-The next step should add CLI-level regression coverage proving JSON output is sanitized for secret-bearing source inputs.
+The next step should add SDK regression coverage proving downloaded artifacts preserve sanitized API output without exposing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1296,6 +1296,19 @@ pnpm test -- apps/cli/src/generate-command.test.ts
 - Added CLI local-mode regression coverage for packaged Markdown zip output.
 - Added direct CLI test dependencies for reading generated zip artifacts.
 - Verified files inside CLI-written `documentation.zip` contain redacted source evidence and exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/generate-command.test.ts
+```
+
+### 2026-05-29: Phase 76 CLI JSON Output Sanitization Regression Coverage
+
+- Added CLI local-mode regression coverage for JSON output.
+- Verified CLI-written `documentation-tree.json` contains redacted source evidence instead of raw provider keys.
+- Verified denied `.env` evidence and denied-source variable names are absent from CLI JSON artifacts.
 
 Verification:
 

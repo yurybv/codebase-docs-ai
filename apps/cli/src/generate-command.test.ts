@@ -76,6 +76,42 @@ describe('runGenerateCommand', () => {
     }
   });
 
+  it('writes sanitized JSON output', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const sourceRoot = path.join(tempRoot, 'source');
+    const outputRoot = path.join(tempRoot, 'out');
+    const rawOpenAiKey = `sk-${'f'.repeat(24)}`;
+
+    try {
+      await writeSanitizationSourceFixture(sourceRoot, rawOpenAiKey);
+
+      const result = await runGenerateCommand({
+        source: [`${sourceRoot}:frontend`],
+        output: outputRoot,
+        format: 'json',
+        name: 'CLI Sanitized JSON Documentation'
+      });
+
+      const jsonPath = path.join(outputRoot, 'documentation-tree.json');
+      expect(result.status).toBe('completed');
+      expect(result.files).toEqual([jsonPath]);
+
+      const json = await readFile(jsonPath, 'utf8');
+      expect(JSON.parse(json)).toMatchObject({
+        title: 'CLI Sanitized JSON Documentation'
+      });
+      expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(json).not.toContain(rawOpenAiKey);
+      expect(json).not.toContain('SHOULD_NOT_APPEAR');
+      expect(json).not.toContain('.env');
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
   it('rejects unsupported API mode archive file names before upload', async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
     const sourcePath = path.join(tempRoot, 'notes.txt');

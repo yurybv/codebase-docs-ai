@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 76: CLI JSON Output Sanitization Regression Coverage.
+- Implement Phase 77: SDK Download Sanitization Regression Coverage.
 
-Phase 76 goal:
-- Add CLI-level regression coverage proving JSON output is sanitized for secret-bearing source inputs.
-- Verify raw denied files and raw secret values are absent from CLI-written `documentation-tree.json`.
-- Keep CLI single-Markdown and zip output sanitization coverage intact.
+Phase 77 goal:
+- Add SDK regression coverage proving downloaded artifacts preserve sanitized API output without exposing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from SDK-returned download blobs when API responses contain sanitized artifacts.
+- Keep CLI JSON, single-Markdown, and zip output sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
