@@ -96,6 +96,8 @@ Extraction must reject:
 - Add rate limits for public deployments.
 - Make retention and cleanup explicit.
 
+Rate limiting strategy is documented in [Rate Limiting](./RATE_LIMITING.md). The current product expects public or multi-tenant deployments to enforce request rates and user/project quotas at the host gateway until a trusted identity source is defined for a built-in adapter.
+
 ## AI Prompt Safety
 
 Before sending context to AI:

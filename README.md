@@ -49,6 +49,7 @@ Start with:
 - [Deployment](./docs/DEPLOYMENT.md)
 - [Development Workflow](./docs/DEVELOPMENT_WORKFLOW.md)
 - [Security](./docs/SECURITY.md)
+- [Rate Limiting](./docs/RATE_LIMITING.md)
 - [Testing](./docs/TESTING.md)
 - [Operations](./docs/OPERATIONS.md)
 - [Prompt Contracts](./docs/PROMPT_CONTRACTS.md)

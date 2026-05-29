@@ -113,6 +113,8 @@ export VITE_WEB_UPLOAD_MAX_FILES=5
 export VITE_WEB_UPLOAD_MAX_FILE_SIZE_BYTES=104857600
 ```
 
+For public or multi-tenant deployments, enforce rate limits and request body limits at the host gateway or reverse proxy. See [Rate Limiting](./RATE_LIMITING.md).
+
 ## Web Runtime
 
 Default Web port:

@@ -78,16 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 33: API Rate Limit Adapter Planning.
+Implement Phase 34: AI Provider Configuration Validation.
 
 Required package:
 
 ```text
+packages/ai-orchestrator
 apps/api
 docs
 ```
 
-The next step should decide whether rate limiting belongs in the standalone API service, host gateway, or optional adapter, then document the first deployable strategy without hardcoding a product-host assumption.
+The next step should validate AI provider environment configuration, document failure modes, and ensure optional AI generation cannot fail silently when credentials are partially configured.
 
 ## Completed Implementation
 
@@ -677,6 +678,19 @@ Verification:
 
 ```text
 pnpm verify
+```
+
+### 2026-05-29: Phase 33 API Rate Limit Adapter Planning
+
+- Documented why the module should not hardcode a user model for rate limiting.
+- Defined gateway, reverse proxy, and host-owned quota responsibilities.
+- Documented future built-in rate limit adapter options and required identity decisions.
+- Linked rate limiting guidance from README, operations, and security docs.
+
+Verification:
+
+```text
+docs-only change
 ```
 
 ## Open Questions
