@@ -90,6 +90,13 @@ describe('App API error handling', () => {
   });
 
   it('runs the completed documentation UI flow against the API contract', async () => {
+    let createdRunBody:
+      | {
+          options?: {
+            outputFormats?: string[];
+          };
+        }
+      | undefined;
     let uploadedMetadata:
       | {
           sources: Array<{
@@ -101,6 +108,11 @@ describe('App API error handling', () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        createdRunBody = JSON.parse(String(init.body)) as {
+          options?: {
+            outputFormats?: string[];
+          };
+        };
         return jsonResponse({
           runId: 'run_completed_ui',
           status: 'created'
@@ -203,11 +215,22 @@ describe('App API error handling', () => {
       backendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
+    for (const label of ['Include markdown-tree output', 'Include single-markdown output']) {
+      const checkbox = document.querySelector(
+        `input[aria-label="${label}"]`
+      ) as HTMLInputElement | null;
+      expect(checkbox?.checked).toBe(true);
+      await act(async () => {
+        checkbox?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    }
+
     await act(async () => {
       getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     await waitForText('Documentation generated.');
 
+    expect(createdRunBody?.options?.outputFormats).toEqual(['json']);
     expect(uploadedMetadata?.sources).toEqual([
       expect.objectContaining({
         name: 'frontend',
@@ -235,6 +258,10 @@ describe('App API error handling', () => {
     expect(document.querySelector('pre')?.textContent).toContain('/api/users');
     expect(document.querySelector('pre')?.textContent).toContain('matched');
 
+    expect(getButtonByText('json')).toBeDefined();
+    expect(queryButtonByText('markdown-tree')).toBeNull();
+    expect(queryButtonByText('single-markdown')).toBeNull();
+
     await act(async () => {
       getButtonByText('json').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -243,6 +270,47 @@ describe('App API error handling', () => {
       'http://localhost:3000/v1/documentation-runs/run_completed_ui/download?format=json',
       '_blank'
     );
+  });
+
+  it('requires at least one selected output format', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File(['frontend'], 'frontend.tar', {
+          type: 'application/x-tar'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    for (const checkbox of Array.from(document.querySelectorAll('.format-option input'))) {
+      await act(async () => {
+        checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    }
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(document.body.textContent).toContain(
+      'Select at least one output format before generating documentation.'
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
@@ -284,14 +352,20 @@ function completedDocumentationPages(): Array<{ key: string; title: string; mark
 }
 
 function getButtonByText(text: string): HTMLButtonElement {
-  const button = Array.from(document.querySelectorAll('button')).find(
-    (candidate) => candidate.textContent?.trim() === text
-  );
+  const button = queryButtonByText(text);
   if (!button) {
     throw new Error(`Button not found: ${text}`);
   }
 
   return button;
+}
+
+function queryButtonByText(text: string): HTMLButtonElement | null {
+  return (
+    Array.from(document.querySelectorAll('button')).find(
+      (candidate) => candidate.textContent?.trim() === text
+    ) ?? null
+  );
 }
 
 async function waitForText(text: string): Promise<void> {

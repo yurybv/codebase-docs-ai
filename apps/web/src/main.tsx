@@ -20,6 +20,8 @@ const uploadConstraints = uploadConstraintsFromEnv(import.meta.env);
 
 export function App(): JSX.Element {
   const [sources, setSources] = useState<SourceDraft[]>([]);
+  const [selectedOutputFormats, setSelectedOutputFormats] =
+    useState<DocumentationOutputFormat[]>(defaultOutputFormats);
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
   const [runState, setRunState] = useState<RunState>({
     status: 'idle'
@@ -30,6 +32,7 @@ export function App(): JSX.Element {
   }, [runState.result, selectedPageKey]);
   const generationInProgress =
     runState.status === 'creating' || runState.status === 'uploading' || runState.status === 'running';
+  const downloadFormats = runState.outputFormats ?? selectedOutputFormats;
 
   function addFiles(fileList: FileList | null): void {
     if (!fileList) {
@@ -66,6 +69,14 @@ export function App(): JSX.Element {
     setSources((currentSources) => currentSources.filter((source) => source.id !== id));
   }
 
+  function toggleOutputFormat(format: DocumentationOutputFormat): void {
+    setSelectedOutputFormats((currentFormats) =>
+      currentFormats.includes(format)
+        ? currentFormats.filter((currentFormat) => currentFormat !== format)
+        : [...currentFormats, format]
+    );
+  }
+
   async function generateDocumentation(): Promise<void> {
     let activeRunId: string | undefined;
     if (generationInProgress) {
@@ -80,19 +91,31 @@ export function App(): JSX.Element {
       return;
     }
 
+    if (selectedOutputFormats.length === 0) {
+      setRunState({
+        status: 'failed',
+        message: 'Select at least one output format before generating documentation.'
+      });
+      return;
+    }
+
+    const runOutputFormats = selectedOutputFormats;
+
     try {
       setRunState({
         status: 'creating',
-        message: 'Creating documentation run.'
+        message: 'Creating documentation run.',
+        outputFormats: runOutputFormats
       });
 
-      const run = await createRun();
+      const run = await createRun(runOutputFormats);
       activeRunId = run.runId;
 
       setRunState({
         status: 'uploading',
         runId: run.runId,
-        message: 'Uploading source archives.'
+        message: 'Uploading source archives.',
+        outputFormats: runOutputFormats
       });
 
       await uploadSources(run.runId, sources);
@@ -100,7 +123,8 @@ export function App(): JSX.Element {
       setRunState({
         status: 'running',
         runId: run.runId,
-        message: 'Analyzing sources and generating documentation.'
+        message: 'Analyzing sources and generating documentation.',
+        outputFormats: runOutputFormats
       });
 
       await startRun(run.runId);
@@ -111,6 +135,7 @@ export function App(): JSX.Element {
         runId: run.runId,
         ...(runDetails.progress ? { progress: runDetails.progress } : {}),
         result,
+        outputFormats: runOutputFormats,
         message: 'Documentation generated.'
       });
       setSelectedPageKey(result.documentation.pages[0]?.key ?? null);
@@ -120,6 +145,7 @@ export function App(): JSX.Element {
         status: 'failed',
         ...(activeRunId ? { runId: activeRunId } : {}),
         ...details,
+        outputFormats: runOutputFormats,
         message: error instanceof Error ? error.message : 'Documentation generation failed.'
       });
     }
@@ -196,6 +222,23 @@ export function App(): JSX.Element {
               </div>
             ))}
           </div>
+
+          <fieldset className="format-fieldset" disabled={generationInProgress}>
+            <legend>Output formats</legend>
+            <div className="format-options">
+              {outputFormatOptions.map((format) => (
+                <label className="format-option" key={format}>
+                  <input
+                    type="checkbox"
+                    checked={selectedOutputFormats.includes(format)}
+                    aria-label={`Include ${format} output`}
+                    onChange={() => toggleOutputFormat(format)}
+                  />
+                  <span>{format}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </aside>
 
         <section className="panel result-panel">
@@ -268,7 +311,7 @@ export function App(): JSX.Element {
 
                 <article className="preview">
                   <div className="download-row">
-                    {outputFormats.map((format) => (
+                    {downloadFormats.map((format) => (
                       <button
                         key={format}
                         type="button"
@@ -301,6 +344,7 @@ interface RunState {
   progress?: DocumentationRunProgress;
   error?: DocumentationRunError;
   result?: DocumentationRunResult;
+  outputFormats?: DocumentationOutputFormat[];
 }
 
 interface DocumentationRun {
@@ -342,11 +386,13 @@ interface DocumentationRunResult {
 }
 
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
-const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
+type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
+const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
+const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const apiBaseUrl =
   import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 
-async function createRun(): Promise<{ runId: string; status: string }> {
+async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ runId: string; status: string }> {
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs`, {
     method: 'POST',
     headers: {

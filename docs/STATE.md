@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 47: Web Output Format Selection.
+Implement Phase 48: Web Output Format Browser Verification.
 
 Required package:
 
@@ -89,7 +89,7 @@ apps/web
 docs
 ```
 
-The next step should let Web operators choose output formats before generation instead of always requesting all formats, keep download controls aligned to selected formats, and cover the format-selection behavior with Web tests.
+The next step should verify output format selection in the real browser flow against the running Web app, confirm the first-viewport layout remains clean on desktop and mobile, and record any findings in `docs/WEB_QA.md`.
 
 ## Completed Implementation
 
@@ -890,6 +890,22 @@ Verification:
 ```text
 pnpm web:completed-state
 pnpm --filter @codebase-docs-ai/web typecheck
+```
+
+### 2026-05-29: Phase 47 Web Output Format Selection
+
+- Added Web output format checkboxes for markdown tree, single Markdown, and JSON.
+- Sent only selected output formats in the create-run API request.
+- Blocked generation with a clear status message when no output format is selected.
+- Kept completed download controls aligned to the formats rendered for that run.
+- Extended Web completed-state regression coverage for format selection and selected-format downloads.
+- Documented output format selection behavior in Web QA and testing docs.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm web:completed-state
 ```
 
 ## Open Questions

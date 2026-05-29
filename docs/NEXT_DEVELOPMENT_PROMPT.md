@@ -37,14 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 47: Web Output Format Selection.
+- Implement Phase 48: Web Output Format Browser Verification.
 
-Phase 47 goal:
-- Let Web operators choose output formats before generation instead of always requesting all formats.
-- Keep generated download controls aligned to the selected formats.
-- Cover format-selection behavior with Web tests.
-- Update docs/WEB_QA.md and docs/STATE.md with the result.
-- Run relevant verification, preferably pnpm verify after code changes.
+Phase 48 goal:
+- Verify output format selection in the real browser flow against the running Web app.
+- Confirm desktop and mobile first-viewport layouts remain clean.
+- Update docs/WEB_QA.md and docs/STATE.md with findings.
+- Run relevant verification, preferably pnpm verify after code or behavior changes.
 - Commit the completed phase directly to master.
 
 Product direction reminders:

@@ -88,11 +88,12 @@ Covered:
 
 - multi-archive selection in the Web upload control;
 - source role changes before generation;
+- output format selection before generation;
 - upload metadata sent to the API contract;
 - completed status and progress rendering;
 - generated warning display;
 - generated page navigation and Markdown preview updates;
-- JSON download URL generation.
+- download controls aligned to the selected output formats.
 
 This regression complements the manual browser verification above. It runs without private archives and uses API-shaped mocked responses to catch Web flow regressions quickly.
 
@@ -104,3 +105,12 @@ Expected behavior:
 - warnings are exposed through a labeled `region` so operators can find them without opening JSON output;
 - warning level and message are visible above generated page navigation;
 - warning display does not block page preview or download controls.
+
+## Output Format Selection
+
+Expected behavior:
+
+- operators can choose one or more output formats before generation;
+- generation is blocked with a clear status message when no output format is selected;
+- the create-run API request includes only the selected output formats;
+- completed-state download controls show only formats rendered for that run.

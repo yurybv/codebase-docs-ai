@@ -103,11 +103,13 @@ The completed-state regression renders the Web app in jsdom with API-shaped mock
 
 - multi-archive upload;
 - frontend/backend role selection;
+- output format selection;
 - metadata sent to the upload API;
+- selected formats sent to the create-run API;
 - completed run status and progress;
 - generated page navigation;
 - Markdown preview updates;
-- JSON download URL generation.
+- download controls aligned to selected formats.
 
 This test is not a visual browser replacement. It protects the Web operator flow at the DOM/API-contract boundary and keeps the manual browser checks in `docs/WEB_QA.md` repeatable enough to catch regressions before manual QA.
 

@@ -127,6 +127,42 @@ p {
   color: #172026;
 }
 
+.format-fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 12px;
+  border: 1px solid #d8e0e6;
+  border-radius: 8px;
+}
+
+.format-fieldset legend {
+  padding: 0 4px;
+  color: #172026;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.format-options {
+  display: grid;
+  gap: 8px;
+}
+
+.format-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: #3f4d57;
+  font-size: 14px;
+}
+
+.format-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
 .primary-action,
 .secondary-action,
 .icon-button {
