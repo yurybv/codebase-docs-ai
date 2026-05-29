@@ -13,6 +13,8 @@ import {
 import type {
   DocumentationOutputFormat,
   DocumentationRun,
+  DocumentationRunError,
+  DocumentationRunProgress,
   DocumentationRunStatus,
   DocumentationTree,
   RenderedDocumentation,
@@ -54,6 +56,16 @@ const uploadSourcesMetadataSchema = z.object({
     })
   )
 });
+
+const generationSteps = [
+  'running',
+  'extracting_sources',
+  'analyzing_sources',
+  'building_system_map',
+  'generating_documentation',
+  'rendering_output',
+  'completed'
+] as const;
 
 @Injectable()
 export class DocumentationRunsService {
@@ -141,7 +153,11 @@ export class DocumentationRunsService {
 
     storedRun.sources = storedSources;
     storedRun.run.sources = storedSources.map((source) => source.metadata);
-    await this.setStatus(storedRun, 'ready');
+    await this.setStatus(storedRun, 'ready', {
+      currentStep: 'Sources uploaded',
+      completedSteps: 0,
+      totalSteps: generationSteps.length
+    });
 
     return {
       runId,
@@ -159,31 +175,36 @@ export class DocumentationRunsService {
       });
     }
 
-    await this.setStatus(storedRun, 'running');
-    await this.setStatus(storedRun, 'extracting_sources');
+    try {
+      await this.setGenerationStatus(storedRun, 'running');
+      await this.setGenerationStatus(storedRun, 'extracting_sources');
 
-    const loadedSources = await Promise.all(
-      storedRun.sources.map((source) =>
-        loadArchiveSource({
-          source: source.metadata,
-          archivePath: source.archivePath,
-          extractionRoot: path.join(storedRun.tempPath, 'extracted')
-        })
-      )
-    );
+      const loadedSources = await Promise.all(
+        storedRun.sources.map((source) =>
+          loadArchiveSource({
+            source: source.metadata,
+            archivePath: source.archivePath,
+            extractionRoot: path.join(storedRun.tempPath, 'extracted')
+          })
+        )
+      );
 
-    await this.setStatus(storedRun, 'analyzing_sources');
-    await this.setStatus(storedRun, 'building_system_map');
-    await this.setStatus(storedRun, 'generating_documentation');
-    const result = await this.engine.generateDocumentation({
-      title: storedRun.run.name,
-      loadedSources,
-      options: storedRun.run.options
-    });
+      await this.setGenerationStatus(storedRun, 'analyzing_sources');
+      await this.setGenerationStatus(storedRun, 'building_system_map');
+      await this.setGenerationStatus(storedRun, 'generating_documentation');
+      const result = await this.engine.generateDocumentation({
+        title: storedRun.run.name,
+        loadedSources,
+        options: storedRun.run.options
+      });
 
-    await this.setStatus(storedRun, 'rendering_output');
-    await this.writeResultArtifacts(storedRun, result.documentationTree, result.rendered);
-    await this.setStatus(storedRun, 'completed');
+      await this.setGenerationStatus(storedRun, 'rendering_output');
+      await this.writeResultArtifacts(storedRun, result.documentationTree, result.rendered);
+      await this.setGenerationStatus(storedRun, 'completed');
+    } catch (error) {
+      await this.failRun(storedRun, error);
+      throw error;
+    }
 
     return {
       runId,
@@ -282,10 +303,42 @@ export class DocumentationRunsService {
     }
   }
 
-  private async setStatus(storedRun: StoredRun, status: DocumentationRunStatus): Promise<void> {
+  private async setStatus(
+    storedRun: StoredRun,
+    status: DocumentationRunStatus,
+    progress?: DocumentationRunProgress
+  ): Promise<void> {
     storedRun.run.status = status;
     storedRun.run.updatedAt = new Date().toISOString();
+    if (progress) {
+      storedRun.run.progress = progress;
+    }
+    if (status !== 'failed') {
+      delete storedRun.run.error;
+    }
     await this.writeRun(storedRun);
+  }
+
+  private async setGenerationStatus(
+    storedRun: StoredRun,
+    status: (typeof generationSteps)[number]
+  ): Promise<void> {
+    const completedSteps =
+      status === 'completed' ? generationSteps.length : generationSteps.indexOf(status);
+    await this.setStatus(storedRun, status, {
+      currentStep: generationStepLabel(status),
+      completedSteps,
+      totalSteps: generationSteps.length
+    });
+  }
+
+  private async failRun(storedRun: StoredRun, error: unknown): Promise<void> {
+    storedRun.run.error = safeRunError(error);
+    await this.setStatus(storedRun, 'failed', {
+      currentStep: 'Failed',
+      completedSteps: storedRun.run.progress?.completedSteps ?? 0,
+      totalSteps: storedRun.run.progress?.totalSteps ?? generationSteps.length
+    });
   }
 
   private async writeResultArtifacts(
@@ -338,6 +391,37 @@ async function writeJsonFile(filePath: string, value: unknown): Promise<void> {
 function createDocumentationEngine(): DocumentationEngine {
   const aiProvider = createOpenAiCompatibleProviderFromEnv();
   return new DocumentationEngine(aiProvider ? { aiProvider } : {});
+}
+
+function generationStepLabel(status: (typeof generationSteps)[number]): string {
+  switch (status) {
+    case 'running':
+      return 'Starting documentation run';
+    case 'extracting_sources':
+      return 'Extracting source archives';
+    case 'analyzing_sources':
+      return 'Analyzing source repositories';
+    case 'building_system_map':
+      return 'Building cross-source system map';
+    case 'generating_documentation':
+      return 'Generating documentation tree';
+    case 'rendering_output':
+      return 'Rendering output artifacts';
+    case 'completed':
+      return 'Documentation run completed';
+  }
+}
+
+function safeRunError(error: unknown): DocumentationRunError {
+  if (error instanceof Error) {
+    return {
+      message: error.message
+    };
+  }
+
+  return {
+    message: 'Documentation generation failed.'
+  };
 }
 
 function parseJson(value: string): unknown {

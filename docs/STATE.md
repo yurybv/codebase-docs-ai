@@ -77,16 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 14: API Progress And Error Reporting.
+Implement Phase 15: Web Progress And Failure UX.
 
 Required package:
 
 ```text
-apps/api
-packages/shared
+apps/web
 ```
 
-The next step should enrich run status responses with structured progress and failure details. Failed generation should persist `failed` status with a safe error message instead of losing context or throwing only at request time.
+The next step should update the Web UI to display structured run progress and failed run details returned by the API, including a clear retry path for failed or expired runs.
 
 ## Completed Implementation
 
@@ -367,6 +366,23 @@ CLI smoke generation with local frontend/backend fixtures
 Verification:
 
 ```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+```
+
+### 2026-05-29: Phase 14 API Progress And Error Reporting
+
+- Added shared run progress and run error contracts.
+- Persisted progress details on API run manifests.
+- Added structured progress labels for each generation step.
+- Persisted failed run status and safe error messages when generation throws.
+- Updated API docs with progress and failure response examples.
+- Added API service tests for completed progress and persisted failure details.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/shared build
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
 ```

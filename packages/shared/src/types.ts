@@ -257,12 +257,25 @@ export interface DocumentationRunOptions {
   includeWarnings: boolean;
 }
 
+export interface DocumentationRunProgress {
+  currentStep: string;
+  completedSteps: number;
+  totalSteps: number;
+}
+
+export interface DocumentationRunError {
+  message: string;
+  code?: string;
+}
+
 export interface DocumentationRun {
   id: string;
   name: string;
   status: DocumentationRunStatus;
   sources: SourceInputMetadata[];
   options: DocumentationRunOptions;
+  progress?: DocumentationRunProgress;
+  error?: DocumentationRunError;
   createdAt: string;
   updatedAt: string;
 }

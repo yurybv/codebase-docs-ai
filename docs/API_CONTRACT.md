@@ -141,8 +141,24 @@ Response:
     "currentStep": "Generating API Contracts page",
     "completedSteps": 6,
     "totalSteps": 9
+  }
+}
+```
+
+If a run fails, the persisted run state includes a safe error summary:
+
+```json
+{
+  "runId": "run_123",
+  "status": "failed",
+  "progress": {
+    "currentStep": "Failed",
+    "completedSteps": 2,
+    "totalSteps": 7
   },
-  "warnings": []
+  "error": {
+    "message": "Documentation generation failed."
+  }
 }
 ```
 

@@ -75,6 +75,12 @@ describe('DocumentationRunsService', () => {
 
     const started = await service.startRun(created.runId);
     expect(started.status).toBe('completed');
+    const completedRun = await service.getRun(created.runId);
+    expect(completedRun.progress).toEqual({
+      currentStep: 'Documentation run completed',
+      completedSteps: 7,
+      totalSteps: 7
+    });
 
     const result = await service.getResult(created.runId);
     expect(result.documentation.pages).toHaveLength(14);
@@ -86,5 +92,50 @@ describe('DocumentationRunsService', () => {
     const download = await restartedService.getDownload(created.runId, 'single-markdown');
     expect(download.fileName).toBe('PROJECT_DOCUMENTATION.md');
     expect(download.content.toString()).toContain('# 01. Overview');
+  });
+
+  it('persists failed run status and safe error details', async () => {
+    const created = await service.createRun({
+      name: 'Broken Fixture Docs',
+      options: {
+        outputFormats: ['markdown-tree'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const archive = new AdmZip();
+    archive.addFile('package.json', Buffer.from('{}'));
+
+    await service.uploadSources(
+      created.runId,
+      [
+        {
+          fieldname: 'frontend',
+          originalname: 'frontend.zip',
+          buffer: archive.toBuffer()
+        }
+      ],
+      JSON.stringify({
+        sources: [
+          {
+            fileField: 'frontend',
+            name: 'Frontend',
+            role: 'frontend'
+          }
+        ]
+      })
+    );
+    await rm(path.join(tempRoot, created.runId, 'uploads'), {
+      recursive: true,
+      force: true
+    });
+
+    await expect(service.startRun(created.runId)).rejects.toThrow();
+    const failedRun = await service.getRun(created.runId);
+
+    expect(failedRun.status).toBe('failed');
+    expect(failedRun.error?.message).toBeTruthy();
+    expect(failedRun.progress?.currentStep).toBe('Failed');
   });
 });
