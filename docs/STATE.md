@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 66: Security Denylist Key File Regression Coverage.
+Implement Phase 67: Secret Redaction Assignment Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/security
 docs
 ```
 
-The next step should add focused security filter regression coverage for private key, certificate, and credential file denylist patterns.
+The next step should add focused secret redaction regression coverage for common secret-like assignment patterns.
 
 ## Completed Implementation
 
@@ -1164,6 +1164,20 @@ pnpm test -- packages/security/src/file-filter.test.ts
 - Added security filter regression coverage for files above `maxPromptFileSizeBytes`.
 - Verified oversized prompt files are skipped with `file_size_limit_exceeded`.
 - Kept nested archive filtering coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/security typecheck
+pnpm test -- packages/security/src/file-filter.test.ts
+```
+
+### 2026-05-29: Phase 66 Security Denylist Key File Regression Coverage
+
+- Added security filter regression coverage for private key filenames.
+- Added security filter regression coverage for `.pem`, `.key`, `.p12`, and `.pfx` sensitive files.
+- Added security filter regression coverage for credentials and secrets path patterns.
+- Kept prompt file size and nested archive filtering coverage intact.
 
 Verification:
 

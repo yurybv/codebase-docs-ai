@@ -37,13 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 66: Security Denylist Key File Regression Coverage.
+- Implement Phase 67: Secret Redaction Assignment Regression Coverage.
 
-Phase 66 goal:
-- Add focused security filter regression coverage for private key file names.
-- Add focused security filter regression coverage for certificate/key archive names such as `.p12` and `.pfx`.
-- Add focused security filter regression coverage for credentials/secrets path patterns.
-- Keep prompt file size and nested archive filtering coverage intact.
+Phase 67 goal:
+- Add focused secret redaction regression coverage for common `password`, `token`, and `secret` assignment patterns.
+- Verify redaction counts remain meaningful.
+- Keep security file filtering coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

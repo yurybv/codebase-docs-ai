@@ -19,6 +19,50 @@ describe('decideSourceFile', () => {
     expect(decision.reason).toBe('denylisted_path');
   });
 
+  it.each([
+    {
+      path: 'deploy/id_rsa',
+      extension: ''
+    },
+    {
+      path: 'deploy/id_ed25519',
+      extension: ''
+    },
+    {
+      path: 'certs/private.pem',
+      extension: '.pem'
+    },
+    {
+      path: 'certs/signing.key',
+      extension: '.key'
+    },
+    {
+      path: 'certs/client.p12',
+      extension: '.p12'
+    },
+    {
+      path: 'certs/client.pfx',
+      extension: '.pfx'
+    },
+    {
+      path: 'config/credentials.json',
+      extension: '.json'
+    },
+    {
+      path: 'config/secrets.yaml',
+      extension: '.yaml'
+    }
+  ])('skips denylisted sensitive file $path', ({ path, extension }) => {
+    const decision = decideSourceFile({
+      ...baseFile,
+      path,
+      extension
+    });
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('denylisted_path');
+  });
+
   it('skips generated paths', () => {
     const decision = decideSourceFile({
       ...baseFile,
