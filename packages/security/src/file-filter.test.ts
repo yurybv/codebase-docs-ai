@@ -68,6 +68,22 @@ describe('decideSourceFile', () => {
     expect(decision.include).toBe(false);
     expect(decision.reason).toBe('binary_extension');
   });
+
+  it('skips files above the prompt file size limit', () => {
+    const decision = decideSourceFile(
+      {
+        ...baseFile,
+        path: 'src/large.ts',
+        sizeBytes: 11
+      },
+      {
+        maxPromptFileSizeBytes: 10
+      }
+    );
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('file_size_limit_exceeded');
+  });
 });
 
 describe('filterLoadedSource', () => {

@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 65: Security Prompt File Size Regression Coverage.
+Implement Phase 66: Security Denylist Key File Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/security
 docs
 ```
 
-The next step should add focused security filter regression coverage for prompt file size limits.
+The next step should add focused security filter regression coverage for private key, certificate, and credential file denylist patterns.
 
 ## Completed Implementation
 
@@ -1151,6 +1151,19 @@ pnpm test -- packages/source-loader/src/load-source.test.ts
 - Added security filter regression coverage for nested `.zip`, `.tar`, `.tar.gz`, and `.tgz` source archives.
 - Added `.tgz` to the default binary extension filter so all supported source archive formats are excluded from prompt/source context when nested inside inputs.
 - Kept existing source-loader archive and folder safety coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/security typecheck
+pnpm test -- packages/security/src/file-filter.test.ts
+```
+
+### 2026-05-29: Phase 65 Security Prompt File Size Regression Coverage
+
+- Added security filter regression coverage for files above `maxPromptFileSizeBytes`.
+- Verified oversized prompt files are skipped with `file_size_limit_exceeded`.
+- Kept nested archive filtering coverage intact.
 
 Verification:
 

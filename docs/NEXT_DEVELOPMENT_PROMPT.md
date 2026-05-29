@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 65: Security Prompt File Size Regression Coverage.
+- Implement Phase 66: Security Denylist Key File Regression Coverage.
 
-Phase 65 goal:
-- Add focused security filter regression coverage for files above `maxPromptFileSizeBytes`.
-- Verify oversized prompt files are skipped with `file_size_limit_exceeded`.
-- Keep nested archive filtering coverage intact.
+Phase 66 goal:
+- Add focused security filter regression coverage for private key file names.
+- Add focused security filter regression coverage for certificate/key archive names such as `.p12` and `.pfx`.
+- Add focused security filter regression coverage for credentials/secrets path patterns.
+- Keep prompt file size and nested archive filtering coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
