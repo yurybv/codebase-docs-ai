@@ -192,7 +192,7 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
   --format single-markdown
 ```
 
-API mode accepts archive files. Use local mode for direct folder input.
+API mode accepts `.zip`, `.tar`, `.tar.gz`, and `.tgz` archive files. Use local mode for direct folder input.
 
 CLI failures are printed as JSON to stderr:
 

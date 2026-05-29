@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 57: CLI API Mode Archive Type Validation.
+Implement Phase 58: Source Loader Tar Archive Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+packages/source-loader
 docs
 ```
 
-The next step should use the shared source archive contract in CLI API mode so unsupported source file names are rejected before API upload. Keep local mode folder support unchanged.
+The next step should add focused source-loader regression coverage for `.tar`, `.tar.gz`, and `.tgz` extraction paths so supported archive formats are protected beyond the existing zip coverage.
 
 ## Completed Implementation
 
@@ -1049,6 +1049,20 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 57 CLI API Mode Archive Type Validation
+
+- Added CLI API mode preflight validation for supported source archive filenames using the shared archive contract.
+- Rejected unsupported API mode source files with `CLI_API_SOURCE_ARCHIVE_UNSUPPORTED` before SDK/API upload work.
+- Kept local mode folder and archive handling unchanged.
+- Documented CLI API mode supported archive filenames in README, module integration, and operations docs.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/generate-command.test.ts apps/cli/src/cli-options.test.ts
 ```
 
 ## Open Questions

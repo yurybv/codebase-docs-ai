@@ -5,7 +5,13 @@ import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orch
 import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
 import { CodebaseDocsAIClient } from '@codebase-docs-ai/sdk';
-import type { DocumentationOutputFormat, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
+import {
+  isSupportedSourceArchiveFileName,
+  supportedSourceArchiveExtensions,
+  type DocumentationOutputFormat,
+  type LoadedSource,
+  type RenderedDocumentation
+} from '@codebase-docs-ai/shared';
 import { loadArchiveSource, loadFolderSource } from '@codebase-docs-ai/source-loader';
 import { CliError } from './cli-error.js';
 import { parseCliSourceInput, type GenerateCommandOptions } from './cli-options.js';
@@ -19,7 +25,9 @@ export interface GenerateCommandResult {
   files: string[];
 }
 
-export async function runGenerateCommand(options: GenerateCommandOptions): Promise<GenerateCommandResult> {
+export async function runGenerateCommand(
+  options: GenerateCommandOptions
+): Promise<GenerateCommandResult> {
   if (options.apiUrl) {
     return runApiGenerateCommand(options);
   }
@@ -72,7 +80,9 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
   }
 }
 
-async function runApiGenerateCommand(options: GenerateCommandOptions): Promise<GenerateCommandResult> {
+async function runApiGenerateCommand(
+  options: GenerateCommandOptions
+): Promise<GenerateCommandResult> {
   if (!options.apiUrl) {
     throw new CliError('CLI_API_URL_REQUIRED', 'API URL is required for API mode.');
   }
@@ -139,12 +149,13 @@ async function loadCliSource(sourceInput: string, tempRoot: string): Promise<Loa
     });
   }
 
-  throw new CliError('CLI_SOURCE_PATH_UNSUPPORTED', `Unsupported source path type: ${parsedSource.inputPath}`);
+  throw new CliError(
+    'CLI_SOURCE_PATH_UNSUPPORTED',
+    `Unsupported source path type: ${parsedSource.inputPath}`
+  );
 }
 
-async function loadApiArchiveSource(
-  sourceInput: string
-): Promise<{
+async function loadApiArchiveSource(sourceInput: string): Promise<{
   name: string;
   role: ReturnType<typeof parseCliSourceInput>['metadata']['role'];
   file: Blob;
@@ -160,10 +171,23 @@ async function loadApiArchiveSource(
     );
   }
 
+  const fileName = path.basename(inputPath);
+  if (!isSupportedSourceArchiveFileName(fileName)) {
+    throw new CliError(
+      'CLI_API_SOURCE_ARCHIVE_UNSUPPORTED',
+      `Unsupported source archive type: ${fileName}.`,
+      2,
+      {
+        suggestion: `Use one of the supported API mode archive types: ${supportedSourceArchiveExtensions.join(', ')}.`,
+        supportedExtensions: [...supportedSourceArchiveExtensions]
+      }
+    );
+  }
+
   return {
     name: parsedSource.metadata.name,
     role: parsedSource.metadata.role,
-    fileName: path.basename(inputPath),
+    fileName,
     file: new Blob([await readFile(inputPath)])
   };
 }

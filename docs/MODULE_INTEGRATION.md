@@ -107,7 +107,7 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
   --format single-markdown
 ```
 
-In API mode, source inputs must be archive files because the HTTP API upload boundary accepts archives.
+In API mode, source inputs must be `.zip`, `.tar`, `.tar.gz`, or `.tgz` archive files because the HTTP API upload boundary accepts archives.
 
 ### 4. Web UI
 

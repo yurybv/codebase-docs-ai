@@ -37,14 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 57: CLI API Mode Archive Type Validation.
+- Implement Phase 58: Source Loader Tar Archive Regression Coverage.
 
-Phase 57 goal:
-- Use the shared source archive contract in CLI API mode.
-- Reject unsupported CLI API mode source file names before API upload.
-- Keep local mode folder support unchanged.
-- Keep CLI tests aligned with the shared extension list and public error behavior.
-- Update docs if CLI behavior changes.
+Phase 58 goal:
+- Add focused source-loader regression coverage for `.tar`, `.tar.gz`, and `.tgz` extraction.
+- Keep zip coverage intact.
+- Verify the supported archive formats declared in the shared contract are covered by extraction tests.
+- Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 
