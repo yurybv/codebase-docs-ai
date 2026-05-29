@@ -66,4 +66,26 @@ describe('App API error handling', () => {
       'INVALID_DOCUMENTATION_RUN: Documentation run request is invalid.'
     );
   });
+
+  it('exposes accessible status and upload controls', async () => {
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    expect(document.querySelector('[role="status"]')?.textContent).toContain(
+      'Upload archives and start a documentation run.'
+    );
+    expect(document.querySelector('input[type="file"]')?.getAttribute('aria-label')).toBe(
+      'Upload source archives'
+    );
+    expect(
+      Array.from(document.querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('Generate')
+      )?.getAttribute('aria-label')
+    ).toBe('Generate documentation');
+  });
 });

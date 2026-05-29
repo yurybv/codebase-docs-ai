@@ -79,7 +79,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 41: Web UI Accessibility And Interaction Review.
+Implement Phase 42: Web Responsive Browser Verification.
 
 Required package:
 
@@ -88,7 +88,7 @@ apps/web
 docs
 ```
 
-The next step should review Web UI accessibility, keyboard flow, aria labels, status semantics, and responsive interaction details before the UI is treated as the operator test surface.
+The next step should run browser-level checks across desktop and mobile widths and address any layout, overflow, or text fitting issues in the operator UI.
 
 ## Completed Implementation
 
@@ -789,6 +789,22 @@ Verification:
 
 ```text
 pnpm verify
+```
+
+### 2026-05-29: Phase 41 Web UI Accessibility And Interaction Review
+
+- Added live status semantics for documentation run updates.
+- Added alert semantics for persisted run error details.
+- Added accessible labels for archive upload and download controls.
+- Added progress value text for screen-reader context.
+- Disabled the generate action while a run is already creating, uploading, or running.
+- Added Web UI tests for accessible status and upload controls.
+
+Verification:
+
+```text
+pnpm verify
+browser check at http://localhost:5173
 ```
 
 ## Open Questions

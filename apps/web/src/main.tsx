@@ -28,6 +28,8 @@ export function App(): JSX.Element {
   const selectedPage = useMemo(() => {
     return runState.result?.documentation.pages.find((page) => page.key === selectedPageKey) ?? null;
   }, [runState.result, selectedPageKey]);
+  const generationInProgress =
+    runState.status === 'creating' || runState.status === 'uploading' || runState.status === 'running';
 
   function addFiles(fileList: FileList | null): void {
     if (!fileList) {
@@ -66,6 +68,10 @@ export function App(): JSX.Element {
 
   async function generateDocumentation(): Promise<void> {
     let activeRunId: string | undefined;
+    if (generationInProgress) {
+      return;
+    }
+
     if (sources.length === 0) {
       setRunState({
         status: 'failed',
@@ -126,7 +132,13 @@ export function App(): JSX.Element {
           <p className="eyebrow">Codebase Docs AI</p>
           <h1>Documentation run</h1>
         </div>
-        <button className="primary-action" type="button" onClick={generateDocumentation}>
+        <button
+          className="primary-action"
+          type="button"
+          onClick={generateDocumentation}
+          disabled={generationInProgress}
+          aria-label={generationInProgress ? 'Documentation generation in progress' : 'Generate documentation'}
+        >
           <Play size={18} />
           Generate
         </button>
@@ -144,6 +156,7 @@ export function App(): JSX.Element {
               type="file"
               multiple
               accept=".zip,.tar,.gz,.tgz"
+              aria-label="Upload source archives"
               onChange={(event) => addFiles(event.currentTarget.files)}
             />
           </label>
@@ -186,7 +199,12 @@ export function App(): JSX.Element {
         </aside>
 
         <section className="panel result-panel">
-          <div className="status-line" data-state={runState.status}>
+          <div
+            className="status-line"
+            data-state={runState.status}
+            role="status"
+            aria-live="polite"
+          >
             <div className="status-copy">
               <span>{runState.message ?? 'Upload archives and start a documentation run.'}</span>
               {runState.progress ? (
@@ -195,13 +213,18 @@ export function App(): JSX.Element {
                   {runState.progress.totalSteps})
                 </span>
               ) : null}
-              {runState.error ? <span className="error-detail">{runState.error.message}</span> : null}
+              {runState.error ? (
+                <span className="error-detail" role="alert">
+                  {runState.error.message}
+                </span>
+              ) : null}
             </div>
             {runState.progress ? (
               <progress
                 max={runState.progress.totalSteps}
                 value={runState.progress.completedSteps}
                 aria-label="Documentation run progress"
+                aria-valuetext={`${runState.progress.currentStep}: ${runState.progress.completedSteps} of ${runState.progress.totalSteps}`}
               />
             ) : null}
           </div>
@@ -228,6 +251,7 @@ export function App(): JSX.Element {
                       key={format}
                       type="button"
                       className="secondary-action"
+                      aria-label={`Download ${format} documentation`}
                       onClick={() => downloadResult(runState.runId, format)}
                     >
                       <Download size={16} />
