@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 67: Secret Redaction Assignment Regression Coverage.
+Implement Phase 68: Secret Redaction Provider Token Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/security
 docs
 ```
 
-The next step should add focused secret redaction regression coverage for common secret-like assignment patterns.
+The next step should add focused secret redaction regression coverage for OpenAI, GitHub, JWT, and database URL provider token patterns.
 
 ## Completed Implementation
 
@@ -1184,6 +1184,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/security typecheck
 pnpm test -- packages/security/src/file-filter.test.ts
+```
+
+### 2026-05-29: Phase 67 Secret Redaction Assignment Regression Coverage
+
+- Added secret redaction regression coverage for common password, token, secret, and private key assignment names.
+- Verified assignment redaction is case-insensitive and preserves assignment syntax.
+- Verified assignment redaction counts remain meaningful.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/security typecheck
+pnpm test -- packages/security/src/redact-secrets.test.ts
 ```
 
 ## Open Questions

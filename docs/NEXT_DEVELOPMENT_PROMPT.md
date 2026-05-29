@@ -37,12 +37,14 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 67: Secret Redaction Assignment Regression Coverage.
+- Implement Phase 68: Secret Redaction Provider Token Regression Coverage.
 
-Phase 67 goal:
-- Add focused secret redaction regression coverage for common `password`, `token`, and `secret` assignment patterns.
-- Verify redaction counts remain meaningful.
-- Keep security file filtering coverage intact.
+Phase 68 goal:
+- Add focused secret redaction regression coverage for OpenAI API keys.
+- Add focused secret redaction regression coverage for GitHub tokens.
+- Add focused secret redaction regression coverage for JWTs.
+- Add focused secret redaction regression coverage for database URLs.
+- Keep assignment redaction coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
