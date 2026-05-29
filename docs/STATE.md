@@ -4,9 +4,9 @@ This file is the durable handoff for future sessions.
 
 ## Current Stage
 
-Product specification and implementation planning.
+Monorepo foundation implemented.
 
-No application code has been generated yet.
+Application code has started. The repository now contains a pnpm workspace with API, Web, CLI, shared contracts, and core engine skeleton packages.
 
 ## Product Decision Log
 
@@ -84,26 +84,44 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Generate monorepo foundation:
+Implement Phase 2: Source Loading And Security.
+
+Required packages:
 
 ```text
-package.json
-pnpm-workspace.yaml
-turbo.json
-tsconfig.base.json
-apps/api
-apps/web
-apps/cli
-packages/shared
-packages/core
+packages/source-loader
+packages/security
 ```
 
-Then implement shared contracts before any UI/API behavior.
+Phase 2 should add safe archive/folder loading, file inventory, path traversal protection, file limits, denylist rules, and secret redaction.
+
+## Completed Implementation
+
+### 2026-05-29: Phase 1 Monorepo Foundation
+
+- Added pnpm workspace configuration.
+- Added TypeScript base config.
+- Added ESLint, Prettier, and Vitest setup.
+- Added `packages/shared` with source/documentation/run contracts and Zod schemas.
+- Added `packages/core` with a minimal `DocumentationEngine` skeleton.
+- Added `apps/api` NestJS skeleton with `/health`.
+- Added `apps/web` Vite React skeleton.
+- Added `apps/cli` Commander skeleton.
+- Added initial package tests.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
 
 ## Open Questions
 
-- Should the Web UI be Next.js or Vite React?
-- Should the API run jobs in-process first or use BullMQ from the start?
+- Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.
+- Should the API run jobs in-process first or use BullMQ from the start? Decision for initial implementation: in-process.
 - Which OpenAI-compatible provider/model should be configured first?
 - What default upload limits should be used?
 - Should generated output be stored only temporarily or persisted between server restarts?
