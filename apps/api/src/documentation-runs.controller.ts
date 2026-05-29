@@ -9,11 +9,14 @@ import {
   Query,
   Res,
   UploadedFiles,
+  UseFilters,
   UseInterceptors
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { DocumentationRunsService } from './documentation-runs.service.js';
+import { MulterExceptionFilter } from './multer-exception.filter.js';
+import { getDocumentationUploadMulterOptions } from './upload-limits.js';
 
 @Controller('/v1/documentation-runs')
 export class DocumentationRunsController {
@@ -28,7 +31,8 @@ export class DocumentationRunsController {
   }
 
   @Post('/:runId/sources')
-  @UseInterceptors(AnyFilesInterceptor())
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(AnyFilesInterceptor(getDocumentationUploadMulterOptions()))
   async uploadSources(
     @Param('runId') runId: string,
     @UploadedFiles() files: Express.Multer.File[],

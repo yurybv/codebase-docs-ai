@@ -77,15 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 22: API Upload Limits And Request Hardening.
+Implement Phase 23: Web Upload Limit Guidance.
 
 Required package:
 
 ```text
-apps/api
+apps/web
 ```
 
-The next step should enforce multipart upload limits at the HTTP boundary before source-loader extraction. Add configurable file count/file size request limits and safe error responses for oversized uploads.
+The next step should show upload constraints in the Web UI and surface oversized upload errors cleanly. Keep the UI concise and avoid in-app explanatory clutter beyond operational labels.
 
 ## Completed Implementation
 
@@ -510,6 +510,23 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm lint
+```
+
+### 2026-05-29: Phase 22 API Upload Limits And Request Hardening
+
+- Added configurable multipart upload limits.
+- Added defaults for maximum uploaded files and per-file upload size.
+- Added a Multer exception filter that returns safe 400 responses for invalid uploads.
+- Applied upload limits to source archive upload endpoint.
+- Added upload limit parsing tests.
+- Documented API upload limit environment variables.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/upload-limits.test.ts apps/api/src/documentation-runs.service.test.ts
 pnpm lint
 ```
 

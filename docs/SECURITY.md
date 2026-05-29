@@ -10,6 +10,7 @@ Security is a core product feature because the module processes private source c
 - Enforce max archive size.
 - Enforce max extracted file count.
 - Enforce max individual file size.
+- Enforce multipart upload file count and per-file size limits before extraction.
 - Skip binary and generated files.
 - Denylist secret files.
 - Redact likely secrets before AI prompt construction.
@@ -86,6 +87,7 @@ Extraction must reject:
 
 - Validate all request bodies with schemas or DTOs.
 - Validate uploaded files before extraction.
+- Limit uploaded file count and size at the HTTP boundary.
 - Return safe error messages.
 - Do not expose local filesystem paths.
 - Add rate limits for public deployments.

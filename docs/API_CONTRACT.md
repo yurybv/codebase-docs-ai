@@ -231,3 +231,21 @@ Deletes temporary files and run artifacts.
 - Never log uploaded source content by default.
 - Enforce upload size limits.
 - Enforce run artifact retention.
+
+## Upload Limits
+
+Multipart source uploads are limited before archive extraction.
+
+Runtime configuration:
+
+```text
+DOCS_AI_UPLOAD_MAX_FILES
+DOCS_AI_UPLOAD_MAX_FILE_SIZE_BYTES
+```
+
+Defaults:
+
+```text
+DOCS_AI_UPLOAD_MAX_FILES=5
+DOCS_AI_UPLOAD_MAX_FILE_SIZE_BYTES=104857600
+```
