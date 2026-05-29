@@ -79,7 +79,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 39: Web API Error Envelope Handling.
+Implement Phase 40: Web API Error UI Smoke Coverage.
 
 Required package:
 
@@ -88,7 +88,7 @@ apps/web
 docs
 ```
 
-The next step should align Web UI error handling with the standardized API `{ error: ... }` envelope so upload/start/result failures show actionable API messages instead of generic HTTP failures.
+The next step should add a browser or smoke-level check that the Web UI presents standardized API error messages clearly during failed upload or generation paths.
 
 ## Completed Implementation
 
@@ -763,6 +763,19 @@ Verification:
 
 ```text
 pnpm lint
+```
+
+### 2026-05-29: Phase 39 Web API Error Envelope Handling
+
+- Added Web API error parsing for the standardized `{ error: ... }` envelope.
+- Preserved defensive parsing for legacy flat error bodies and non-JSON responses.
+- Included API error codes in operator-facing Web messages.
+- Added Web unit tests for API error parsing and formatting.
+
+Verification:
+
+```text
+pnpm verify
 ```
 
 ## Open Questions

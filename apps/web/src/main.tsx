@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Download, FileArchive, Play, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
+import { formatApiErrorMessage, parseApiError } from './api-errors.js';
 import {
   buildSourceUploadMetadata,
   inferSourceName,
@@ -357,8 +358,8 @@ function downloadResult(runId: string | undefined, format: string): void {
 
 async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const message = await parseErrorMessage(response);
-    throw new Error(message || `Request failed with status ${response.status}`);
+    const error = await parseApiError(response);
+    throw new Error(formatApiErrorMessage(error, `Request failed with status ${response.status}`));
   }
 
   return response.json() as Promise<T>;
@@ -377,16 +378,6 @@ async function failedRunDetails(runId: string | undefined): Promise<Pick<RunStat
     };
   } catch {
     return {};
-  }
-}
-
-async function parseErrorMessage(response: Response): Promise<string> {
-  const text = await response.text();
-  try {
-    const parsed = JSON.parse(text) as { message?: string; error?: { message?: string } };
-    return parsed.error?.message ?? parsed.message ?? text;
-  } catch {
-    return text;
   }
 }
 
