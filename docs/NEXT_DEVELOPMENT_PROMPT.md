@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 96: CLI API Error Output Sanitization Regression Coverage.
+- Implement Phase 97: Source Loader Extraction Error Sanitization Regression Coverage.
 
-Phase 96 goal:
-- Add CLI regression coverage proving API-mode failures printed by the CLI do not expose raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from CLI API-mode error output.
-- Keep API failed-run/error-envelope/result/download and SDK/Web/renderer sanitization coverage intact.
+Phase 97 goal:
+- Add source-loader regression coverage proving archive extraction failures do not expose raw secret-bearing source content.
+- Sanitize source-loader extraction errors if needed so raw denied files and raw secret values are absent from thrown errors.
+- Keep API/CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

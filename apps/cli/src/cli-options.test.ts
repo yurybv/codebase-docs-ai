@@ -53,4 +53,28 @@ describe('CLI option parsing', () => {
       }
     });
   });
+
+  it('formats API failures without raw secret-bearing error content', () => {
+    const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const failure = formatCliError({
+      name: 'CodebaseDocsAIClientError',
+      status: 400,
+      code: 'SOURCE_UPLOAD_INVALID',
+      message: `Upload failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
+      details: {
+        fieldErrors: {
+          sources: [`Remove ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
+        }
+      }
+    });
+    const payload = JSON.stringify(failure);
+
+    expect(failure.exitCode).toBe(1);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+  });
 });

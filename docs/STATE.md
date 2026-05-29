@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 96: CLI API Error Output Sanitization Regression Coverage.
+Implement Phase 97: Source Loader Extraction Error Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+packages/source-loader
 docs
 ```
 
-The next step should add CLI regression coverage proving API-mode failures printed by the CLI do not expose raw secret-bearing source content.
+The next step should add source-loader regression coverage proving archive extraction failures do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1562,6 +1562,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 96 CLI API Error Output Sanitization Regression Coverage
+
+- Added CLI failure formatting sanitization for SDK/API-mode error messages and nested details.
+- Added CLI regression coverage for raw provider keys and denied `.env` evidence in API-mode failure payloads.
+- Verified CLI API-mode error output preserves redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/cli-options.test.ts
 ```
 
 ## Open Questions
