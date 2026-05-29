@@ -85,13 +85,16 @@ describe('DocumentationRunsService', () => {
       completedSteps: 7,
       totalSteps: 7
     });
+    expect(completedRun.renderedFormats).toEqual(['markdown-tree', 'single-markdown', 'json']);
 
     const result = await service.getResult(created.runId);
     expect(result.documentation.pages).toHaveLength(14);
+    expect(result.renderedFormats).toEqual(['markdown-tree', 'single-markdown', 'json']);
 
     const restartedService = new DocumentationRunsService();
     const persistedRun = await restartedService.getRun(created.runId);
     expect(persistedRun.status).toBe('completed');
+    expect(persistedRun.renderedFormats).toEqual(['markdown-tree', 'single-markdown', 'json']);
 
     const download = await restartedService.getDownload(created.runId, 'single-markdown');
     expect(download.fileName).toBe('PROJECT_DOCUMENTATION.md');
@@ -231,6 +234,7 @@ describe('DocumentationRunsService', () => {
     const uploads = await readdir(uploadPath);
     expect(uploads).toHaveLength(1);
     expect(uploads[0]).toContain('frontend-b.zip');
+    expect((await service.getRun(created.runId)).renderedFormats).toBeUndefined();
   });
 
   it('cleans up expired run artifacts from the temp store', async () => {

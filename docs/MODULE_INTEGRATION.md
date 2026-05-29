@@ -72,6 +72,8 @@ const result = await client.documentationRuns.generateFromArchives({
 
 The helper creates a run, uploads archives, starts generation, polls until completion, retrieves the documentation tree, and optionally downloads a rendered artifact.
 
+After completion, `run.renderedFormats` and `result.renderedFormats` list the formats that can be downloaded for that run. Host applications should build download UI from this list instead of assuming every supported format is present.
+
 ### 3. CLI
 
 Useful for:

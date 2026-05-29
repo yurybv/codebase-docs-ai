@@ -285,6 +285,7 @@ export interface DocumentationRun {
   status: DocumentationRunStatus;
   sources: SourceInputMetadata[];
   options: DocumentationRunOptions;
+  renderedFormats?: DocumentationOutputFormat[];
   progress?: DocumentationRunProgress;
   error?: DocumentationRunError;
   createdAt: string;

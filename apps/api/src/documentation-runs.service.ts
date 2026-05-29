@@ -278,7 +278,12 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
 
   async getResult(
     runId: string
-  ): Promise<{ runId: string; status: DocumentationRunStatus; documentation: DocumentationTree }> {
+  ): Promise<{
+    runId: string;
+    status: DocumentationRunStatus;
+    renderedFormats: DocumentationOutputFormat[];
+    documentation: DocumentationTree;
+  }> {
     const storedRun = await this.requireRun(runId);
     if (!storedRun.documentationTreePath) {
       throw new BadRequestException({
@@ -291,6 +296,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     return {
       runId,
       status: storedRun.run.status,
+      renderedFormats: availableRenderedFormats(storedRun),
       documentation: documentationTree
     };
   }
@@ -462,12 +468,14 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       renderedPaths[format] = renderedPath;
     }
     storedRun.renderedPaths = renderedPaths;
+    storedRun.run.renderedFormats = availableRenderedFormats(storedRun);
     await this.writeRun(storedRun);
   }
 
   private async resetSourceArtifacts(storedRun: StoredRun): Promise<void> {
     delete storedRun.documentationTreePath;
     delete storedRun.renderedPaths;
+    delete storedRun.run.renderedFormats;
     await Promise.all([
       rm(path.join(storedRun.tempPath, 'uploads'), {
         recursive: true,
@@ -553,6 +561,15 @@ function safeRunError(error: unknown): DocumentationRunError {
   return {
     message: 'Documentation generation failed.'
   };
+}
+
+function availableRenderedFormats(storedRun: StoredRun): DocumentationOutputFormat[] {
+  const renderedFormats = storedRun.run.renderedFormats;
+  if (renderedFormats) {
+    return renderedFormats;
+  }
+
+  return Object.keys(storedRun.renderedPaths ?? {}) as DocumentationOutputFormat[];
 }
 
 function parseJson(value: string): unknown {

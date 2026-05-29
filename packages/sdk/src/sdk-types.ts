@@ -39,6 +39,7 @@ export interface UploadDocumentationSourcesResponse {
 export interface DocumentationRunResult {
   runId: string;
   status: DocumentationRunStatus;
+  renderedFormats: DocumentationOutputFormat[];
   documentation: DocumentationTree;
 }
 

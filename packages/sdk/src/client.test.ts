@@ -127,6 +127,7 @@ describe('CodebaseDocsAIClient', () => {
         jsonResponse({
           runId: 'run_123',
           status: 'completed',
+          renderedFormats: ['single-markdown'],
           documentation: {
             title: 'Docs',
             summary: 'Generated',
@@ -175,6 +176,7 @@ describe('CodebaseDocsAIClient', () => {
     });
 
     expect(result.run.status).toBe('completed');
+    expect(result.result.renderedFormats).toEqual(['single-markdown']);
     expect(result.result.documentation.title).toBe('Docs');
     expect(result.download?.fileName).toBe('PROJECT_DOCUMENTATION.md');
   });

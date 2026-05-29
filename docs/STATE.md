@@ -80,18 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 49: Download Format Availability Contract.
+Implement Phase 50: Web Download Controls From API Rendered Formats.
 
 Required package:
 
 ```text
-packages/shared
-apps/api
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose the rendered/downloadable output formats through API run or result responses, keep SDK types aligned, and document how API/SDK consumers can discover available downloads after a run completes.
+The next step should make the Web completed state prefer API-provided `renderedFormats` from run/result responses for download controls, while keeping selected formats as the pre-generation request state.
 
 ## Completed Implementation
 
@@ -923,6 +921,24 @@ Verification:
 
 ```text
 Browser check at http://localhost:5173/
+```
+
+### 2026-05-29: Phase 49 Download Format Availability Contract
+
+- Added `renderedFormats` to completed run state.
+- Returned `renderedFormats` from the documentation result endpoint.
+- Persisted rendered format availability with run artifacts.
+- Kept SDK result types aligned with the API response.
+- Added API service, HTTP lifecycle, and SDK regression coverage.
+- Documented how API and SDK consumers can discover downloadable formats.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/shared build
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts
 ```
 
 ## Open Questions

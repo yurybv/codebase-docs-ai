@@ -31,6 +31,8 @@ const result = await client.documentationRuns.generateFromArchives({
   ],
   downloadFormat: 'single-markdown'
 });
+
+console.log(result.result.renderedFormats);
 ```
 
 The SDK expects runtime support for `fetch`, `FormData`, and `Blob`. Node.js `>=20.10.0` provides these APIs.

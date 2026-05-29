@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 49: Download Format Availability Contract.
+- Implement Phase 50: Web Download Controls From API Rendered Formats.
 
-Phase 49 goal:
-- Expose rendered/downloadable output formats through API run or result responses.
-- Keep SDK types and tests aligned with the API response shape.
-- Document how API and SDK consumers can discover available downloads after a run completes.
+Phase 50 goal:
+- Make the Web completed state prefer API-provided `renderedFormats` from run/result responses for download controls.
+- Keep selected formats as the pre-generation request state.
+- Update Web tests and docs for API-driven completed download controls.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

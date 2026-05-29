@@ -202,9 +202,12 @@ Returns:
 {
   runId: string;
   status: DocumentationRunStatus;
+  renderedFormats: DocumentationOutputFormat[];
   documentation: DocumentationTree;
 }
 ```
+
+`renderedFormats` lists the output artifacts available through `download(input)` for that completed run.
 
 ### `download(input)`
 
@@ -282,6 +285,8 @@ const result = await client.documentationRuns.generateFromArchives({
 ```
 
 Use this helper for simple host integrations. Use individual methods when the host needs custom persistence, progress UI, cancellation, retry behavior, or separate upload/start approval.
+
+The returned `run.renderedFormats` and `result.renderedFormats` can be used to show download controls without assuming every requested format was rendered.
 
 ## Error Handling
 

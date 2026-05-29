@@ -145,6 +145,21 @@ Response:
 }
 ```
 
+Completed runs include the formats that were actually rendered and can be downloaded:
+
+```json
+{
+  "runId": "run_123",
+  "status": "completed",
+  "renderedFormats": ["single-markdown", "json"],
+  "progress": {
+    "currentStep": "Documentation run completed",
+    "completedSteps": 7,
+    "totalSteps": 7
+  }
+}
+```
+
 If a run fails, the persisted run state includes a safe error summary:
 
 ```json
@@ -174,6 +189,7 @@ Response:
 {
   "runId": "run_123",
   "status": "completed",
+  "renderedFormats": ["single-markdown", "json"],
   "documentation": {
     "title": "Customer Portal Documentation",
     "pages": [
@@ -201,6 +217,8 @@ markdown-tree
 single-markdown
 json
 ```
+
+Use `renderedFormats` from `GET /v1/documentation-runs/:runId` or `/result` to discover which of these formats are available for a specific completed run.
 
 ## Delete Run
 

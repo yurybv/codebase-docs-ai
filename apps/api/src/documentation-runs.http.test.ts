@@ -106,10 +106,16 @@ describe('Documentation runs HTTP API', () => {
     );
     expect(started.status).toBe('completed');
 
-    const result = await fetchJson<{ documentation: { pages: unknown[] } }>(
+    const completedRun = await fetchJson<{ renderedFormats: string[] }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}`
+    );
+    expect(completedRun.renderedFormats).toEqual(['single-markdown', 'json']);
+
+    const result = await fetchJson<{ renderedFormats: string[]; documentation: { pages: unknown[] } }>(
       `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`
     );
     expect(result.documentation.pages.length).toBeGreaterThan(0);
+    expect(result.renderedFormats).toEqual(['single-markdown', 'json']);
 
     const downloadResponse = await fetch(
       `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
