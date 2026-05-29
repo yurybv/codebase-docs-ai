@@ -45,6 +45,7 @@ Start with:
 - [API Contract](./docs/API_CONTRACT.md)
 - [Product Features](./docs/FEATURES.md)
 - [Module Integration](./docs/MODULE_INTEGRATION.md)
+- [SDK Contract](./docs/SDK_CONTRACT.md)
 - [Packaging And Public Boundaries](./docs/PACKAGING.md)
 - [Deployment](./docs/DEPLOYMENT.md)
 - [Development Workflow](./docs/DEVELOPMENT_WORKFLOW.md)

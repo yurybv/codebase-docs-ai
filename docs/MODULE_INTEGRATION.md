@@ -35,6 +35,8 @@ The SDK wraps HTTP API calls by default.
 
 Optional local engine mode can be added later for Node.js projects that want to run the engine in-process.
 
+Full public method, error handling, and file input contract: [SDK Contract](./SDK_CONTRACT.md).
+
 Example:
 
 ```ts

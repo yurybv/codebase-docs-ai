@@ -42,6 +42,8 @@ import { CodebaseDocsAIClient } from '@codebase-docs-ai/sdk';
 
 The high-level helper is `client.documentationRuns.generateFromArchives(...)`. It creates a run, uploads archives, starts generation, polls completion, retrieves the tree, and optionally downloads a rendered artifact.
 
+The detailed public SDK contract is documented in [SDK Contract](./SDK_CONTRACT.md).
+
 ### CLI
 
 Public operator and automation surface.

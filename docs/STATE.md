@@ -79,16 +79,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 36: SDK Package Contract Documentation.
+Implement Phase 37: SDK Contract Tests For Public Error Shapes.
 
 Required package:
 
 ```text
 packages/sdk
-docs
 ```
 
-The next step should document SDK public method contracts, error handling, browser/Node file input expectations, and versioning boundaries for external TypeScript consumers.
+The next step should add focused SDK contract tests for public method behavior, multipart upload metadata, deletion, timeout behavior, and API error shape preservation.
 
 ## Completed Implementation
 
@@ -720,6 +719,21 @@ Verification:
 
 ```text
 pnpm verify
+```
+
+### 2026-05-29: Phase 36 SDK Package Contract Documentation
+
+- Added public SDK contract documentation for external TypeScript consumers.
+- Documented runtime expectations for `fetch`, `FormData`, `Blob`, and Node.js `>=20.10.0`.
+- Documented archive file input expectations for Node.js and browser hosts.
+- Documented each `documentationRuns` method and the high-level archive generation helper.
+- Documented `CodebaseDocsAIClientError` handling and versioning boundaries.
+- Added an SDK package README and linked SDK contract docs from README, module integration, and packaging docs.
+
+Verification:
+
+```text
+pnpm lint
 ```
 
 ## Open Questions
