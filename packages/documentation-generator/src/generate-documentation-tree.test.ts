@@ -56,6 +56,30 @@ describe('generateDocumentationTree', () => {
     expect(documentationTree.pages.find((page) => page.key === 'api-contracts')?.markdown).toContain(
       '| GET | /api/users | matched |'
     );
+    expect(documentationTree.pages.find((page) => page.key === 'system-architecture')?.markdown).toContain(
+      '| frontend-calls-backend | Frontend | Backend | high |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'frontend')?.markdown).toContain(
+      '| next-app-route | /users |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'backend')?.markdown).toContain(
+      '| GET | /api/users | users.controller |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'auth')?.markdown).toContain(
+      '| jwt | Frontend, Backend | medium |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'local-development')?.markdown).toContain(
+      '| dev | `next dev` |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'testing')?.markdown).toContain(
+      '| test | `vitest run` |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'build-deployment')?.markdown).toContain(
+      '| docker | Backend:Dockerfile |'
+    );
+    expect(documentationTree.pages.find((page) => page.key === 'external-integrations')?.markdown).toContain(
+      '| Stripe | Backend |'
+    );
     expect(documentationTree.sourceReferences).toContainEqual({
       sourceName: 'Frontend',
       path: 'src/api.ts'
@@ -100,10 +124,37 @@ function systemMapFixture(): SystemMap {
               sourceName: 'Frontend',
               path: 'package.json'
             }
+          },
+          {
+            name: 'test',
+            command: 'vitest run',
+            sourceReference: {
+              sourceName: 'Frontend',
+              path: 'package.json'
+            }
           }
         ],
-        dependencies: [],
-        routes: [],
+        dependencies: [
+          {
+            name: 'next',
+            version: 'latest',
+            scope: 'dependencies',
+            sourceReference: {
+              sourceName: 'Frontend',
+              path: 'package.json'
+            }
+          }
+        ],
+        routes: [
+          {
+            kind: 'next-app-route',
+            path: '/users',
+            sourceReference: {
+              sourceName: 'Frontend',
+              path: 'app/users/page.tsx'
+            }
+          }
+        ],
         apiEndpoints: [],
         apiClientCalls: [
           {
@@ -116,12 +167,128 @@ function systemMapFixture(): SystemMap {
           }
         ],
         environmentVariables: [],
-        configFiles: [],
+        configFiles: [
+          {
+            kind: 'next',
+            sourceReference: {
+              sourceName: 'Frontend',
+              path: 'next.config.ts'
+            }
+          }
+        ],
+        risks: [],
+        generatedAt: '2026-05-29T00:00:00.000Z'
+      },
+      {
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        packageManager: {
+          name: 'pnpm',
+          evidence: [
+            {
+              sourceName: 'Backend',
+              path: 'pnpm-lock.yaml'
+            }
+          ]
+        },
+        frameworks: [
+          {
+            name: 'NestJS',
+            category: 'backend',
+            evidence: [
+              {
+                sourceName: 'Backend',
+                path: 'package.json'
+              }
+            ]
+          }
+        ],
+        scripts: [
+          {
+            name: 'start',
+            command: 'nest start',
+            sourceReference: {
+              sourceName: 'Backend',
+              path: 'package.json'
+            }
+          },
+          {
+            name: 'build',
+            command: 'nest build',
+            sourceReference: {
+              sourceName: 'Backend',
+              path: 'package.json'
+            }
+          }
+        ],
+        dependencies: [
+          {
+            name: 'stripe',
+            version: 'latest',
+            scope: 'dependencies',
+            sourceReference: {
+              sourceName: 'Backend',
+              path: 'package.json'
+            }
+          }
+        ],
+        routes: [],
+        apiEndpoints: [
+          {
+            method: 'GET',
+            path: '/api/users',
+            controller: 'users.controller',
+            sourceReference: {
+              sourceName: 'Backend',
+              path: 'src/users.controller.ts'
+            }
+          }
+        ],
+        apiClientCalls: [],
+        environmentVariables: [
+          {
+            name: 'DATABASE_URL',
+            sourceReferences: [
+              {
+                sourceName: 'Backend',
+                path: 'src/config.ts'
+              }
+            ]
+          }
+        ],
+        configFiles: [
+          {
+            kind: 'docker',
+            sourceReference: {
+              sourceName: 'Backend',
+              path: 'Dockerfile'
+            }
+          }
+        ],
         risks: [],
         generatedAt: '2026-05-29T00:00:00.000Z'
       }
     ],
-    relationships: [],
+    relationships: [
+      {
+        kind: 'frontend-calls-backend',
+        fromSource: 'Frontend',
+        toSource: 'Backend',
+        confidence: 'high',
+        evidence: [
+          {
+            sourceName: 'Frontend',
+            path: 'src/api.ts'
+          },
+          {
+            sourceName: 'Backend',
+            path: 'src/users.controller.ts'
+          }
+        ]
+      }
+    ],
     apiContracts: [
       {
         method: 'GET',
@@ -137,9 +304,32 @@ function systemMapFixture(): SystemMap {
         status: 'matched'
       }
     ],
-    authFlows: [],
+    authFlows: [
+      {
+        kind: 'jwt',
+        sources: ['Frontend', 'Backend'],
+        confidence: 'medium',
+        evidence: [
+          {
+            sourceName: 'Backend',
+            path: 'package.json'
+          }
+        ]
+      }
+    ],
     environmentLinks: [],
-    integrations: [],
+    integrations: [
+      {
+        name: 'Stripe',
+        sources: ['Backend'],
+        evidence: [
+          {
+            sourceName: 'Backend',
+            path: 'package.json'
+          }
+        ]
+      }
+    ],
     risks: [],
     unknowns: [],
     generatedAt: '2026-05-29T00:00:00.000Z'

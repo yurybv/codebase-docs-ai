@@ -283,6 +283,25 @@ Done when:
 - documentation generator validates AI page output before rendering;
 - API and CLI can use the provider when credentials are configured.
 
+## Phase 17: Documentation Quality Expansion
+
+Deliverables:
+
+- deterministic content for system architecture;
+- frontend route/script/API call documentation;
+- backend endpoint/script/runtime documentation;
+- auth evidence documentation;
+- local development command documentation;
+- testing command documentation;
+- build/deployment evidence documentation;
+- external integration evidence documentation.
+
+Done when:
+
+- default documentation pages no longer rely on generic placeholders for core product sections;
+- deterministic output remains useful without AI credentials;
+- generator tests cover the specialized sections.
+
 ## Cross-Cutting Work
 
 During all phases:

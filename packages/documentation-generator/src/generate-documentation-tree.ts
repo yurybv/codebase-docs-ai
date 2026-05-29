@@ -126,12 +126,28 @@ function renderPageMarkdown(key: string, title: string, systemMap: SystemMap): s
   switch (key) {
     case 'overview':
       return renderOverview(title, systemMap);
+    case 'system-architecture':
+      return renderSystemArchitecture(title, systemMap);
     case 'source-inventory':
       return renderSourceInventory(title, systemMap);
+    case 'frontend':
+      return renderRolePage(title, systemMap, 'frontend');
+    case 'backend':
+      return renderRolePage(title, systemMap, 'backend');
     case 'api-contracts':
       return renderApiContracts(title, systemMap);
+    case 'auth':
+      return renderAuth(title, systemMap);
     case 'environment':
       return renderEnvironment(title, systemMap);
+    case 'local-development':
+      return renderLocalDevelopment(title, systemMap);
+    case 'testing':
+      return renderTesting(title, systemMap);
+    case 'build-deployment':
+      return renderBuildDeployment(title, systemMap);
+    case 'external-integrations':
+      return renderExternalIntegrations(title, systemMap);
     case 'risks':
       return renderRisks(title, systemMap);
     case 'source-references':
@@ -160,6 +176,36 @@ ${sourceRows || '| Not detected | unknown |'}
 `;
 }
 
+function renderSystemArchitecture(title: string, systemMap: SystemMap): string {
+  const relationshipRows = systemMap.relationships
+    .map(
+      (relationship) =>
+        `| ${relationship.kind} | ${relationship.fromSource} | ${relationship.toSource} | ${relationship.confidence} | ${formatReferences(relationship.evidence)} |`
+    )
+    .join('\n');
+  const sourceRows = systemMap.sources
+    .map((repository) => {
+      const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
+      return `| ${repository.source.name} | ${repository.source.role} | ${frameworks} | ${repository.packageManager.name} |`;
+    })
+    .join('\n');
+
+  return `${heading(title)}
+
+## Source Roles
+
+| Source | Role | Frameworks | Package manager |
+| --- | --- | --- | --- |
+${sourceRows || '| None detected | N/A | N/A | N/A |'}
+
+## Detected Relationships
+
+| Kind | From | To | Confidence | Evidence |
+| --- | --- | --- | --- | --- |
+${relationshipRows || '| None detected | N/A | N/A | N/A | N/A |'}
+`;
+}
+
 function renderSourceInventory(title: string, systemMap: SystemMap): string {
   const sections = systemMap.sources.map((repository) => {
     const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
@@ -177,6 +223,74 @@ function renderSourceInventory(title: string, systemMap: SystemMap): string {
 
 ${sections.join('\n\n') || 'No sources were provided.'}
 `;
+}
+
+function renderRolePage(title: string, systemMap: SystemMap, role: 'frontend' | 'backend'): string {
+  const repositories = systemMap.sources.filter((repository) => repository.source.role === role);
+  const sections = repositories.map((repository) => {
+    const frameworkRows = repository.frameworks
+      .map((framework) => `| ${framework.name} | ${framework.category} | ${formatReferences(framework.evidence)} |`)
+      .join('\n');
+    const scriptRows = repository.scripts
+      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .join('\n');
+    const routeRows = repository.routes
+      .map((route) => `| ${route.kind} | ${route.path} | ${formatReference(route.sourceReference)} |`)
+      .join('\n');
+    const endpointRows = repository.apiEndpoints
+      .map(
+        (endpoint) =>
+          `| ${endpoint.method} | ${endpoint.path} | ${endpoint.controller ?? 'N/A'} | ${formatReference(endpoint.sourceReference)} |`
+      )
+      .join('\n');
+    const apiCallRows = repository.apiClientCalls
+      .map((call) => `| ${call.method} | ${call.path} | ${formatReference(call.sourceReference)} |`)
+      .join('\n');
+
+    return `## ${repository.source.name}
+
+### Framework Evidence
+
+| Framework | Category | Evidence |
+| --- | --- | --- |
+${frameworkRows || '| None detected | N/A | N/A |'}
+
+### Scripts
+
+| Script | Command | Evidence |
+| --- | --- | --- |
+${scriptRows || '| None detected | N/A | N/A |'}
+
+${role === 'frontend' ? frontendSpecificContent(routeRows, apiCallRows) : backendSpecificContent(endpointRows)}
+`;
+  });
+
+  return `${heading(title)}
+
+${sections.join('\n\n') || `No ${role} source was provided or detected.`}
+`;
+}
+
+function frontendSpecificContent(routeRows: string, apiCallRows: string): string {
+  return `### Routes
+
+| Kind | Path | Evidence |
+| --- | --- | --- |
+${routeRows || '| None detected | N/A | N/A |'}
+
+### API Calls
+
+| Method | Path | Evidence |
+| --- | --- | --- |
+${apiCallRows || '| None detected | N/A | N/A |'}`;
+}
+
+function backendSpecificContent(endpointRows: string): string {
+  return `### API Endpoints
+
+| Method | Path | Controller | Evidence |
+| --- | --- | --- | --- |
+${endpointRows || '| None detected | N/A | N/A | N/A |'}`;
 }
 
 function renderApiContracts(title: string, systemMap: SystemMap): string {
@@ -197,6 +311,28 @@ function renderApiContracts(title: string, systemMap: SystemMap): string {
 | Method | Path | Status | Consumer | Provider |
 | --- | --- | --- | --- | --- |
 ${rows || '| N/A | N/A | No API contracts detected | N/A | N/A |'}
+`;
+}
+
+function renderAuth(title: string, systemMap: SystemMap): string {
+  const rows = systemMap.authFlows
+    .map(
+      (flow) =>
+        `| ${flow.kind} | ${flow.sources.join(', ')} | ${flow.confidence} | ${formatReferences(flow.evidence)} |`
+    )
+    .join('\n');
+
+  return `${heading(title)}
+
+## Detected Auth Evidence
+
+| Kind | Sources | Confidence | Evidence |
+| --- | --- | --- | --- |
+${rows || '| None detected | N/A | N/A | N/A |'}
+
+## Notes
+
+${rows ? 'Auth documentation is based on dependency and source evidence only. Review route guards, middleware, session handling, and permissions manually before relying on this section for security decisions.' : 'The provided source inputs do not contain enough evidence to determine authentication or authorization behavior.'}
 `;
 }
 
@@ -226,6 +362,119 @@ ${envRows || '| None detected | N/A | N/A |'}
 | Name | Sources |
 | --- | --- |
 ${linkRows || '| None detected | N/A |'}
+`;
+}
+
+function renderLocalDevelopment(title: string, systemMap: SystemMap): string {
+  const sections = systemMap.sources.map((repository) => {
+    const installCommand = installCommandForPackageManager(repository.packageManager.name);
+    const startScripts = scriptsMatching(repository, ['dev', 'start', 'serve']);
+    const setupRows = startScripts
+      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .join('\n');
+
+    return `## ${repository.source.name}
+
+- Package manager: ${repository.packageManager.name}
+- Suggested install command: \`${installCommand}\`
+
+| Start script | Command | Evidence |
+| --- | --- | --- |
+${setupRows || '| None detected | N/A | N/A |'}`;
+  });
+
+  return `${heading(title)}
+
+${sections.join('\n\n') || 'No source scripts were detected.'}
+`;
+}
+
+function renderTesting(title: string, systemMap: SystemMap): string {
+  const sections = systemMap.sources.map((repository) => {
+    const testScripts = scriptsMatching(repository, ['test', 'unit', 'integration', 'e2e', 'spec']);
+    const rows = testScripts
+      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .join('\n');
+
+    return `## ${repository.source.name}
+
+| Test script | Command | Evidence |
+| --- | --- | --- |
+${rows || '| None detected | N/A | N/A |'}`;
+  });
+
+  return `${heading(title)}
+
+${sections.join('\n\n') || 'No source scripts were detected.'}
+
+## Gaps
+
+${systemMap.sources.some((repository) => scriptsMatching(repository, ['test', 'unit', 'integration', 'e2e', 'spec']).length === 0) ? 'At least one source does not expose an obvious test script in package metadata.' : 'Detected sources expose test-related scripts.'}
+`;
+}
+
+function renderBuildDeployment(title: string, systemMap: SystemMap): string {
+  const sections = systemMap.sources.map((repository) => {
+    const buildScripts = scriptsMatching(repository, ['build', 'compile', 'deploy', 'docker']);
+    const scriptRows = buildScripts
+      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .join('\n');
+    const configRows = repository.configFiles
+      .map((configFile) => `| ${configFile.kind} | ${formatReference(configFile.sourceReference)} |`)
+      .join('\n');
+
+    return `## ${repository.source.name}
+
+### Build And Deployment Scripts
+
+| Script | Command | Evidence |
+| --- | --- | --- |
+${scriptRows || '| None detected | N/A | N/A |'}
+
+### Deployment-Relevant Config
+
+| Kind | Evidence |
+| --- | --- |
+${configRows || '| None detected | N/A |'}`;
+  });
+
+  return `${heading(title)}
+
+${sections.join('\n\n') || 'No build or deployment evidence was detected.'}
+`;
+}
+
+function renderExternalIntegrations(title: string, systemMap: SystemMap): string {
+  const integrationRows = systemMap.integrations
+    .map(
+      (integration) =>
+        `| ${integration.name} | ${integration.sources.join(', ')} | ${formatReferences(integration.evidence)} |`
+    )
+    .join('\n');
+  const dependencyRows = systemMap.sources
+    .flatMap((repository) =>
+      repository.dependencies
+        .filter((dependency) => likelyIntegrationDependency(dependency.name))
+        .map(
+          (dependency) =>
+            `| ${dependency.name} | ${repository.source.name} | ${dependency.scope} | ${formatReference(dependency.sourceReference)} |`
+        )
+    )
+    .join('\n');
+
+  return `${heading(title)}
+
+## Detected Integrations
+
+| Integration | Sources | Evidence |
+| --- | --- | --- |
+${integrationRows || '| None detected | N/A | N/A |'}
+
+## Integration-Like Dependencies
+
+| Dependency | Source | Scope | Evidence |
+| --- | --- | --- | --- |
+${dependencyRows || '| None detected | N/A | N/A | N/A |'}
 `;
 }
 
@@ -263,6 +512,60 @@ The provided source inputs contain ${systemMap.sources.length} repository map(s)
 `;
 }
 
+function installCommandForPackageManager(packageManager: string): string {
+  switch (packageManager) {
+    case 'pnpm':
+      return 'pnpm install';
+    case 'yarn':
+      return 'yarn install';
+    case 'bun':
+      return 'bun install';
+    case 'npm':
+      return 'npm install';
+    default:
+      return 'Install dependencies with the package manager used by the source.';
+  }
+}
+
+function scriptsMatching(
+  repository: SystemMap['sources'][number],
+  keywords: string[]
+): SystemMap['sources'][number]['scripts'] {
+  return repository.scripts.filter((script) =>
+    keywords.some((keyword) => script.name.toLowerCase().includes(keyword))
+  );
+}
+
+function likelyIntegrationDependency(dependencyName: string): boolean {
+  return [
+    'stripe',
+    'sentry',
+    'firebase',
+    'aws-sdk',
+    '@aws-sdk/',
+    'twilio',
+    'sendgrid',
+    'mailgun',
+    'prisma',
+    'mongoose',
+    'typeorm',
+    'redis',
+    'bull',
+    'amqp',
+    'kafka',
+    'openai',
+    '@octokit/'
+  ].some((candidate) => dependencyName.includes(candidate));
+}
+
+function formatReference(sourceReference: SourceReference): string {
+  return `${sourceReference.sourceName}:${sourceReference.path}`;
+}
+
+function formatReferences(sourceReferences: SourceReference[]): string {
+  return sourceReferences.map(formatReference).join(', ') || 'N/A';
+}
+
 function collectPageReferences(key: string, systemMap: SystemMap): SourceReference[] {
   if (key === 'api-contracts') {
     return dedupeReferences(
@@ -278,6 +581,52 @@ function collectPageReferences(key: string, systemMap: SystemMap): SourceReferen
         repository.environmentVariables.flatMap((envVar) => envVar.sourceReferences)
       )
     );
+  }
+
+  if (key === 'system-architecture') {
+    return dedupeReferences([
+      ...collectSystemReferences(systemMap),
+      ...systemMap.relationships.flatMap((relationship) => relationship.evidence)
+    ]);
+  }
+
+  if (key === 'frontend' || key === 'backend') {
+    const role = key;
+    return dedupeReferences(
+      systemMap.sources
+        .filter((repository) => repository.source.role === role)
+        .flatMap((repository) => [
+          ...repository.frameworks.flatMap((framework) => framework.evidence),
+          ...repository.scripts.map((script) => script.sourceReference),
+          ...repository.routes.map((route) => route.sourceReference),
+          ...repository.apiEndpoints.map((endpoint) => endpoint.sourceReference),
+          ...repository.apiClientCalls.map((call) => call.sourceReference)
+        ])
+    );
+  }
+
+  if (key === 'auth') {
+    return dedupeReferences(systemMap.authFlows.flatMap((flow) => flow.evidence));
+  }
+
+  if (key === 'local-development' || key === 'testing' || key === 'build-deployment') {
+    return dedupeReferences(
+      systemMap.sources.flatMap((repository) => [
+        ...repository.scripts.map((script) => script.sourceReference),
+        ...repository.configFiles.map((configFile) => configFile.sourceReference)
+      ])
+    );
+  }
+
+  if (key === 'external-integrations') {
+    return dedupeReferences([
+      ...systemMap.integrations.flatMap((integration) => integration.evidence),
+      ...systemMap.sources.flatMap((repository) =>
+        repository.dependencies
+          .filter((dependency) => likelyIntegrationDependency(dependency.name))
+          .map((dependency) => dependency.sourceReference)
+      )
+    ]);
   }
 
   return collectSystemReferences(systemMap);

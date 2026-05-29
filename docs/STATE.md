@@ -77,16 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 17: Documentation Quality Expansion.
+Implement Phase 18: Analyzer Evidence Expansion.
 
 Required package:
 
 ```text
-packages/documentation-generator
 packages/repo-analyzer
+packages/system-analyzer
 ```
 
-The next step should expand deterministic documentation page content beyond placeholders, especially local development, testing, build/deployment, frontend, backend, auth, and integrations pages. Use existing repository and system maps first, then let AI enrich when configured.
+The next step should improve analyzer evidence quality: detect more source roles/frameworks, more integration dependencies, more config files, stronger auth evidence, and better API client method detection for `fetch` calls with explicit method options.
 
 ## Completed Implementation
 
@@ -421,6 +421,27 @@ Verification:
 
 ```text
 pnpm smoke:e2e
+```
+
+### 2026-05-29: Phase 17 Documentation Quality Expansion
+
+- Expanded deterministic documentation beyond generic placeholders.
+- Added specialized system architecture content.
+- Added frontend documentation for frameworks, scripts, routes, and API calls.
+- Added backend documentation for frameworks, scripts, and API endpoints.
+- Added authentication evidence documentation.
+- Added local development command documentation.
+- Added testing command and gap documentation.
+- Added build/deployment script and config documentation.
+- Added external integration evidence documentation.
+- Added generator fixture coverage for the specialized sections.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/documentation-generator typecheck
+pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm lint
 ```
 
 ## Open Questions
