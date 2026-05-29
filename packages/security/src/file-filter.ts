@@ -48,6 +48,7 @@ export const defaultSecurityFilterOptions: SecurityFilterOptions = {
     '.zip',
     '.tar',
     '.gz',
+    '.tgz',
     '.p12',
     '.pfx'
   ],
@@ -63,7 +64,9 @@ export function filterLoadedSource(
 
   return {
     source: source.source,
-    includedFiles: decisions.filter((decision) => decision.include).map((decision) => decision.file),
+    includedFiles: decisions
+      .filter((decision) => decision.include)
+      .map((decision) => decision.file),
     skippedFiles: decisions.filter((decision) => !decision.include)
   };
 }
@@ -105,7 +108,9 @@ function getSkipReason(
   return 'included';
 }
 
-function mergeSecurityFilterOptions(options: Partial<SecurityFilterOptions>): SecurityFilterOptions {
+function mergeSecurityFilterOptions(
+  options: Partial<SecurityFilterOptions>
+): SecurityFilterOptions {
   return {
     denylistPatterns: options.denylistPatterns ?? defaultSecurityFilterOptions.denylistPatterns,
     generatedPatterns: options.generatedPatterns ?? defaultSecurityFilterOptions.generatedPatterns,

@@ -40,6 +40,34 @@ describe('decideSourceFile', () => {
     expect(decision.include).toBe(false);
     expect(decision.reason).toBe('binary_extension');
   });
+
+  it.each([
+    {
+      path: 'archives/frontend.zip',
+      extension: '.zip'
+    },
+    {
+      path: 'archives/backend.tar',
+      extension: '.tar'
+    },
+    {
+      path: 'archives/shared.tar.gz',
+      extension: '.gz'
+    },
+    {
+      path: 'archives/infra.tgz',
+      extension: '.tgz'
+    }
+  ])('skips nested source archive file $path', ({ path, extension }) => {
+    const decision = decideSourceFile({
+      ...baseFile,
+      path,
+      extension
+    });
+
+    expect(decision.include).toBe(false);
+    expect(decision.reason).toBe('binary_extension');
+  });
 });
 
 describe('filterLoadedSource', () => {
@@ -67,8 +95,6 @@ describe('filterLoadedSource', () => {
     const filtered = filterLoadedSource(source);
 
     expect(filtered.includedFiles.map((file) => file.path)).toEqual(['src/main.ts']);
-    expect(filtered.skippedFiles.map((decision) => decision.reason)).toEqual([
-      'denylisted_path'
-    ]);
+    expect(filtered.skippedFiles.map((decision) => decision.reason)).toEqual(['denylisted_path']);
   });
 });

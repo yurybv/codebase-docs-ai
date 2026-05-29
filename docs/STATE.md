@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 64: Security Nested Archive Filter Regression Coverage.
+Implement Phase 65: Security Prompt File Size Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/security
 docs
 ```
 
-The next step should add focused security filter regression coverage for nested source archive files so nested archives are excluded from prompt/source context.
+The next step should add focused security filter regression coverage for prompt file size limits.
 
 ## Completed Implementation
 
@@ -1144,6 +1144,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/source-loader typecheck
 pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-29: Phase 64 Security Nested Archive Filter Regression Coverage
+
+- Added security filter regression coverage for nested `.zip`, `.tar`, `.tar.gz`, and `.tgz` source archives.
+- Added `.tgz` to the default binary extension filter so all supported source archive formats are excluded from prompt/source context when nested inside inputs.
+- Kept existing source-loader archive and folder safety coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/security typecheck
+pnpm test -- packages/security/src/file-filter.test.ts
 ```
 
 ## Open Questions

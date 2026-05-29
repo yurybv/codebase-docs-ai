@@ -37,13 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 64: Security Nested Archive Filter Regression Coverage.
+- Implement Phase 65: Security Prompt File Size Regression Coverage.
 
-Phase 64 goal:
-- Add focused security filter regression coverage for nested `.zip` files.
-- Add focused security filter regression coverage for nested `.tar`, `.tar.gz`, and `.tgz` files.
-- Verify nested archives are excluded from prompt/source context.
-- Keep source-loader archive and folder safety coverage intact.
+Phase 65 goal:
+- Add focused security filter regression coverage for files above `maxPromptFileSizeBytes`.
+- Verify oversized prompt files are skipped with `file_size_limit_exceeded`.
+- Keep nested archive filtering coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
