@@ -77,15 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 15: Web Progress And Failure UX.
+Implement Phase 16: End-To-End API/Web Integration Test Harness.
 
 Required package:
 
 ```text
+apps/api
 apps/web
 ```
 
-The next step should update the Web UI to display structured run progress and failed run details returned by the API, including a clear retry path for failed or expired runs.
+The next step should add an automated integration harness that starts API and Web locally, uploads fixture archives through the browser, waits for generation, and verifies preview/download behavior. This should reduce reliance on manual smoke checks.
 
 ## Completed Implementation
 
@@ -385,6 +386,23 @@ Verification:
 pnpm --filter @codebase-docs-ai/shared build
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
+```
+
+### 2026-05-29: Phase 15 Web Progress And Failure UX
+
+- Updated Web UI run state to include API progress and safe error details.
+- Added completed progress display after generation.
+- Added failed run detail retrieval from persisted API run state when start fails.
+- Added progress bar and compact progress labels to the result panel.
+- Improved API error parsing for JSON error bodies.
+- Verified Web UI rendering in the browser.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm --filter @codebase-docs-ai/web build
+Browser smoke test at http://localhost:5173/
 ```
 
 ## Open Questions

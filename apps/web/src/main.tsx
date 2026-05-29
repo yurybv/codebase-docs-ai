@@ -47,6 +47,7 @@ function App(): JSX.Element {
   }
 
   async function generateDocumentation(): Promise<void> {
+    let activeRunId: string | undefined;
     if (sources.length === 0) {
       setRunState({
         status: 'failed',
@@ -62,6 +63,7 @@ function App(): JSX.Element {
       });
 
       const run = await createRun();
+      activeRunId = run.runId;
 
       setRunState({
         status: 'uploading',
@@ -78,17 +80,22 @@ function App(): JSX.Element {
       });
 
       await startRun(run.runId);
+      const runDetails = await getRun(run.runId);
       const result = await getResult(run.runId);
       setRunState({
         status: 'completed',
         runId: run.runId,
+        ...(runDetails.progress ? { progress: runDetails.progress } : {}),
         result,
         message: 'Documentation generated.'
       });
       setSelectedPageKey(result.documentation.pages[0]?.key ?? null);
     } catch (error) {
+      const details = await failedRunDetails(activeRunId);
       setRunState({
         status: 'failed',
+        ...(activeRunId ? { runId: activeRunId } : {}),
+        ...details,
         message: error instanceof Error ? error.message : 'Documentation generation failed.'
       });
     }
@@ -159,7 +166,23 @@ function App(): JSX.Element {
 
         <section className="panel result-panel">
           <div className="status-line" data-state={runState.status}>
-            <span>{runState.message ?? 'Upload archives and start a documentation run.'}</span>
+            <div className="status-copy">
+              <span>{runState.message ?? 'Upload archives and start a documentation run.'}</span>
+              {runState.progress ? (
+                <span className="progress-label">
+                  {runState.progress.currentStep} ({runState.progress.completedSteps}/
+                  {runState.progress.totalSteps})
+                </span>
+              ) : null}
+              {runState.error ? <span className="error-detail">{runState.error.message}</span> : null}
+            </div>
+            {runState.progress ? (
+              <progress
+                max={runState.progress.totalSteps}
+                value={runState.progress.completedSteps}
+                aria-label="Documentation run progress"
+              />
+            ) : null}
           </div>
 
           {runState.result ? (
@@ -207,7 +230,26 @@ interface RunState {
   status: RunStatus;
   runId?: string;
   message?: string;
+  progress?: DocumentationRunProgress;
+  error?: DocumentationRunError;
   result?: DocumentationRunResult;
+}
+
+interface DocumentationRun {
+  id: string;
+  status: string;
+  progress?: DocumentationRunProgress;
+  error?: DocumentationRunError;
+}
+
+interface DocumentationRunProgress {
+  currentStep: string;
+  completedSteps: number;
+  totalSteps: number;
+}
+
+interface DocumentationRunError {
+  message: string;
 }
 
 interface DocumentationRunResult {
@@ -274,6 +316,11 @@ async function startRun(runId: string): Promise<void> {
   await parseResponse(response);
 }
 
+async function getRun(runId: string): Promise<DocumentationRun> {
+  const response = await fetch(`${apiBaseUrl}/v1/documentation-runs/${runId}`);
+  return parseResponse(response);
+}
+
 async function getResult(runId: string): Promise<DocumentationRunResult> {
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs/${runId}/result`);
   return parseResponse(response);
@@ -289,11 +336,37 @@ function downloadResult(runId: string | undefined, format: string): void {
 
 async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const message = await response.text();
+    const message = await parseErrorMessage(response);
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
   return response.json() as Promise<T>;
+}
+
+async function failedRunDetails(runId: string | undefined): Promise<Pick<RunState, 'progress' | 'error'>> {
+  if (!runId) {
+    return {};
+  }
+
+  try {
+    const run = await getRun(runId);
+    return {
+      ...(run.progress ? { progress: run.progress } : {}),
+      ...(run.error ? { error: run.error } : {})
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function parseErrorMessage(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const parsed = JSON.parse(text) as { message?: string; error?: { message?: string } };
+    return parsed.error?.message ?? parsed.message ?? text;
+  } catch {
+    return text;
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
