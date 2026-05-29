@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 91: CLI API Mode Download Sanitization Regression Coverage.
+- Implement Phase 92: API Run Failure Error Sanitization Regression Coverage.
 
-Phase 91 goal:
-- Add CLI API-mode regression coverage proving downloaded artifacts written through the CLI preserve sanitized documentation content without introducing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from CLI-written API-mode download artifacts.
-- Keep CLI local single-Markdown/markdown-tree/JSON/zip and SDK/API/Web/renderer sanitization coverage intact.
+Phase 92 goal:
+- Add API regression coverage proving failed documentation run error messages do not expose raw secret-bearing source content.
+- Sanitize failed-run error messages if needed so raw denied files and raw secret values are absent from API-visible run state.
+- Keep API result/download and CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

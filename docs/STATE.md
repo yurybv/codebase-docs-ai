@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 91: CLI API Mode Download Sanitization Regression Coverage.
+Implement Phase 92: API Run Failure Error Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+apps/api
 docs
 ```
 
-The next step should add CLI API-mode regression coverage proving downloaded artifacts written through the CLI preserve sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add API regression coverage proving failed documentation run error messages do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1491,6 +1491,19 @@ pnpm test -- packages/sdk/src/client.test.ts
 - Added CLI regression coverage for local markdown-tree output from secret-bearing source inputs.
 - Verified CLI-written markdown-tree files preserve redacted source evidence.
 - Verified CLI-written markdown-tree files exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/generate-command.test.ts
+```
+
+### 2026-05-29: Phase 91 CLI API Mode Download Sanitization Regression Coverage
+
+- Added CLI API-mode regression coverage for sanitized downloaded artifacts.
+- Verified CLI-written API-mode download artifacts preserve redacted source evidence.
+- Verified CLI-written API-mode download artifacts exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:
 

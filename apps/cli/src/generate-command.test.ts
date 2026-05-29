@@ -2,10 +2,14 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runGenerateCommand } from './generate-command.js';
 
 describe('runGenerateCommand', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('writes sanitized local generation output', async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
     const sourceRoot = path.join(tempRoot, 'source');
@@ -147,6 +151,76 @@ describe('runGenerateCommand', () => {
     }
   });
 
+  it('writes sanitized API-mode download output', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const sourcePath = path.join(tempRoot, 'frontend.zip');
+    const outputRoot = path.join(tempRoot, 'out');
+    const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
+    const sanitizedMarkdown = [
+      '# 06. API Contracts',
+      '',
+      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+    ].join('\n');
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'created' }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'ready', sources: [] }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'running' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'run_123', status: 'completed' }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runId: 'run_123',
+          status: 'completed',
+          renderedFormats: ['single-markdown'],
+          documentation: {
+            title: 'CLI API Sanitized Documentation',
+            summary: 'Generated',
+            pages: [],
+            warnings: [],
+            sourceReferences: [],
+            generatedAt: '2026-05-29T00:00:00.000Z'
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(sanitizedMarkdown, {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="PROJECT_DOCUMENTATION.md"',
+            'content-type': 'text/markdown'
+          }
+        })
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await writeSanitizationArchiveFixture(sourcePath, rawOpenAiKey);
+
+      const result = await runGenerateCommand({
+        source: [`${sourcePath}:frontend`],
+        output: outputRoot,
+        format: 'single-markdown',
+        name: 'CLI API Sanitized Documentation',
+        apiUrl: 'http://localhost:3000'
+      });
+
+      const markdownPath = path.join(outputRoot, 'PROJECT_DOCUMENTATION.md');
+      expect(result.status).toBe('completed');
+      expect(result.files).toEqual([markdownPath]);
+
+      const markdown = await readFile(markdownPath, 'utf8');
+      expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(markdown).not.toContain(rawOpenAiKey);
+      expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
+      expect(markdown).not.toContain('.env');
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
   it('rejects unsupported API mode archive file names before upload', async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
     const sourcePath = path.join(tempRoot, 'notes.txt');
@@ -198,4 +272,36 @@ async function writeSanitizationSourceFixture(
     `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
   );
   await writeFile(path.join(sourceRoot, '.env'), 'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n');
+}
+
+async function writeSanitizationArchiveFixture(
+  archivePath: string,
+  rawOpenAiKey: string
+): Promise<void> {
+  const archive = new AdmZip();
+  archive.addFile(
+    'package.json',
+    Buffer.from(
+      JSON.stringify({
+        dependencies: {
+          react: 'latest'
+        }
+      })
+    )
+  );
+  archive.addFile(
+    'api.ts',
+    Buffer.from(`fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`)
+  );
+  archive.addFile('.env', Buffer.from('IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'));
+  await writeFile(archivePath, archive.toBuffer());
+}
+
+function jsonResponse(payload: unknown): Response {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
 }
