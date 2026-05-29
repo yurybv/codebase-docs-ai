@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 87: Renderer Markdown Tree Sanitization Regression Coverage.
+Implement Phase 88: SDK JSON Download Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/renderers
+packages/sdk
 docs
 ```
 
-The next step should add renderer regression coverage proving markdown-tree rendering preserves sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add SDK direct download regression coverage proving JSON artifacts returned through the TypeScript client preserve sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1439,6 +1439,19 @@ pnpm test -- packages/renderers/src/renderers.test.ts
 - Added renderer regression coverage for single-Markdown rendering of sanitized documentation trees.
 - Verified renderer-produced single-Markdown files preserve redacted source evidence.
 - Verified renderer-produced single-Markdown files exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/renderers typecheck
+pnpm test -- packages/renderers/src/renderers.test.ts
+```
+
+### 2026-05-29: Phase 87 Renderer Markdown Tree Sanitization Regression Coverage
+
+- Added renderer regression coverage for markdown-tree rendering of sanitized documentation trees.
+- Verified renderer-produced markdown-tree files preserve redacted source evidence.
+- Verified renderer-produced markdown-tree files exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:
 

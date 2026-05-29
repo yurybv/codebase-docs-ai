@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 87: Renderer Markdown Tree Sanitization Regression Coverage.
+- Implement Phase 88: SDK JSON Download Sanitization Regression Coverage.
 
-Phase 87 goal:
-- Add renderer regression coverage proving markdown-tree rendering preserves sanitized documentation content without introducing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from renderer-produced markdown-tree artifacts.
-- Keep renderer single-Markdown/JSON/zip and SDK/API/Web/CLI sanitization coverage intact.
+Phase 88 goal:
+- Add SDK direct download regression coverage proving JSON artifacts returned through the TypeScript client preserve sanitized documentation content without introducing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from SDK-downloaded JSON artifacts.
+- Keep SDK result/single-Markdown/markdown-tree zip and API/Web/CLI/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

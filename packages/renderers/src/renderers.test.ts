@@ -14,6 +14,29 @@ describe('markdown renderers', () => {
     expect(findRenderedFile(rendered, '01-overview.md')?.content).toContain('# Overview');
   });
 
+  it('preserves sanitized rendered content in markdown tree files', () => {
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const rendered = renderMarkdownTree({
+      ...documentationTreeFixture(),
+      pages: [
+        {
+          key: 'api-contracts',
+          title: '06. API Contracts',
+          order: 1,
+          markdown: '# API Contracts\n\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |',
+          sourceReferences: [],
+          warnings: []
+        }
+      ]
+    });
+    const content = findRenderedFile(rendered, '01-api-contracts.md')?.content ?? '';
+
+    expect(content).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(content).not.toContain(rawOpenAiKey);
+    expect(content).not.toContain('SHOULD_NOT_APPEAR');
+    expect(content).not.toContain('.env');
+  });
+
   it('renders a documentation tree as a single markdown file', () => {
     const rendered = renderSingleMarkdown(documentationTreeFixture());
 
