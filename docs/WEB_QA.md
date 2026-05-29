@@ -114,6 +114,7 @@ Expected behavior:
 - generation is blocked with a clear status message when no output format is selected;
 - the create-run API request includes only the selected output formats;
 - completed-state download controls show only formats rendered for that run.
+- when the API returns `renderedFormats`, completed-state download controls should use that list even if it differs from the pre-run selected formats.
 
 Browser verification:
 

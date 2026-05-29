@@ -130,12 +130,13 @@ export function App(): JSX.Element {
       await startRun(run.runId);
       const runDetails = await getRun(run.runId);
       const result = await getResult(run.runId);
+      const renderedFormats = result.renderedFormats ?? runDetails.renderedFormats ?? runOutputFormats;
       setRunState({
         status: 'completed',
         runId: run.runId,
         ...(runDetails.progress ? { progress: runDetails.progress } : {}),
         result,
-        outputFormats: runOutputFormats,
+        outputFormats: renderedFormats,
         message: 'Documentation generated.'
       });
       setSelectedPageKey(result.documentation.pages[0]?.key ?? null);
@@ -350,6 +351,7 @@ interface RunState {
 interface DocumentationRun {
   id: string;
   status: string;
+  renderedFormats?: DocumentationOutputFormat[];
   progress?: DocumentationRunProgress;
   error?: DocumentationRunError;
 }
@@ -367,6 +369,7 @@ interface DocumentationRunError {
 interface DocumentationRunResult {
   runId: string;
   status: string;
+  renderedFormats?: DocumentationOutputFormat[];
   documentation: {
     pages: Array<{
       key: string;

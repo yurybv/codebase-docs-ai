@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 50: Web Download Controls From API Rendered Formats.
+Implement Phase 51: Web Rendered Format Browser Verification.
 
 Required package:
 
@@ -89,7 +89,7 @@ apps/web
 docs
 ```
 
-The next step should make the Web completed state prefer API-provided `renderedFormats` from run/result responses for download controls, while keeping selected formats as the pre-generation request state.
+The next step should verify the Web completed-state download controls in a browser after the API-rendered-format wiring, including the case where the API reports a narrower rendered format list than the pre-run selection.
 
 ## Completed Implementation
 
@@ -939,6 +939,21 @@ pnpm --filter @codebase-docs-ai/shared build
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 50 Web Download Controls From API Rendered Formats
+
+- Updated the Web completed state to prefer API-provided `renderedFormats`.
+- Kept selected output formats as the pre-generation request state.
+- Preserved fallback to selected formats for older API responses without `renderedFormats`.
+- Added Web regression coverage for API-rendered download controls when the API returns a narrower format list.
+- Documented the completed-state behavior in Web QA and testing docs.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm web:completed-state
 ```
 
 ## Open Questions

@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 50: Web Download Controls From API Rendered Formats.
+- Implement Phase 51: Web Rendered Format Browser Verification.
 
-Phase 50 goal:
-- Make the Web completed state prefer API-provided `renderedFormats` from run/result responses for download controls.
-- Keep selected formats as the pre-generation request state.
-- Update Web tests and docs for API-driven completed download controls.
+Phase 51 goal:
+- Verify the Web completed-state download controls in a browser after API-rendered-format wiring.
+- Include the case where the API reports a narrower rendered format list than the pre-run selection.
+- Update docs/WEB_QA.md and docs/STATE.md with findings.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

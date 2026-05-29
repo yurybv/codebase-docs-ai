@@ -159,6 +159,7 @@ describe('App API error handling', () => {
         return jsonResponse({
           runId: 'run_completed_ui',
           status: 'completed',
+          renderedFormats: ['json'],
           documentation: {
             pages: completedDocumentationPages(),
             warnings: [
@@ -268,6 +269,118 @@ describe('App API error handling', () => {
 
     expect(openMock).toHaveBeenCalledWith(
       'http://localhost:3000/v1/documentation-runs/run_completed_ui/download?format=json',
+      '_blank'
+    );
+  });
+
+  it('uses API-rendered formats for completed download controls', async () => {
+    let createdRunBody:
+      | {
+          options?: {
+            outputFormats?: string[];
+          };
+        }
+      | undefined;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        createdRunBody = JSON.parse(String(init.body)) as {
+          options?: {
+            outputFormats?: string[];
+          };
+        };
+        return jsonResponse({
+          runId: 'run_rendered_formats',
+          status: 'created'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_rendered_formats/sources')) {
+        return jsonResponse({
+          runId: 'run_rendered_formats',
+          status: 'ready'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_rendered_formats/start')) {
+        return jsonResponse({
+          runId: 'run_rendered_formats',
+          status: 'completed'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_rendered_formats')) {
+        return jsonResponse({
+          id: 'run_rendered_formats',
+          status: 'completed',
+          renderedFormats: ['single-markdown'],
+          progress: {
+            currentStep: 'Documentation run completed',
+            completedSteps: 7,
+            totalSteps: 7
+          }
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_rendered_formats/result')) {
+        return jsonResponse({
+          runId: 'run_rendered_formats',
+          status: 'completed',
+          renderedFormats: ['single-markdown'],
+          documentation: {
+            pages: completedDocumentationPages(),
+            warnings: []
+          }
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File(['frontend'], 'frontend.tar', {
+          type: 'application/x-tar'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Documentation generated.');
+
+    expect(createdRunBody?.options?.outputFormats).toEqual([
+      'markdown-tree',
+      'single-markdown',
+      'json'
+    ]);
+    expect(getButtonByText('single-markdown')).toBeDefined();
+    expect(queryButtonByText('markdown-tree')).toBeNull();
+    expect(queryButtonByText('json')).toBeNull();
+
+    await act(async () => {
+      getButtonByText('single-markdown').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(openMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs/run_rendered_formats/download?format=single-markdown',
       '_blank'
     );
   });

@@ -106,6 +106,7 @@ The completed-state regression renders the Web app in jsdom with API-shaped mock
 - output format selection;
 - metadata sent to the upload API;
 - selected formats sent to the create-run API;
+- completed download controls built from API-provided rendered formats;
 - completed run status and progress;
 - generated page navigation;
 - Markdown preview updates;
