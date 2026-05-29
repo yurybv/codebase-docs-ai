@@ -67,6 +67,66 @@ describe('App API error handling', () => {
     );
   });
 
+  it('renders sanitized API errors without raw secret-bearing source content', async () => {
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 'SOURCE_UPLOAD_INVALID',
+            message:
+              'Source upload failed for [REDACTED_OPENAI_API_KEY] in [REDACTED_DENIED_FILE].'
+          }
+        }),
+        {
+          status: 400,
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    );
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(
+      [
+        `fetch("https://api.example.com/v1/${rawOpenAiKey}");\n`,
+        'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
+      ],
+      'frontend.zip',
+      {
+        type: 'application/zip'
+      }
+    );
+    Object.defineProperty(fileInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(renderedText).not.toContain('.env');
+  });
+
   it('exposes accessible status and upload controls', async () => {
     const rootElement = document.createElement('div');
     document.body.append(rootElement);

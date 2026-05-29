@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 94: Web API Error Display Sanitization Regression Coverage.
+- Implement Phase 95: SDK API Error Message Sanitization Regression Coverage.
 
-Phase 94 goal:
-- Add Web regression coverage proving operator-facing API error messages do not expose raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from rendered Web error states.
-- Keep API failed-run/error-envelope/result/download and CLI/SDK/renderer sanitization coverage intact.
+Phase 95 goal:
+- Add SDK regression coverage proving API error messages surfaced by the TypeScript client do not expose raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from SDK-thrown API errors.
+- Keep API failed-run/error-envelope/result/download and CLI/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

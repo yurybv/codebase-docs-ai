@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 94: Web API Error Display Sanitization Regression Coverage.
+Implement Phase 95: SDK API Error Message Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/web
+packages/sdk
 docs
 ```
 
-The next step should add Web regression coverage proving operator-facing API error messages do not expose raw secret-bearing source content.
+The next step should add SDK regression coverage proving API error messages surfaced by the TypeScript client do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1536,6 +1536,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/api-exception.filter.test.ts
+```
+
+### 2026-05-29: Phase 94 Web API Error Display Sanitization Regression Coverage
+
+- Added Web regression coverage for rendered API error states from sanitized error envelopes.
+- Verified operator-facing Web error messages preserve redacted source evidence.
+- Verified rendered Web error states exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/main.test.ts
 ```
 
 ## Open Questions
