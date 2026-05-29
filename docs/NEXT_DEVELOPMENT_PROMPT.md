@@ -37,13 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 61: Source Loader Folder Limit Regression Coverage.
+- Implement Phase 62: Source Loader Archive Link Regression Coverage.
 
-Phase 61 goal:
-- Add focused source-loader regression coverage for folder file count limits.
-- Add focused source-loader regression coverage for folder per-file size limits.
-- Add focused source-loader regression coverage for folder total size limits.
-- Keep archive limit coverage intact.
+Phase 62 goal:
+- Add focused source-loader regression coverage for tar symbolic link rejection.
+- Add focused source-loader regression coverage for tar hard link rejection.
+- Add focused source-loader regression coverage for zip symbolic link rejection if practical with current fixtures.
+- Keep path traversal, folder limit, and archive limit coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

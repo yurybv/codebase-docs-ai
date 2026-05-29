@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 61: Source Loader Folder Limit Regression Coverage.
+Implement Phase 62: Source Loader Archive Link Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/source-loader
 docs
 ```
 
-The next step should add focused source-loader regression coverage for folder file count, per-file size, and total size limits.
+The next step should add focused source-loader regression coverage for rejecting symbolic links and hard links inside archives.
 
 ## Completed Implementation
 
@@ -1097,6 +1097,20 @@ pnpm test -- packages/source-loader/src/load-source.test.ts
 - Added source-loader regression coverage for archive per-file size limits.
 - Added source-loader regression coverage for archive total size limits.
 - Kept supported and unsupported archive format coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-29: Phase 61 Source Loader Folder Limit Regression Coverage
+
+- Added source-loader regression coverage for folder file count limits.
+- Added source-loader regression coverage for folder per-file size skip behavior.
+- Added source-loader regression coverage for folder total size limits.
+- Kept archive limit coverage intact.
 
 Verification:
 

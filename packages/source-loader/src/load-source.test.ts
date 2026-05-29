@@ -41,6 +41,86 @@ describe('loadFolderSource', () => {
     expect(loaded.files.map((file) => file.path)).toEqual(['package.json', 'src/main.ts']);
     expect(loaded.totalSizeBytes).toBeGreaterThan(0);
   });
+
+  it('rejects folders that exceed the file count limit', async () => {
+    const sourcePath = path.join(tempRoot, 'too-many-files');
+    await mkdir(path.join(sourcePath, 'src'), {
+      recursive: true
+    });
+    await writeFile(path.join(sourcePath, 'src', 'one.ts'), 'export const one = true;');
+    await writeFile(path.join(sourcePath, 'src', 'two.ts'), 'export const two = true;');
+
+    await expect(
+      loadFolderSource({
+        source: {
+          name: 'Frontend',
+          role: 'frontend'
+        },
+        folderPath: sourcePath,
+        limits: {
+          maxFiles: 1
+        }
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Source exceeds file count limit of 1'
+    });
+  });
+
+  it('skips folder files that exceed the per-file size limit', async () => {
+    const sourcePath = path.join(tempRoot, 'large-file');
+    await mkdir(path.join(sourcePath, 'src'), {
+      recursive: true
+    });
+    await writeFile(path.join(sourcePath, 'src', 'main.ts'), 'export const main = true;');
+
+    const loaded = await loadFolderSource({
+      source: {
+        name: 'Frontend',
+        role: 'frontend'
+      },
+      folderPath: sourcePath,
+      limits: {
+        maxFileSizeBytes: 5
+      }
+    });
+
+    expect(loaded.files).toEqual([]);
+    expect(loaded.skippedFiles).toEqual([
+      {
+        path: 'src/main.ts',
+        reason: 'file_size_limit_exceeded'
+      }
+    ]);
+  });
+
+  it('rejects folders that exceed the total size limit', async () => {
+    const sourcePath = path.join(tempRoot, 'large-total');
+    await mkdir(path.join(sourcePath, 'src'), {
+      recursive: true
+    });
+    await writeFile(path.join(sourcePath, 'src', 'one.ts'), '1234');
+    await writeFile(path.join(sourcePath, 'src', 'two.ts'), '5678');
+
+    await expect(
+      loadFolderSource({
+        source: {
+          name: 'Frontend',
+          role: 'frontend'
+        },
+        folderPath: sourcePath,
+        limits: {
+          maxFileSizeBytes: 10,
+          maxTotalSizeBytes: 5
+        }
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Source exceeds total size limit of 5 bytes'
+    });
+  });
 });
 
 describe('loadArchiveSource', () => {
