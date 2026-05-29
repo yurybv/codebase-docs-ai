@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { LocalJsonProvider, type GenerateObjectInput } from '@codebase-docs-ai/ai-orchestrator';
 import { DocumentationEngine } from './documentation-engine.js';
 import type { LoadedSource, SourceFile, SourceInputMetadata } from '@codebase-docs-ai/shared';
 
@@ -85,22 +86,7 @@ describe('DocumentationEngine', () => {
     const rawOpenAiKey = `sk-${'a'.repeat(24)}`;
 
     try {
-      await writeFile(
-        path.join(fixtureRoot, 'package.json'),
-        JSON.stringify({
-          dependencies: {
-            react: 'latest'
-          }
-        })
-      );
-      await writeFile(
-        path.join(fixtureRoot, 'api.ts'),
-        `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
-      );
-      await writeFile(
-        path.join(fixtureRoot, '.env'),
-        'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
-      );
+      await writeSanitizationFixture(fixtureRoot, rawOpenAiKey);
 
       const engine = new DocumentationEngine();
       const result = await engine.generateDocumentation({
@@ -152,7 +138,77 @@ describe('DocumentationEngine', () => {
       });
     }
   });
+
+  it('uses sanitized source evidence in AI provider prompt payloads', async () => {
+    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'core-engine-ai-prompt-test-'));
+    const rawOpenAiKey = `sk-${'b'.repeat(24)}`;
+    const capturedInputs: GenerateObjectInput[] = [];
+
+    try {
+      await writeSanitizationFixture(fixtureRoot, rawOpenAiKey);
+
+      const engine = new DocumentationEngine({
+        aiProvider: new LocalJsonProvider((input) => {
+          capturedInputs.push(input);
+
+          return {
+            key: 'safe-page',
+            title: 'Safe Page',
+            markdown: '# Safe Page\n\nAI output fixture.',
+            sourceReferences: [],
+            warnings: []
+          };
+        })
+      });
+
+      await engine.generateDocumentation({
+        title: 'AI Prompt Sanitized Core Engine Test',
+        loadedSources: [
+          await loadedSourceFixture(fixtureRoot, {
+            name: 'Frontend',
+            role: 'frontend'
+          })
+        ],
+        options: {
+          outputFormats: ['json'],
+          language: 'en',
+          includeSourceReferences: true,
+          includeWarnings: true
+        }
+      });
+
+      const promptPayload = capturedInputs
+        .map((input) => `${input.systemPrompt}\n${input.userPrompt}`)
+        .join('\n');
+      expect(capturedInputs.length).toBeGreaterThan(0);
+      expect(promptPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(promptPayload).not.toContain(rawOpenAiKey);
+      expect(promptPayload).not.toContain('SHOULD_NOT_APPEAR');
+      expect(promptPayload).not.toContain('.env');
+    } finally {
+      await rm(fixtureRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
 });
+
+async function writeSanitizationFixture(rootPath: string, rawOpenAiKey: string): Promise<void> {
+  await writeFile(
+    path.join(rootPath, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        react: 'latest'
+      }
+    })
+  );
+  await writeFile(
+    path.join(rootPath, 'api.ts'),
+    `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
+  );
+  await writeFile(path.join(rootPath, '.env'), 'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n');
+}
 
 async function loadedSourceFixture(
   rootPath: string,

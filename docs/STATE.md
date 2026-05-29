@@ -80,18 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 72: AI Provider Prompt Payload Sanitization Regression Coverage.
+Implement Phase 73: API Run Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/core
-packages/ai-orchestrator
+apps/api
 docs
 ```
 
-The next step should add regression coverage proving AI provider prompt payloads only receive sanitized repository and system evidence.
+The next step should add HTTP-level regression coverage proving uploaded secret-bearing source archives produce sanitized results and downloads.
 
 ## Completed Implementation
 
@@ -1245,6 +1244,19 @@ pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts
 - Extended core sanitization regression coverage to include generated `DocumentationTree` output.
 - Verified rendered markdown-tree, single-markdown, and JSON artifacts contain redacted source evidence instead of raw provider keys.
 - Verified denied `.env` evidence and raw denied-source variable names do not appear in generated documentation output.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/core/src/documentation-engine.test.ts
+```
+
+### 2026-05-29: Phase 72 AI Provider Prompt Payload Sanitization Regression Coverage
+
+- Added core regression coverage for AI-provider prompt payloads.
+- Captured all local AI provider inputs during documentation generation.
+- Verified AI prompts include redacted source evidence and exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:
 
