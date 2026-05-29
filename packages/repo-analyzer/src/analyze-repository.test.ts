@@ -29,16 +29,20 @@ describe('analyzeRepository', () => {
         },
         dependencies: {
           next: '^15.0.0',
-          react: '^18.0.0'
+          react: '^18.0.0',
+          fastify: '^5.0.0'
         },
         devDependencies: {
-          typescript: '^5.0.0'
+          typescript: '^5.0.0',
+          vite: '^6.0.0'
         }
       })
     );
     await writeFixtureFile('pnpm-lock.yaml', 'lockfileVersion: 9.0');
     await writeFixtureFile('app/users/[id]/page.tsx', 'export default function Page() {}');
-    await writeFixtureFile('src/api.ts', 'fetch("/api/users");');
+    await writeFixtureFile('src/api.ts', 'fetch("/api/users", { method: "POST" });');
+    await writeFixtureFile('vite.config.ts', 'export default {};');
+    await writeFixtureFile('playwright.config.ts', 'export default {};');
 
     const repositoryMap = await analyzeRepository({
       source: {
@@ -50,7 +54,9 @@ describe('analyzeRepository', () => {
         'package.json',
         'pnpm-lock.yaml',
         'app/users/[id]/page.tsx',
-        'src/api.ts'
+        'src/api.ts',
+        'vite.config.ts',
+        'playwright.config.ts'
       ])
     });
 
@@ -58,11 +64,19 @@ describe('analyzeRepository', () => {
     expect(repositoryMap.frameworks.map((framework) => framework.name)).toEqual([
       'Next.js',
       'React',
+      'Fastify',
+      'Vite',
       'TypeScript'
     ]);
     expect(repositoryMap.scripts.map((script) => script.name)).toEqual(['dev', 'build']);
     expect(repositoryMap.routes.map((route) => route.path)).toEqual(['/users/:id']);
-    expect(repositoryMap.apiClientCalls.map((call) => call.path)).toEqual(['/api/users']);
+    expect(repositoryMap.apiClientCalls.map((call) => `${call.method} ${call.path}`)).toEqual([
+      'POST /api/users'
+    ]);
+    expect(repositoryMap.configFiles.map((configFile) => configFile.kind)).toEqual([
+      'vite',
+      'playwright'
+    ]);
   });
 
   it('detects NestJS controller endpoints and environment variables', async () => {

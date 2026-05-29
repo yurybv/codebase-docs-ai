@@ -145,6 +145,31 @@ function detectFrameworks(dependencies: DependencyInfo[], sourceName: string): F
       category: 'frontend'
     },
     {
+      dependency: 'vue',
+      name: 'Vue',
+      category: 'frontend'
+    },
+    {
+      dependency: '@angular/core',
+      name: 'Angular',
+      category: 'frontend'
+    },
+    {
+      dependency: 'svelte',
+      name: 'Svelte',
+      category: 'frontend'
+    },
+    {
+      dependency: 'nuxt',
+      name: 'Nuxt',
+      category: 'fullstack'
+    },
+    {
+      dependency: '@remix-run/react',
+      name: 'Remix',
+      category: 'fullstack'
+    },
+    {
       dependency: '@nestjs/core',
       name: 'NestJS',
       category: 'backend'
@@ -152,6 +177,11 @@ function detectFrameworks(dependencies: DependencyInfo[], sourceName: string): F
     {
       dependency: 'express',
       name: 'Express',
+      category: 'backend'
+    },
+    {
+      dependency: 'fastify',
+      name: 'Fastify',
       category: 'backend'
     },
     {
@@ -248,12 +278,12 @@ async function detectApiClientCalls(
 
   for (const file of sourceFiles) {
     const content = await readFile(file.absolutePath, 'utf8');
-    const fetchPattern = /fetch\(\s*['"`]([^'"`]+)['"`]/g;
+    const fetchPattern = /fetch\(\s*['"`]([^'"`]+)['"`]\s*(?:,\s*(\{[\s\S]*?\}))?\s*\)/g;
     const axiosPattern = /axios\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/g;
 
     for (const match of content.matchAll(fetchPattern)) {
       calls.push({
-        method: 'UNKNOWN',
+        method: extractFetchMethod(match[2]),
         path: normalizeApiPath(match[1] ?? ''),
         sourceReference: sourceReference(sourceName, file.path)
       });
@@ -317,6 +347,10 @@ function detectConfigFiles(sourceName: string, files: SourceFile[]): ConfigFileI
       test: (file) => /^next\.config\.(js|mjs|ts)$/.test(file.path)
     },
     {
+      kind: 'vite',
+      test: (file) => /^vite\.config\.(js|mjs|ts)$/.test(file.path)
+    },
+    {
       kind: 'nest',
       test: (file) => file.path === 'nest-cli.json'
     },
@@ -331,6 +365,14 @@ function detectConfigFiles(sourceName: string, files: SourceFile[]): ConfigFileI
     {
       kind: 'prisma',
       test: (file) => file.path === 'prisma/schema.prisma'
+    },
+    {
+      kind: 'playwright',
+      test: (file) => /^playwright\.config\.(js|mjs|ts)$/.test(file.path)
+    },
+    {
+      kind: 'cypress',
+      test: (file) => /^cypress\.config\.(js|mjs|ts)$/.test(file.path)
     }
   ];
 
@@ -419,6 +461,15 @@ function normalizeApiPath(apiPath: string): string {
 
   const parsed = apiPath.replace(/^https?:\/\/[^/]+/, '');
   return parsed.startsWith('/') ? parsed : `/${parsed}`;
+}
+
+function extractFetchMethod(optionsSource: string | undefined): string {
+  if (!optionsSource) {
+    return 'UNKNOWN';
+  }
+
+  const methodMatch = optionsSource.match(/method\s*:\s*['"`]([A-Za-z]+)['"`]/);
+  return methodMatch?.[1]?.toUpperCase() ?? 'UNKNOWN';
 }
 
 function dedupeSourceReferences(sourceReferences: SourceReference[]): SourceReference[] {

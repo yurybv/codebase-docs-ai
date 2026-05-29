@@ -302,6 +302,23 @@ Done when:
 - deterministic output remains useful without AI credentials;
 - generator tests cover the specialized sections.
 
+## Phase 18: Analyzer Evidence Expansion
+
+Deliverables:
+
+- broader framework detection;
+- more deployment/test config detection;
+- better API client method detection for `fetch`;
+- broader auth dependency evidence;
+- broader external integration dependency evidence;
+- prefix matching for scoped integration packages.
+
+Done when:
+
+- repository analyzer tests cover new framework/config/fetch method evidence;
+- system analyzer tests cover scoped auth and integration dependencies;
+- generated documentation receives richer evidence without API contract changes.
+
 ## Cross-Cutting Work
 
 During all phases:

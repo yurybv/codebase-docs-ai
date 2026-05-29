@@ -34,6 +34,26 @@ describe('analyzeSystem', () => {
         repositoryMap({
           name: 'Backend',
           role: 'backend',
+          dependencies: [
+            {
+              name: '@clerk/nextjs',
+              version: 'latest',
+              scope: 'dependencies',
+              sourceReference: {
+                sourceName: 'Backend',
+                path: 'package.json'
+              }
+            },
+            {
+              name: '@aws-sdk/client-s3',
+              version: 'latest',
+              scope: 'dependencies',
+              sourceReference: {
+                sourceName: 'Backend',
+                path: 'package.json'
+              }
+            }
+          ],
           apiEndpoints: [
             {
               method: 'GET',
@@ -80,6 +100,11 @@ describe('analyzeSystem', () => {
       'environment-coupling'
     ]);
     expect(systemMap.environmentLinks.map((link) => link.name)).toEqual(['API_URL']);
+    expect(systemMap.authFlows.map((flow) => flow.kind)).toEqual(['clerk']);
+    expect(systemMap.integrations.map((integration) => integration.name)).toEqual([
+      'AWS SDK',
+      'Clerk'
+    ]);
   });
 
   it('reports unmatched consumer and provider contracts', () => {

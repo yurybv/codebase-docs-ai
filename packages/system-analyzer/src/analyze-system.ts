@@ -21,6 +21,7 @@ const knownIntegrationDependencies = new Map<string, string>([
   ['@prisma/client', 'Prisma'],
   ['prisma', 'Prisma'],
   ['stripe', 'Stripe'],
+  ['@stripe/', 'Stripe'],
   ['@sentry/node', 'Sentry'],
   ['@sentry/react', 'Sentry'],
   ['@sentry/nextjs', 'Sentry'],
@@ -28,7 +29,36 @@ const knownIntegrationDependencies = new Map<string, string>([
   ['next-auth', 'NextAuth'],
   ['passport', 'Passport'],
   ['@nestjs/passport', 'NestJS Passport'],
-  ['jsonwebtoken', 'JWT']
+  ['jsonwebtoken', 'JWT'],
+  ['@nestjs/jwt', 'NestJS JWT'],
+  ['@auth/', 'Auth.js'],
+  ['@clerk/', 'Clerk'],
+  ['@auth0/', 'Auth0'],
+  ['firebase', 'Firebase'],
+  ['@supabase/', 'Supabase'],
+  ['@aws-sdk/', 'AWS SDK'],
+  ['aws-sdk', 'AWS SDK'],
+  ['openai', 'OpenAI'],
+  ['@sendgrid/', 'SendGrid'],
+  ['nodemailer', 'Nodemailer'],
+  ['twilio', 'Twilio'],
+  ['redis', 'Redis'],
+  ['ioredis', 'Redis'],
+  ['bullmq', 'BullMQ'],
+  ['kafkajs', 'Kafka']
+]);
+
+const knownAuthDependencies = new Map<string, string>([
+  ['next-auth', 'next-auth'],
+  ['passport', 'passport'],
+  ['@nestjs/passport', 'passport'],
+  ['jsonwebtoken', 'jwt'],
+  ['@nestjs/jwt', 'jwt'],
+  ['@auth/', 'auth.js'],
+  ['@clerk/', 'clerk'],
+  ['@auth0/', 'auth0'],
+  ['firebase', 'firebase-auth'],
+  ['@supabase/', 'supabase-auth']
 ]);
 
 export function analyzeSystem(input: AnalyzeSystemInput): SystemMap {
@@ -205,28 +235,28 @@ function buildRelationships(
 }
 
 function detectAuthFlows(repositories: RepositoryMap[]): AuthFlow[] {
-  const authEvidence = repositories.flatMap((repository) =>
-    repository.dependencies
-      .filter((dependency) =>
-        ['next-auth', 'passport', '@nestjs/passport', 'jsonwebtoken', '@nestjs/jwt'].includes(
-          dependency.name
-        )
-      )
-      .map((dependency) => dependency.sourceReference)
-  );
+  const evidenceByKind = new Map<string, SourceReference[]>();
 
-  if (authEvidence.length === 0) {
-    return [];
+  for (const repository of repositories) {
+    for (const dependency of repository.dependencies) {
+      const authKind = resolveKnownDependencyName(dependency.name, knownAuthDependencies);
+      if (!authKind) {
+        continue;
+      }
+
+      const current = evidenceByKind.get(authKind) ?? [];
+      evidenceByKind.set(authKind, [...current, dependency.sourceReference]);
+    }
   }
 
-  return [
-    {
-      kind: 'token-or-session-auth',
-      sources: [...new Set(authEvidence.map((evidence) => evidence.sourceName))],
-      confidence: 'medium',
-      evidence: dedupeReferences(authEvidence)
-    }
-  ];
+  return [...evidenceByKind.entries()]
+    .map(([kind, evidence]) => ({
+      kind,
+      sources: [...new Set(evidence.map((sourceReference) => sourceReference.sourceName))],
+      confidence: 'medium' as const,
+      evidence: dedupeReferences(evidence)
+    }))
+    .sort((left, right) => left.kind.localeCompare(right.kind));
 }
 
 function detectIntegrations(repositories: RepositoryMap[]): IntegrationPoint[] {
@@ -234,7 +264,7 @@ function detectIntegrations(repositories: RepositoryMap[]): IntegrationPoint[] {
 
   for (const repository of repositories) {
     for (const dependency of repository.dependencies) {
-      const integrationName = knownIntegrationDependencies.get(dependency.name);
+      const integrationName = resolveKnownDependencyName(dependency.name, knownIntegrationDependencies);
       if (!integrationName) {
         continue;
       }
@@ -251,6 +281,26 @@ function detectIntegrations(repositories: RepositoryMap[]): IntegrationPoint[] {
       sources: [...new Set(evidence.map((sourceReference) => sourceReference.sourceName))]
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function resolveKnownDependencyName(
+  dependencyName: string,
+  knownDependencies: Map<string, string>
+): string | undefined {
+  for (const [candidate, label] of knownDependencies.entries()) {
+    if (candidate.endsWith('/')) {
+      if (dependencyName.startsWith(candidate)) {
+        return label;
+      }
+      continue;
+    }
+
+    if (dependencyName === candidate) {
+      return label;
+    }
+  }
+
+  return undefined;
 }
 
 function buildSystemRisks(apiContracts: ApiContract[]): SystemRisk[] {

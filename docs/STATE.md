@@ -77,16 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 18: Analyzer Evidence Expansion.
+Implement Phase 19: SDK Polling And High-Level Generate Helper.
 
 Required package:
 
 ```text
-packages/repo-analyzer
-packages/system-analyzer
+packages/sdk
 ```
 
-The next step should improve analyzer evidence quality: detect more source roles/frameworks, more integration dependencies, more config files, stronger auth evidence, and better API client method detection for `fetch` calls with explicit method options.
+The next step should add SDK ergonomics for external modules: polling until completion/failure and a high-level `generateFromArchives` helper that creates a run, uploads archives, starts generation, polls, and returns the documentation tree or downloaded artifact.
 
 ## Completed Implementation
 
@@ -441,6 +440,25 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/documentation-generator typecheck
 pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm lint
+```
+
+### 2026-05-29: Phase 18 Analyzer Evidence Expansion
+
+- Added broader framework detection for Vue, Angular, Svelte, Nuxt, Remix, and Fastify.
+- Added Vite, Playwright, and Cypress config detection.
+- Improved `fetch` API client detection to read explicit `method` options.
+- Expanded auth evidence detection for Auth.js, Clerk, Auth0, Firebase auth, Supabase auth, JWT, and Passport dependencies.
+- Expanded integration detection for scoped Stripe, AWS SDK, OpenAI, SendGrid, Twilio, Redis, BullMQ, Kafka, Firebase, Supabase, and related packages.
+- Added prefix matching for scoped dependency families such as `@aws-sdk/*` and `@clerk/*`.
+- Added repository and system analyzer test coverage for richer evidence.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/repo-analyzer typecheck
+pnpm --filter @codebase-docs-ai/system-analyzer typecheck
+pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts packages/system-analyzer/src/analyze-system.test.ts
 pnpm lint
 ```
 
