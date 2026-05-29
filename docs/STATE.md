@@ -77,15 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 23: Web Upload Limit Guidance.
+Implement Phase 24: Operational Configuration Documentation.
 
 Required package:
 
 ```text
-apps/web
+docs
 ```
 
-The next step should show upload constraints in the Web UI and surface oversized upload errors cleanly. Keep the UI concise and avoid in-app explanatory clutter beyond operational labels.
+The next step should consolidate all runtime environment variables and operational commands into one operator-facing document, including API, Web, CLI, SDK, AI provider, upload limits, retention, and smoke verification.
 
 ## Completed Implementation
 
@@ -527,6 +527,22 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/upload-limits.test.ts apps/api/src/documentation-runs.service.test.ts
+pnpm lint
+```
+
+### 2026-05-29: Phase 23 Web Upload Limit Guidance
+
+- Added Web upload constraint parsing.
+- Added client-side file count and file size validation.
+- Added concise upload limit label to the archive dropzone.
+- Added clean failed-state messages for too many or oversized selected files.
+- Added upload constraint unit tests.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/upload-constraints.test.ts apps/web/src/source-metadata.test.ts
 pnpm lint
 ```
 

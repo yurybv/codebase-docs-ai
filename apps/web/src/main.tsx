@@ -9,6 +9,13 @@ import {
   type SourceDraft,
   type SourceRole
 } from './source-metadata.js';
+import {
+  formatBytes,
+  uploadConstraintsFromEnv,
+  validateSelectedFiles
+} from './upload-constraints.js';
+
+const uploadConstraints = uploadConstraintsFromEnv(import.meta.env);
 
 function App(): JSX.Element {
   const [sources, setSources] = useState<SourceDraft[]>([]);
@@ -26,7 +33,17 @@ function App(): JSX.Element {
       return;
     }
 
-    const newSources = Array.from(fileList).map((file, index) => ({
+    const selectedFiles = Array.from(fileList);
+    const validation = validateSelectedFiles(sources.length, selectedFiles, uploadConstraints);
+    if (validation.errorMessage) {
+      setRunState({
+        status: 'failed',
+        message: validation.errorMessage
+      });
+      return;
+    }
+
+    const newSources = validation.acceptedFiles.map((file, index) => ({
       id: `source_${Date.now()}_${index}`,
       name: inferSourceName(file.name) || file.name,
       role: 'unknown' as SourceRole,
@@ -119,6 +136,9 @@ function App(): JSX.Element {
           <label className="dropzone">
             <Upload size={24} />
             <span>Upload source archives</span>
+            <small>
+              {uploadConstraints.maxFiles} files max, {formatBytes(uploadConstraints.maxFileSizeBytes)} each
+            </small>
             <input
               type="file"
               multiple

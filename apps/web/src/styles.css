@@ -84,6 +84,11 @@ p {
   background: #fbfcfd;
 }
 
+.dropzone small {
+  color: #6b7a86;
+  font-size: 13px;
+}
+
 .dropzone input {
   display: none;
 }
