@@ -1,0 +1,217 @@
+# API Contract
+
+## Goal
+
+The API is the universal integration surface for any external system, regardless of programming language.
+
+It accepts source archives and returns generated documentation artifacts.
+
+## Base Path
+
+```text
+/v1
+```
+
+## Run Lifecycle
+
+```text
+created
+uploading_sources
+ready
+running
+extracting_sources
+analyzing_sources
+building_system_map
+generating_documentation
+rendering_output
+completed
+failed
+cancelled
+expired
+```
+
+## Create Run
+
+```http
+POST /v1/documentation-runs
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "name": "Customer Portal Documentation",
+  "options": {
+    "outputFormats": ["markdown-tree", "single-markdown", "json"],
+    "language": "en",
+    "includeSourceReferences": true,
+    "includeWarnings": true
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "runId": "run_123",
+  "status": "created"
+}
+```
+
+## Upload Sources
+
+```http
+POST /v1/documentation-runs/:runId/sources
+Content-Type: multipart/form-data
+```
+
+Parts:
+
+```text
+metadata: JSON
+files: one or more archives
+```
+
+Metadata:
+
+```json
+{
+  "sources": [
+    {
+      "fileField": "frontend",
+      "name": "Frontend",
+      "role": "frontend"
+    },
+    {
+      "fileField": "backend",
+      "name": "Backend",
+      "role": "backend"
+    }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "runId": "run_123",
+  "status": "ready",
+  "sources": [
+    {
+      "sourceId": "src_frontend",
+      "name": "Frontend",
+      "role": "frontend",
+      "fileName": "frontend.zip"
+    }
+  ]
+}
+```
+
+## Start Run
+
+```http
+POST /v1/documentation-runs/:runId/start
+```
+
+Response:
+
+```json
+{
+  "runId": "run_123",
+  "status": "running"
+}
+```
+
+## Get Run
+
+```http
+GET /v1/documentation-runs/:runId
+```
+
+Response:
+
+```json
+{
+  "runId": "run_123",
+  "status": "generating_documentation",
+  "progress": {
+    "currentStep": "Generating API Contracts page",
+    "completedSteps": 6,
+    "totalSteps": 9
+  },
+  "warnings": []
+}
+```
+
+## Get Result
+
+```http
+GET /v1/documentation-runs/:runId/result
+```
+
+Response:
+
+```json
+{
+  "runId": "run_123",
+  "status": "completed",
+  "documentation": {
+    "title": "Customer Portal Documentation",
+    "pages": [
+      {
+        "key": "overview",
+        "title": "01. Overview",
+        "markdown": "# 01. Overview\n..."
+      }
+    ],
+    "warnings": []
+  }
+}
+```
+
+## Download Result
+
+```http
+GET /v1/documentation-runs/:runId/download?format=markdown-tree
+```
+
+Supported formats:
+
+```text
+markdown-tree
+single-markdown
+json
+```
+
+## Delete Run
+
+```http
+DELETE /v1/documentation-runs/:runId
+```
+
+Deletes temporary files and run artifacts.
+
+## Error Response
+
+```json
+{
+  "error": {
+    "code": "SOURCE_ARCHIVE_INVALID",
+    "message": "The uploaded archive could not be extracted safely.",
+    "suggestion": "Upload a valid .zip, .tar, or .tar.gz archive."
+  }
+}
+```
+
+## API Rules
+
+- Validate all request bodies.
+- Validate all uploaded files.
+- Never return raw server paths.
+- Never expose internal stack traces.
+- Never log uploaded source content by default.
+- Enforce upload size limits.
+- Enforce run artifact retention.
