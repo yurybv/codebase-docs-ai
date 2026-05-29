@@ -124,3 +124,10 @@ Browser verification:
 - checked the desktop first viewport with the format panel visible and no obvious overlap;
 - checked the mobile first viewport with no horizontal document overflow;
 - reduced the mobile heading size and constrained the topbar text container after the narrow viewport exposed heading clipping.
+
+Rendered format browser verification:
+
+- ran the Web app against a mock API that returned `renderedFormats: ["single-markdown"]` after all three formats were selected before generation;
+- uploaded a synthetic archive through the browser file input and completed the run flow;
+- confirmed the completed status and Markdown preview rendered;
+- confirmed the completed download row displayed only `single-markdown`.

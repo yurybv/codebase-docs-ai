@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 51: Web Rendered Format Browser Verification.
+- Implement Phase 52: API Source Archive Type Validation.
 
-Phase 51 goal:
-- Verify the Web completed-state download controls in a browser after API-rendered-format wiring.
-- Include the case where the API reports a narrower rendered format list than the pre-run selection.
-- Update docs/WEB_QA.md and docs/STATE.md with findings.
+Phase 52 goal:
+- Validate uploaded archive file names at the API upload boundary.
+- Reject unsupported archive extensions with a safe API error before storing files.
+- Document the supported upload types.
+- Add API tests for unsupported archive upload rejection.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 

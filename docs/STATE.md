@@ -80,16 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 51: Web Rendered Format Browser Verification.
+Implement Phase 52: API Source Archive Type Validation.
 
 Required package:
 
 ```text
-apps/web
+apps/api
 docs
 ```
 
-The next step should verify the Web completed-state download controls in a browser after the API-rendered-format wiring, including the case where the API reports a narrower rendered format list than the pre-run selection.
+The next step should validate uploaded archive file names at the API upload boundary, reject unsupported archive extensions with a safe API error before storing files, and document the supported upload types.
 
 ## Completed Implementation
 
@@ -954,6 +954,20 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm web:completed-state
+```
+
+### 2026-05-29: Phase 51 Web Rendered Format Browser Verification
+
+- Ran the Web app against a mock API that returned a narrower `renderedFormats` list than the pre-run selection.
+- Uploaded a synthetic archive through the browser file input.
+- Confirmed the completed status and Markdown preview rendered.
+- Confirmed completed download controls used the API-rendered format list and displayed only `single-markdown`.
+- Recorded browser QA findings in `docs/WEB_QA.md`.
+
+Verification:
+
+```text
+Browser check at http://localhost:5173/ with mock API at http://127.0.0.1:3000
 ```
 
 ## Open Questions
