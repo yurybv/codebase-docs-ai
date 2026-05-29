@@ -2,6 +2,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
+import * as tar from 'tar';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadArchiveSource, loadFolderSource } from './load-source.js';
 import { assertSafeRelativePath } from './path-safety.js';
@@ -62,6 +63,36 @@ describe('loadArchiveSource', () => {
     expect(loaded.files.map((file) => file.path)).toEqual(['src/main.ts']);
   });
 
+  it.each([
+    {
+      archiveName: 'backend.tar',
+      gzip: false
+    },
+    {
+      archiveName: 'backend.tar.gz',
+      gzip: true
+    },
+    {
+      archiveName: 'backend.tgz',
+      gzip: true
+    }
+  ])('extracts $archiveName archive and builds file inventory', async ({ archiveName, gzip }) => {
+    const archivePath = path.join(tempRoot, archiveName);
+    await writeTarFixtureArchive(archivePath, gzip);
+
+    const loaded = await loadArchiveSource({
+      source: {
+        name: 'Backend',
+        role: 'backend'
+      },
+      archivePath,
+      extractionRoot: path.join(tempRoot, `extract-${archiveName}`)
+    });
+
+    expect(loaded.rootPath).toContain('backend');
+    expect(loaded.files.map((file) => file.path)).toEqual(['src/main.ts']);
+  });
+
   it('rejects unsafe relative paths before extraction', () => {
     expect(() => assertSafeRelativePath('../escape.ts')).toThrow(UnsafeArchivePathError);
     expect(() => assertSafeRelativePath('/absolute.ts')).toThrow(UnsafeArchivePathError);
@@ -72,3 +103,20 @@ describe('loadArchiveSource', () => {
     expect(assertSafeRelativePath('src/controllers/')).toBe('src/controllers');
   });
 });
+
+async function writeTarFixtureArchive(archivePath: string, gzip: boolean): Promise<void> {
+  const sourceRoot = path.join(tempRoot, `fixture-${path.basename(archivePath)}`);
+  await mkdir(path.join(sourceRoot, 'src'), {
+    recursive: true
+  });
+  await writeFile(path.join(sourceRoot, 'src', 'main.ts'), 'export const main = true;');
+
+  await tar.c(
+    {
+      cwd: sourceRoot,
+      file: archivePath,
+      gzip
+    },
+    ['src/main.ts']
+  );
+}

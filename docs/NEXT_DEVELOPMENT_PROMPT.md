@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 58: Source Loader Tar Archive Regression Coverage.
+- Implement Phase 59: Source Loader Unsupported Archive Regression Coverage.
 
-Phase 58 goal:
-- Add focused source-loader regression coverage for `.tar`, `.tar.gz`, and `.tgz` extraction.
-- Keep zip coverage intact.
-- Verify the supported archive formats declared in the shared contract are covered by extraction tests.
+Phase 59 goal:
+- Add focused source-loader regression coverage for unsupported archive filenames.
+- Verify package-level unsupported archive behavior stays aligned with API, Web, SDK, and CLI validation.
+- Keep supported archive extraction coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

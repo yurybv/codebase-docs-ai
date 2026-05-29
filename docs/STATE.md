@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 58: Source Loader Tar Archive Regression Coverage.
+Implement Phase 59: Source Loader Unsupported Archive Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/source-loader
 docs
 ```
 
-The next step should add focused source-loader regression coverage for `.tar`, `.tar.gz`, and `.tgz` extraction paths so supported archive formats are protected beyond the existing zip coverage.
+The next step should add focused source-loader regression coverage for unsupported archive filenames so package-level behavior is protected alongside API, Web, SDK, and CLI validation.
 
 ## Completed Implementation
 
@@ -1063,6 +1063,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm test -- apps/cli/src/generate-command.test.ts apps/cli/src/cli-options.test.ts
+```
+
+### 2026-05-29: Phase 58 Source Loader Tar Archive Regression Coverage
+
+- Added direct source-loader extraction coverage for `.tar`, `.tar.gz`, and `.tgz` archives.
+- Kept existing zip extraction coverage intact.
+- Used synthetic fixture archives only; no private source or uploaded artifacts were committed.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
 ```
 
 ## Open Questions
