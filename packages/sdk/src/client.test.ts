@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import AdmZip from 'adm-zip';
 import { CodebaseDocsAIClient, CodebaseDocsAIClientError } from './client.js';
 
 describe('CodebaseDocsAIClient', () => {
@@ -372,6 +373,46 @@ describe('CodebaseDocsAIClient', () => {
       'http://localhost:3000/v1/documentation-runs/run_123/result',
       undefined
     );
+  });
+
+  it('preserves sanitized markdown-tree zip downloads', async () => {
+    const rawOpenAiKey = `sk-${'j'.repeat(24)}`;
+    const sanitizedZip = new AdmZip();
+    sanitizedZip.addFile(
+      '06-api-contracts.md',
+      Buffer.from('| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |\n')
+    );
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(sanitizedZip.toBuffer(), {
+        status: 200,
+        headers: {
+          'content-disposition': 'attachment; filename="documentation.zip"',
+          'content-type': 'application/zip'
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const download = await client.documentationRuns.download({
+      runId: 'run_123',
+      format: 'markdown-tree'
+    });
+    const zip = new AdmZip(Buffer.from(await download.content.arrayBuffer()));
+    const zipContent = zip
+      .getEntries()
+      .filter((entry) => !entry.isDirectory)
+      .map((entry) => entry.getData().toString('utf8'))
+      .join('\n');
+
+    expect(download.fileName).toBe('documentation.zip');
+    expect(download.contentType).toContain('application/zip');
+    expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).not.toContain(rawOpenAiKey);
+    expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
+    expect(zipContent).not.toContain('.env');
   });
 
   it('surfaces failed run messages while polling', async () => {

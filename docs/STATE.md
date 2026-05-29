@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 83: SDK Markdown Tree Zip Download Sanitization Regression Coverage.
+Implement Phase 84: Renderer Zip Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+packages/renderers
 docs
 ```
 
-The next step should add SDK regression coverage proving markdown-tree zip download blobs returned by the API remain sanitized.
+The next step should add renderer regression coverage proving zip packaging preserves sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1393,6 +1393,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.http.test.ts
+```
+
+### 2026-05-29: Phase 83 SDK Markdown Tree Zip Download Sanitization Regression Coverage
+
+- Added SDK direct download regression coverage for markdown-tree zip artifacts.
+- Added direct SDK test dependencies for reading generated zip blobs.
+- Verified files inside SDK-returned markdown-tree zip blobs contain redacted source evidence and exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
 ```
 
 ## Open Questions

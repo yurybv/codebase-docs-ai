@@ -17,5 +17,9 @@
   },
   "dependencies": {
     "@codebase-docs-ai/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "adm-zip": "^0.5.16"
   }
 }

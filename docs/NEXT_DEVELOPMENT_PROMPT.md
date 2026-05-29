@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 83: SDK Markdown Tree Zip Download Sanitization Regression Coverage.
+- Implement Phase 84: Renderer Zip Sanitization Regression Coverage.
 
-Phase 83 goal:
-- Add SDK regression coverage proving markdown-tree zip download blobs returned by the API remain sanitized.
-- Verify raw denied files and raw secret values are absent from files inside SDK-returned markdown-tree zip blobs.
-- Keep API markdown-tree/JSON/single-Markdown, Web result/download, SDK result/download, and CLI output sanitization coverage intact.
+Phase 84 goal:
+- Add renderer regression coverage proving zip packaging preserves sanitized documentation content without introducing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from files inside renderer-produced zip artifacts.
+- Keep SDK/API/Web/CLI sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

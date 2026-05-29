@@ -216,6 +216,13 @@ importers:
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.8
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.17
 
   packages/security:
     dependencies:
