@@ -32,6 +32,38 @@ describe('json renderer', () => {
       title: 'Docs'
     });
   });
+
+  it('preserves sanitized rendered content in JSON files', () => {
+    const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
+    const rendered = renderJson({
+      ...documentationTreeFixture(),
+      pages: [
+        {
+          key: 'api-contracts',
+          title: '06. API Contracts',
+          order: 1,
+          markdown: '# API Contracts\n\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |',
+          sourceReferences: [],
+          warnings: []
+        }
+      ],
+      warnings: [
+        {
+          level: 'medium',
+          message: 'A source reference contained [REDACTED_OPENAI_API_KEY].'
+        }
+      ]
+    });
+    const content = rendered.files[0]?.content ?? '';
+
+    expect(JSON.parse(content)).toMatchObject({
+      title: 'Docs'
+    });
+    expect(content).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(content).not.toContain(rawOpenAiKey);
+    expect(content).not.toContain('SHOULD_NOT_APPEAR');
+    expect(content).not.toContain('.env');
+  });
 });
 
 describe('zip renderer', () => {
