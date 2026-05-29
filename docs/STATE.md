@@ -80,16 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 43: Web Completed-State Browser Verification.
+Implement Phase 44: API Run Retention Scheduler.
 
 Required package:
 
 ```text
-apps/web
+apps/api
 docs
 ```
 
-The next step should verify the Web UI after a successful generation with source rows, page navigation, Markdown preview, and download buttons rendered in desktop and mobile viewports.
+The next step should wire the existing expired-run cleanup method into the API runtime with a configurable scheduler, document the operational behavior, and add focused tests for interval setup, disabled scheduling, and shutdown cleanup.
 
 ## Completed Implementation
 
@@ -820,6 +820,24 @@ Verification:
 
 ```text
 browser check at http://localhost:5173
+pnpm lint
+```
+
+### 2026-05-29: Phase 43 Web Completed-State Browser Verification
+
+- Verified successful Web generation against the real local API and Web dev servers.
+- Uploaded frontend and backend tar archives through the browser flow.
+- Assigned source roles through the source row selectors.
+- Verified completed progress, generated page navigation, Markdown preview updates, and download controls.
+- Verified JSON download starts from the API and returns `documentation-tree.json`.
+- Checked completed state at desktop viewport `1440x900`.
+- Checked completed state at mobile viewport `390x844`.
+- Recorded completed-state Web QA findings.
+
+Verification:
+
+```text
+browser check at http://localhost:5173 with API at http://localhost:3300
 pnpm lint
 ```
 
