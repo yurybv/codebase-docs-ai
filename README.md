@@ -57,6 +57,7 @@ Start with:
 - [Prompt Contracts](./docs/PROMPT_CONTRACTS.md)
 - [Generation Prompt](./docs/GENERATION_PROMPT.md)
 - [Autonomous Development Prompt](./docs/AUTONOMOUS_DEVELOPMENT_PROMPT.md)
+- [Next Development Prompt](./docs/NEXT_DEVELOPMENT_PROMPT.md)
 - [Decision Log](./docs/DECISIONS.md)
 - [External Rule Sources](./docs/EXTERNAL_RULE_SOURCES.md)
 

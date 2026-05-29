@@ -34,6 +34,7 @@ Application code has started. The repository now contains a pnpm workspace with 
 - Security: `docs/SECURITY.md`
 - Testing: `docs/TESTING.md`
 - Prompt contracts: `docs/PROMPT_CONTRACTS.md`
+- Next continuation prompt: `docs/NEXT_DEVELOPMENT_PROMPT.md`
 - External source docs: `docs/EXTERNAL_RULE_SOURCES.md`
 
 ## Reviewed External Inputs
