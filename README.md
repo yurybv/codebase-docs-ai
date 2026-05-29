@@ -48,6 +48,7 @@ Start with:
 - [Development Workflow](./docs/DEVELOPMENT_WORKFLOW.md)
 - [Security](./docs/SECURITY.md)
 - [Testing](./docs/TESTING.md)
+- [Operations](./docs/OPERATIONS.md)
 - [Prompt Contracts](./docs/PROMPT_CONTRACTS.md)
 - [Generation Prompt](./docs/GENERATION_PROMPT.md)
 - [Autonomous Development Prompt](./docs/AUTONOMOUS_DEVELOPMENT_PROMPT.md)

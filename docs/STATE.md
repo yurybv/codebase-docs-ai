@@ -77,15 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 24: Operational Configuration Documentation.
+Implement Phase 25: Packaging And Public API Boundaries Review.
 
 Required package:
 
 ```text
+package manifests
 docs
 ```
 
-The next step should consolidate all runtime environment variables and operational commands into one operator-facing document, including API, Web, CLI, SDK, AI provider, upload limits, retention, and smoke verification.
+The next step should review package exports, public SDK/API boundaries, bin scripts, README entry points, and package manifests so the module can be consumed cleanly from other projects.
 
 ## Completed Implementation
 
@@ -544,6 +545,21 @@ Verification:
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/upload-constraints.test.ts apps/web/src/source-metadata.test.ts
 pnpm lint
+```
+
+### 2026-05-29: Phase 24 Operational Configuration Documentation
+
+- Added operator-facing runtime documentation.
+- Documented local commands and verification flow.
+- Documented API, Web, CLI, SDK, AI provider, upload limit, and retention environment variables.
+- Documented CLI local mode and API mode usage.
+- Documented smoke harness behavior.
+- Added operations document to README index.
+
+Verification:
+
+```text
+docs-only change
 ```
 
 ## Open Questions
