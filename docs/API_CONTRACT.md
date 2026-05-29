@@ -74,6 +74,17 @@ metadata: JSON
 files: one or more archives
 ```
 
+Supported archive file names:
+
+```text
+.zip
+.tar
+.tar.gz
+.tgz
+```
+
+Unsupported file names are rejected before the API stores upload artifacts.
+
 Metadata:
 
 ```json

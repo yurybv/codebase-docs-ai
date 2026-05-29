@@ -80,16 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 52: API Source Archive Type Validation.
+Implement Phase 53: Web Supported Archive Guidance Alignment.
 
 Required package:
 
 ```text
-apps/api
+apps/web
 docs
 ```
 
-The next step should validate uploaded archive file names at the API upload boundary, reject unsupported archive extensions with a safe API error before storing files, and document the supported upload types.
+The next step should align the Web upload accept list and operator guidance with the API-supported archive types: `.zip`, `.tar`, `.tar.gz`, and `.tgz`.
 
 ## Completed Implementation
 
@@ -968,6 +968,22 @@ Verification:
 
 ```text
 Browser check at http://localhost:5173/ with mock API at http://127.0.0.1:3000
+```
+
+### 2026-05-29: Phase 52 API Source Archive Type Validation
+
+- Added API upload-boundary validation for supported archive file names.
+- Supported `.zip`, `.tar`, `.tar.gz`, and `.tgz` uploads.
+- Rejected unsupported archive file names with a safe `SOURCE_ARCHIVE_UNSUPPORTED_TYPE` error before storing upload artifacts.
+- Fixed the upload route exception filter so non-Multer upload-route errors use the same public API error envelope.
+- Added API service and HTTP lifecycle coverage for unsupported upload rejection.
+- Documented supported archive upload types in the API contract.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts apps/api/src/api-exception.filter.test.ts
 ```
 
 ## Open Questions

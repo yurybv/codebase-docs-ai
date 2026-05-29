@@ -52,6 +52,51 @@ describe('Documentation runs HTTP API', () => {
     });
   });
 
+  it('returns a safe error envelope for unsupported source archive uploads', async () => {
+    const created = await fetchJson<{ runId: string }>(`${apiBaseUrl}/v1/documentation-runs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: 'Unsupported Upload Documentation',
+        options: {
+          outputFormats: ['single-markdown'],
+          language: 'en',
+          includeSourceReferences: true,
+          includeWarnings: true
+        }
+      })
+    });
+    const formData = new FormData();
+    formData.append(
+      'metadata',
+      JSON.stringify({
+        sources: [
+          {
+            fileField: 'frontend',
+            name: 'Frontend',
+            role: 'frontend'
+          }
+        ]
+      })
+    );
+    formData.append('frontend', new Blob(['not an archive']), 'frontend.txt');
+
+    const response = await fetch(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/sources`, {
+      method: 'POST',
+      body: formData
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: {
+        code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE',
+        message: 'Unsupported source archive type: frontend.txt.'
+      }
+    });
+  });
+
   it('runs the create, upload, start, result, download, and delete lifecycle', async () => {
     const created = await fetchJson<{ runId: string; status: string }>(
       `${apiBaseUrl}/v1/documentation-runs`,

@@ -195,6 +195,37 @@ describe('DocumentationRunsService', () => {
     });
   });
 
+  it('rejects unsupported source archive file types before storing uploads', async () => {
+    const created = await service.createRun({
+      name: 'Unsupported Archive Fixture Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+
+    await expect(
+      service.uploadSources(
+        created.runId,
+        [
+          {
+            fieldname: 'frontend',
+            originalname: 'frontend.txt',
+            buffer: Buffer.from('not an archive')
+          }
+        ],
+        sourceMetadata()
+      )
+    ).rejects.toMatchObject({
+      response: {
+        code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE'
+      }
+    });
+    await expect(readdir(path.join(tempRoot, created.runId, 'uploads'))).rejects.toThrow();
+  });
+
   it('cleans old source artifacts when replacing ready-state uploads', async () => {
     const created = await service.createRun({
       name: 'Replace Sources Fixture Docs',

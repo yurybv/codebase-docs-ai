@@ -82,6 +82,7 @@ const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready
 const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
 const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
+const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'] as const;
 
 @Injectable()
 export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
@@ -175,14 +176,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       });
     }
 
-    const uploadPath = path.join(storedRun.tempPath, 'uploads');
-    await this.resetSourceArtifacts(storedRun);
-    await mkdir(uploadPath, {
-      recursive: true
-    });
-
-    const storedSources: StoredSource[] = [];
-    for (const sourceMetadata of parsedMetadata.data.sources) {
+    const uploadCandidates = parsedMetadata.data.sources.map((sourceMetadata) => {
       const file = files.find((candidate) => candidate.fieldname === sourceMetadata.fileField);
       if (!file) {
         throw new BadRequestException({
@@ -190,7 +184,21 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
           message: `No uploaded file found for field ${sourceMetadata.fileField}.`
         });
       }
+      assertSupportedArchiveFile(file.originalname);
+      return {
+        sourceMetadata,
+        file
+      };
+    });
 
+    const uploadPath = path.join(storedRun.tempPath, 'uploads');
+    await this.resetSourceArtifacts(storedRun);
+    await mkdir(uploadPath, {
+      recursive: true
+    });
+
+    const storedSources: StoredSource[] = [];
+    for (const { sourceMetadata, file } of uploadCandidates) {
       const archivePath = path.join(uploadPath, `${randomUUID()}-${file.originalname}`);
       await writeFile(archivePath, file.buffer);
       storedSources.push({
@@ -570,6 +578,20 @@ function availableRenderedFormats(storedRun: StoredRun): DocumentationOutputForm
   }
 
   return Object.keys(storedRun.renderedPaths ?? {}) as DocumentationOutputFormat[];
+}
+
+function assertSupportedArchiveFile(fileName: string): void {
+  const lowerFileName = fileName.toLowerCase();
+  const isSupported = supportedArchiveExtensions.some((extension) => lowerFileName.endsWith(extension));
+  if (isSupported) {
+    return;
+  }
+
+  throw new BadRequestException({
+    code: 'SOURCE_ARCHIVE_UNSUPPORTED_TYPE',
+    message: `Unsupported source archive type: ${fileName}.`,
+    suggestion: `Upload one of the supported archive types: ${supportedArchiveExtensions.join(', ')}.`
+  });
 }
 
 function parseJson(value: string): unknown {
