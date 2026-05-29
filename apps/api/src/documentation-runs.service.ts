@@ -2,10 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { generateDocumentationTree } from '@codebase-docs-ai/documentation-generator';
-import { renderJson, renderMarkdownTree, renderSingleMarkdown, renderZip } from '@codebase-docs-ai/renderers';
-import { analyzeRepository } from '@codebase-docs-ai/repo-analyzer';
-import { filterLoadedSource } from '@codebase-docs-ai/security';
+import { DocumentationEngine } from '@codebase-docs-ai/core';
+import { renderZip } from '@codebase-docs-ai/renderers';
 import {
   createDocumentationRunSchema,
   documentationOutputFormatSchema,
@@ -14,14 +12,12 @@ import {
 import type {
   DocumentationOutputFormat,
   DocumentationRun,
-  DocumentationRunOptions,
   DocumentationRunStatus,
   DocumentationTree,
   RenderedDocumentation,
   SourceInputMetadata
 } from '@codebase-docs-ai/shared';
 import { loadArchiveSource } from '@codebase-docs-ai/source-loader';
-import { analyzeSystem } from '@codebase-docs-ai/system-analyzer';
 import { z } from 'zod';
 
 interface UploadedSourceFile {
@@ -61,6 +57,7 @@ const uploadSourcesMetadataSchema = z.object({
 @Injectable()
 export class DocumentationRunsService {
   private readonly runs = new Map<string, StoredRun>();
+  private readonly engine = new DocumentationEngine();
   private readonly tempRoot = path.resolve(process.env.DOCS_AI_TMP_DIR ?? '.tmp/codebase-docs-ai');
 
   createRun(body: unknown): { runId: string; status: DocumentationRunStatus } {
@@ -175,31 +172,17 @@ export class DocumentationRunsService {
     );
 
     this.setStatus(storedRun, 'analyzing_sources');
-    const repositoryMaps = await Promise.all(
-      loadedSources.map((loadedSource) => {
-        const filteredSource = filterLoadedSource(loadedSource);
-        return analyzeRepository({
-          source: loadedSource.source,
-          rootPath: loadedSource.rootPath,
-          files: filteredSource.includedFiles
-        });
-      })
-    );
-
     this.setStatus(storedRun, 'building_system_map');
-    const systemMap = analyzeSystem({
-      repositories: repositoryMaps
-    });
-
     this.setStatus(storedRun, 'generating_documentation');
-    const documentationTree = generateDocumentationTree({
+    const result = await this.engine.generateDocumentation({
       title: storedRun.run.name,
-      systemMap
+      loadedSources,
+      options: storedRun.run.options
     });
 
     this.setStatus(storedRun, 'rendering_output');
-    storedRun.documentationTree = documentationTree;
-    storedRun.rendered = renderDocumentation(documentationTree, storedRun.run.options);
+    storedRun.documentationTree = result.documentationTree;
+    storedRun.rendered = result.rendered;
     this.setStatus(storedRun, 'completed');
 
     return {
@@ -301,29 +284,6 @@ export class DocumentationRunsService {
     storedRun.run.status = status;
     storedRun.run.updatedAt = new Date().toISOString();
   }
-}
-
-function renderDocumentation(
-  documentationTree: DocumentationTree,
-  options: DocumentationRunOptions
-): Map<DocumentationOutputFormat, RenderedDocumentation> {
-  const rendered = new Map<DocumentationOutputFormat, RenderedDocumentation>();
-
-  for (const format of options.outputFormats) {
-    if (format === 'markdown-tree') {
-      rendered.set(format, renderMarkdownTree(documentationTree));
-    }
-
-    if (format === 'single-markdown') {
-      rendered.set(format, renderSingleMarkdown(documentationTree));
-    }
-
-    if (format === 'json') {
-      rendered.set(format, renderJson(documentationTree));
-    }
-  }
-
-  return rendered;
 }
 
 function parseJson(value: string): unknown {

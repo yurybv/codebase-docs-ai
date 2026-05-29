@@ -77,15 +77,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 11: Shared Engine Orchestration.
+Implement Phase 12: AI Provider Integration And Prompt-Backed Documentation.
 
 Required package:
 
 ```text
-packages/core
+packages/ai-orchestrator
+packages/documentation-generator
 ```
 
-The next step should move the duplicated API/CLI generation pipeline into `packages/core`, then update API and CLI to call the shared engine. This will make the module boundary cleaner and prevent future behavior drift between surfaces.
+The next step should add an OpenAI-compatible provider adapter, wire optional AI-assisted page generation behind the existing deterministic documentation generator, keep deterministic fallback behavior for tests/local usage, and preserve schema validation for generated documentation content.
 
 ## Completed Implementation
 
@@ -302,6 +303,26 @@ pnpm lint
 - Added CLI option parsing tests.
 - Added README and module integration CLI usage docs.
 - Added smoke verification with paired frontend/backend folders and matched `/api/users` contract output.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+CLI smoke generation with local frontend/backend fixtures
+```
+
+### 2026-05-29: Phase 11 Shared Engine Orchestration
+
+- Expanded `packages/core` from a run-plan skeleton into the shared documentation orchestration engine.
+- Added core generation from loaded sources through security filtering, repository analysis, system analysis, documentation generation, and rendering.
+- Updated API run lifecycle to call the shared engine after archive loading.
+- Updated CLI generation to call the shared engine after local folder/archive loading.
+- Removed analyzer/generator orchestration dependencies from API and CLI adapters.
+- Added core engine generation tests.
+- Updated architecture and implementation plan docs.
 
 Verification:
 

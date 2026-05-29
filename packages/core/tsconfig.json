@@ -10,7 +10,22 @@
   "exclude": ["src/**/*.test.ts"],
   "references": [
     {
+      "path": "../documentation-generator"
+    },
+    {
+      "path": "../renderers"
+    },
+    {
+      "path": "../repo-analyzer"
+    },
+    {
+      "path": "../security"
+    },
+    {
       "path": "../shared"
+    },
+    {
+      "path": "../system-analyzer"
     }
   ]
 }

@@ -192,18 +192,42 @@ apps/cli
 
 Local command-line wrapper around the core engine.
 
+## Core Engine
+
+```text
+packages/core
+```
+
+The core engine is the shared orchestration boundary used by API and CLI.
+
+Responsibilities:
+
+- accept already loaded sources;
+- apply security filtering;
+- run per-source repository analysis;
+- run cross-source system analysis;
+- generate the documentation tree;
+- render requested output formats.
+
+Transport-specific concerns remain outside the core engine:
+
+- API owns uploads, run lifecycle state, and HTTP downloads;
+- CLI owns local path parsing and writing files to disk;
+- SDK owns HTTP client ergonomics.
+
 ## Data Flow
 
 ```text
-Archive Upload
-  -> API stores temporary input
+Archive Upload / Local Path
+  -> Adapter stores or resolves input
   -> Source Loader extracts safely
-  -> Security filters and redacts
-  -> Repo Analyzer builds RepositoryMap per source
-  -> System Analyzer builds SystemMap
-  -> Documentation Generator creates DocumentationTree
-  -> Renderers produce output files
-  -> API returns result/download
+  -> Core Engine
+      -> Security filters and redacts
+      -> Repo Analyzer builds RepositoryMap per source
+      -> System Analyzer builds SystemMap
+      -> Documentation Generator creates DocumentationTree
+      -> Renderers produce output files
+  -> Adapter returns, downloads, or writes artifacts
 ```
 
 ## Stable Internal Contracts

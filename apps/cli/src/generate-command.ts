@@ -1,13 +1,10 @@
 import { mkdtemp, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { generateDocumentationTree } from '@codebase-docs-ai/documentation-generator';
-import { renderJson, renderMarkdownTree, renderSingleMarkdown, renderZip } from '@codebase-docs-ai/renderers';
-import { analyzeRepository } from '@codebase-docs-ai/repo-analyzer';
-import { filterLoadedSource } from '@codebase-docs-ai/security';
-import type { DocumentationTree, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
+import { DocumentationEngine } from '@codebase-docs-ai/core';
+import { renderZip } from '@codebase-docs-ai/renderers';
+import type { DocumentationOutputFormat, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
 import { loadArchiveSource, loadFolderSource } from '@codebase-docs-ai/source-loader';
-import { analyzeSystem } from '@codebase-docs-ai/system-analyzer';
 import { parseCliSourceInput, type GenerateCommandOptions } from './cli-options.js';
 
 export interface GenerateCommandResult {
@@ -26,25 +23,24 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
     const loadedSources = await Promise.all(
       options.source.map((sourceInput) => loadCliSource(sourceInput, tempRoot))
     );
-    const repositoryMaps = await Promise.all(
-      loadedSources.map((loadedSource) => {
-        const filteredSource = filterLoadedSource(loadedSource);
-        return analyzeRepository({
-          source: loadedSource.source,
-          rootPath: loadedSource.rootPath,
-          files: filteredSource.includedFiles
-        });
-      })
-    );
-    const systemMap = analyzeSystem({
-      repositories: repositoryMaps
-    });
-    const documentationTree = generateDocumentationTree({
+    const engine = new DocumentationEngine();
+    const engineResult = await engine.generateDocumentation({
       title: options.name,
-      systemMap
+      loadedSources,
+      options: {
+        outputFormats: [coreOutputFormat(options.format)],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
     });
+    const renderedDocumentation = engineResult.rendered.get(coreOutputFormat(options.format));
+    if (!renderedDocumentation) {
+      throw new Error(`Documentation output was not rendered for format: ${options.format}`);
+    }
+
     const writtenFiles = await writeOutput({
-      renderedDocumentation: renderForCliFormat(documentationTree, options.format),
+      renderedDocumentation,
       outputPath: options.output,
       zip: options.format === 'zip'
     });
@@ -88,19 +84,8 @@ async function loadCliSource(sourceInput: string, tempRoot: string): Promise<Loa
   throw new Error(`Unsupported source path type: ${parsedSource.inputPath}`);
 }
 
-function renderForCliFormat(
-  documentationTree: DocumentationTree,
-  format: GenerateCommandOptions['format']
-): RenderedDocumentation {
-  if (format === 'markdown-tree' || format === 'zip') {
-    return renderMarkdownTree(documentationTree);
-  }
-
-  if (format === 'single-markdown') {
-    return renderSingleMarkdown(documentationTree);
-  }
-
-  return renderJson(documentationTree);
+function coreOutputFormat(format: GenerateCommandOptions['format']): DocumentationOutputFormat {
+  return format === 'zip' ? 'markdown-tree' : format;
 }
 
 async function writeOutput(input: {

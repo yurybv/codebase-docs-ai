@@ -251,6 +251,21 @@ Done when:
 - local archives can generate docs from terminal;
 - CLI uses the same engine contracts.
 
+## Phase 11: Shared Engine Orchestration
+
+Deliverables:
+
+- shared `DocumentationEngine` orchestration in `packages/core`;
+- API uses the shared engine after source loading;
+- CLI uses the shared engine after local source resolution;
+- duplicated analyzer/generator/renderer orchestration is removed from adapters.
+
+Done when:
+
+- API lifecycle tests still pass;
+- CLI smoke generation still passes;
+- API and CLI depend on the same core generation method.
+
 ## Cross-Cutting Work
 
 During all phases:
