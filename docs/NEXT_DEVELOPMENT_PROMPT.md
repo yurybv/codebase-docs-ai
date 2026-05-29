@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 93: API Error Envelope Secret Sanitization Regression Coverage.
+- Implement Phase 94: Web API Error Display Sanitization Regression Coverage.
 
-Phase 93 goal:
-- Add API regression coverage proving public error envelopes do not expose raw secret-bearing source content.
-- Sanitize public error envelope messages/details if needed so raw denied files and raw secret values are absent from API responses.
-- Keep API failed-run/result/download and CLI/SDK/Web/renderer sanitization coverage intact.
+Phase 94 goal:
+- Add Web regression coverage proving operator-facing API error messages do not expose raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from rendered Web error states.
+- Keep API failed-run/error-envelope/result/download and CLI/SDK/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

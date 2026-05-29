@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 93: API Error Envelope Secret Sanitization Regression Coverage.
+Implement Phase 94: Web API Error Display Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/api
+apps/web
 docs
 ```
 
-The next step should add API regression coverage proving public error envelopes do not expose raw secret-bearing source content.
+The next step should add Web regression coverage proving operator-facing API error messages do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1523,6 +1523,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
+```
+
+### 2026-05-29: Phase 93 API Error Envelope Secret Sanitization Regression Coverage
+
+- Added recursive sanitization for public API error envelope messages, details, and suggestions.
+- Added API exception filter regression coverage for raw provider keys and denied `.env` evidence in structured HTTP exceptions.
+- Verified public API error envelopes preserve redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/api-exception.filter.test.ts
 ```
 
 ## Open Questions

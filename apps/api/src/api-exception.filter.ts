@@ -43,7 +43,7 @@ function normalizeHttpExceptionResponse(response: string | object, statusCode: n
   if (typeof response === 'string') {
     return {
       code: defaultErrorCode(statusCode),
-      message: response
+      message: sanitizePublicString(response, defaultErrorMessage(statusCode))
     };
   }
 
@@ -54,11 +54,11 @@ function normalizeHttpExceptionResponse(response: string | object, statusCode: n
   };
 
   if ('details' in responseRecord) {
-    payload.details = responseRecord.details;
+    payload.details = sanitizePublicValue(responseRecord.details);
   }
 
   if (typeof responseRecord.suggestion === 'string') {
-    payload.suggestion = responseRecord.suggestion;
+    payload.suggestion = sanitizePublicString(responseRecord.suggestion, defaultErrorMessage(statusCode));
   }
 
   return payload;
@@ -66,17 +66,44 @@ function normalizeHttpExceptionResponse(response: string | object, statusCode: n
 
 function normalizeMessage(value: unknown, fallback: string): string {
   if (typeof value === 'string' && value.length > 0) {
-    return value;
+    return sanitizePublicString(value, fallback);
   }
 
   if (Array.isArray(value)) {
     const messages = value.filter((entry): entry is string => typeof entry === 'string');
     if (messages.length > 0) {
-      return messages.join('; ');
+      return sanitizePublicString(messages.join('; '), fallback);
     }
   }
 
   return fallback;
+}
+
+function sanitizePublicValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return sanitizePublicString(value, '[REDACTED]');
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizePublicValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, sanitizePublicValue(entry)])
+    );
+  }
+
+  return value;
+}
+
+function sanitizePublicString(value: string, fallback: string): string {
+  const sanitized = value
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
+    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
+
+  return sanitized.length > 0 ? sanitized : fallback;
 }
 
 function defaultErrorCode(statusCode: number): string {
