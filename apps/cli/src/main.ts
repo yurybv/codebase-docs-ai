@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { collectRepeatedOption, parseGenerateOptions } from './cli-options.js';
+import { runGenerateCommand } from './generate-command.js';
 
 const program = new Command();
 
@@ -11,23 +13,35 @@ program
 program
   .command('generate')
   .description('Generate documentation from source inputs.')
-  .option('--source <source...>', 'Source in the form path:role')
+  .option('-s, --source <source>', 'Source in the form path:role. Repeat for multiple sources.', collectRepeatedOption, [])
   .option('--output <path>', 'Output directory', './generated-docs')
-  .option('--format <format>', 'Output format', 'markdown-tree')
-  .action((options: { source?: string[]; output: string; format: string }) => {
-    const sourceCount = options.source?.length ?? 0;
+  .option('--format <format>', 'Output format: markdown-tree, single-markdown, json, or zip', 'markdown-tree')
+  .option('--name <name>', 'Documentation title', 'Generated Project Documentation')
+  .action(async (options: { source?: string[]; output?: string; format?: string; name?: string }) => {
+    const result = await runGenerateCommand(parseGenerateOptions(options));
     console.log(
       JSON.stringify(
-        {
-          status: 'not_implemented',
-          sourceCount,
-          output: options.output,
-          format: options.format
-        },
+        result,
         null,
         2
       )
     );
   });
 
-program.parse();
+try {
+  await program.parseAsync();
+} catch (error) {
+  console.error(
+    JSON.stringify(
+      {
+        status: 'failed',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown CLI error.'
+        }
+      },
+      null,
+      2
+    )
+  );
+  process.exitCode = 1;
+}

@@ -12,7 +12,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@codebase-docs-ai/core": "workspace:*",
+    "@codebase-docs-ai/documentation-generator": "workspace:*",
+    "@codebase-docs-ai/renderers": "workspace:*",
+    "@codebase-docs-ai/repo-analyzer": "workspace:*",
+    "@codebase-docs-ai/security": "workspace:*",
+    "@codebase-docs-ai/shared": "workspace:*",
+    "@codebase-docs-ai/source-loader": "workspace:*",
+    "@codebase-docs-ai/system-analyzer": "workspace:*",
     "commander": "^12.1.0"
   }
 }

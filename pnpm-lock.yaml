@@ -93,9 +93,27 @@ importers:
 
   apps/cli:
     dependencies:
-      '@codebase-docs-ai/core':
+      '@codebase-docs-ai/documentation-generator':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/documentation-generator
+      '@codebase-docs-ai/renderers':
+        specifier: workspace:*
+        version: link:../../packages/renderers
+      '@codebase-docs-ai/repo-analyzer':
+        specifier: workspace:*
+        version: link:../../packages/repo-analyzer
+      '@codebase-docs-ai/security':
+        specifier: workspace:*
+        version: link:../../packages/security
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@codebase-docs-ai/source-loader':
+        specifier: workspace:*
+        version: link:../../packages/source-loader
+      '@codebase-docs-ai/system-analyzer':
+        specifier: workspace:*
+        version: link:../../packages/system-analyzer
       commander:
         specifier: ^12.1.0
         version: 12.1.0

@@ -15,7 +15,7 @@ source archives / folders
   -> Markdown / JSON output
 ```
 
-The module will expose:
+The module exposes:
 
 - Web UI for manual testing and preview;
 - HTTP API for integration from any language;
@@ -25,7 +25,13 @@ The module will expose:
 
 ## Current Repository Status
 
-This repository is currently in product specification and implementation-planning stage.
+This repository now contains the first executable product slice:
+
+```text
+Web UI upload -> API run -> source extraction -> analysis -> documentation tree -> Markdown/JSON download
+```
+
+It also includes a typed SDK and a local CLI generation command.
 
 Start with:
 
@@ -48,10 +54,26 @@ Start with:
 - [Decision Log](./docs/DECISIONS.md)
 - [External Rule Sources](./docs/EXTERNAL_RULE_SOURCES.md)
 
-## Next Action
+## CLI Usage
 
-After the specification is approved, generate the monorepo structure and implement the first full product slice:
+Generate documentation directly from local folders or archives:
+
+```bash
+pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
+  --source ./frontend.zip:frontend \
+  --source ./backend.zip:backend \
+  --output ./generated-docs \
+  --format markdown-tree \
+  --name "Project Documentation"
+```
+
+Supported CLI formats:
 
 ```text
-Web UI upload -> API run -> source extraction -> analysis -> documentation tree -> Markdown download
+markdown-tree
+single-markdown
+json
+zip
 ```
+
+`zip` is a CLI convenience format that packages the Markdown tree as `documentation.zip`.

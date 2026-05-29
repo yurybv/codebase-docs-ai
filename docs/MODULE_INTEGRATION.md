@@ -31,7 +31,7 @@ Supported by:
 
 Convenience client for Node.js and TypeScript applications.
 
-The SDK should wrap HTTP API calls by default.
+The SDK wraps HTTP API calls by default.
 
 Optional local engine mode can be added later for Node.js projects that want to run the engine in-process.
 
@@ -43,6 +43,19 @@ Useful for:
 - CI pipelines;
 - one-off documentation generation;
 - development fixtures.
+
+Example:
+
+```bash
+pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
+  --source ./frontend:frontend \
+  --source ./backend:backend \
+  --output ./generated-docs \
+  --format single-markdown \
+  --name "Generated Project Documentation"
+```
+
+The CLI accepts folders and archives. It runs the source loading, security filtering, repository analysis, system analysis, documentation generation, and rendering pipeline locally.
 
 ### 4. Web UI
 

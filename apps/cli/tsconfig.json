@@ -8,7 +8,25 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../../packages/core"
+      "path": "../../packages/documentation-generator"
+    },
+    {
+      "path": "../../packages/renderers"
+    },
+    {
+      "path": "../../packages/repo-analyzer"
+    },
+    {
+      "path": "../../packages/security"
+    },
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/source-loader"
+    },
+    {
+      "path": "../../packages/system-analyzer"
     }
   ]
 }

@@ -6,7 +6,7 @@ This file is the durable handoff for future sessions.
 
 Monorepo foundation implemented.
 
-Application code has started. The repository now contains a pnpm workspace with API, Web, CLI, SDK, shared contracts, source loading, security filtering, repository/system analysis, documentation generation, renderers, and an end-to-end Web/API documentation run flow.
+Application code has started. The repository now contains a pnpm workspace with API, Web, CLI, SDK, shared contracts, source loading, security filtering, repository/system analysis, documentation generation, renderers, and executable Web/API/SDK/CLI product surfaces.
 
 ## Product Decision Log
 
@@ -77,15 +77,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 10: CLI.
+Implement Phase 11: Shared Engine Orchestration.
 
-Required app:
+Required package:
 
 ```text
-apps/cli
+packages/core
 ```
 
-The next step should add a local `generate` command that accepts one or more source archives/folders, runs the same core pipeline without the API server, and writes Markdown tree, single Markdown, JSON, or zip output to disk.
+The next step should move the duplicated API/CLI generation pipeline into `packages/core`, then update API and CLI to call the shared engine. This will make the module boundary cleaner and prevent future behavior drift between surfaces.
 
 ## Completed Implementation
 
@@ -289,6 +289,28 @@ pnpm build
 pnpm typecheck
 pnpm test
 pnpm lint
+```
+
+### 2026-05-29: Phase 10 CLI
+
+- Replaced CLI placeholder output with a real local `generate` command.
+- Added repeated `--source path:role` support for folders and archives.
+- Added `--format` support for `markdown-tree`, `single-markdown`, `json`, and CLI-only `zip`.
+- Added local pipeline execution using source loading, security filtering, repository analysis, system analysis, documentation generation, and renderers.
+- Added output writing to disk.
+- Added structured JSON failure output for CLI errors.
+- Added CLI option parsing tests.
+- Added README and module integration CLI usage docs.
+- Added smoke verification with paired frontend/backend folders and matched `/api/users` contract output.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+CLI smoke generation with local frontend/backend fixtures
 ```
 
 ## Open Questions
