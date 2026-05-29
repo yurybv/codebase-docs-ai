@@ -22,6 +22,7 @@ Application code has started. The repository now contains a pnpm workspace with 
 - Web UI exists primarily for manual testing and operator usage.
 - The system must support frontend/backend archives analyzed together.
 - Documentation and specification should be written in English.
+- Default git workflow is direct commits to `master`; do not create feature branches unless explicitly requested.
 
 ## Current Source Of Truth
 

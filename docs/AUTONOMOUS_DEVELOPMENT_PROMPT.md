@@ -39,9 +39,12 @@ Development mode:
 - Add tests for each meaningful package or behavior.
 - Run relevant verification after each meaningful task.
 - Update docs/STATE.md after meaningful progress.
+- Work directly on `master` unless the user explicitly asks for a branch.
+- Do not create feature branches during autonomous development by default.
 
 Commit policy:
 - Each meaningful completed task must be committed before moving to the next meaningful task.
+- Commit directly to `master` by default.
 - A meaningful task is a coherent reviewable unit, for example:
   - monorepo foundation;
   - shared contracts;
