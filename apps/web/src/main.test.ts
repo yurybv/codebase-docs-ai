@@ -484,6 +484,7 @@ describe('App API error handling', () => {
       throw new Error(`Unexpected request: ${url}`);
     });
     vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     const rootElement = document.createElement('div');
     document.body.append(rootElement);
@@ -529,6 +530,18 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain(rawOpenAiKey);
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(renderedText).not.toContain('.env');
+
+    await act(async () => {
+      getButtonByText('json').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const openedUrl = String(openMock.mock.calls[0]?.[0] ?? '');
+    expect(openedUrl).toBe(
+      'http://localhost:3000/v1/documentation-runs/run_sanitized_result/download?format=json'
+    );
+    expect(openedUrl).not.toContain(rawOpenAiKey);
+    expect(openedUrl).not.toContain('SHOULD_NOT_APPEAR');
+    expect(openedUrl).not.toContain('.env');
   });
 
   it('requires at least one selected output format', async () => {
