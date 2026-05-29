@@ -78,17 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 31: Docker Runtime Smoke Test.
+Implement Phase 32: API Security And Abuse Limits Review.
 
 Required package:
 
 ```text
-Dockerfile
-docker-compose.yml
+apps/api
+packages/security
 docs
 ```
 
-The next step should run API and Web containers from the built Docker images and verify `/health` plus Web reachability, then document any runtime caveats.
+The next step should review API abuse controls around upload limits, run lifecycle misuse, temporary storage growth, and safe error exposure before external-host usage.
 
 ## Completed Implementation
 
@@ -648,6 +648,20 @@ pnpm verify
 Verification:
 
 ```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 31 Docker Runtime Smoke Test
+
+- Added a Docker runtime smoke script that starts API and Web through Compose.
+- Verified API `/health` and Web root reachability from running containers.
+- Ensured the smoke script tears down containers and volumes after the check.
+- Added a `pnpm docker:smoke` script and documented when to use it.
+
+Verification:
+
+```text
+pnpm docker:smoke
 pnpm verify
 ```
 

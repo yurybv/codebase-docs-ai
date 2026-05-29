@@ -47,6 +47,14 @@ Run API and Web together:
 docker compose up --build
 ```
 
+Run a container runtime smoke test:
+
+```bash
+pnpm docker:smoke
+```
+
+The smoke script starts API and Web containers with Docker Compose, checks API `/health`, checks Web reachability, and then stops the compose project with volumes removed.
+
 Default URLs:
 
 ```text
@@ -123,4 +131,10 @@ Run the repository verification before building deployment images:
 
 ```bash
 pnpm verify
+```
+
+Run the container runtime smoke test after image or compose changes:
+
+```bash
+pnpm docker:smoke
 ```

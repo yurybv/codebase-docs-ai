@@ -14,6 +14,7 @@
     "docker:build:api": "docker build --target api -t codebase-docs-ai-api:local .",
     "docker:build:web": "docker build --target web --build-arg VITE_WEB_API_BASE_URL=${VITE_WEB_API_BASE_URL:-http://localhost:3000} -t codebase-docs-ai-web:local .",
     "docker:compose:config": "docker compose config",
+    "docker:smoke": "tsx scripts/docker-runtime-smoke.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

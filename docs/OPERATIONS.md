@@ -57,6 +57,12 @@ pnpm docker:build:api
 VITE_WEB_API_BASE_URL=http://localhost:3000 pnpm docker:build:web
 ```
 
+Run the Docker runtime smoke test:
+
+```bash
+pnpm docker:smoke
+```
+
 ## API Runtime
 
 Default API port:
