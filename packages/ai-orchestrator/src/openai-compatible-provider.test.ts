@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createOpenAiCompatibleProviderFromEnv,
-  OpenAiCompatibleProvider
+  OpenAiCompatibleProvider,
+  OpenAiCompatibleProviderConfigurationError
 } from './openai-compatible-provider.js';
 
 describe('OpenAiCompatibleProvider', () => {
@@ -57,5 +58,35 @@ describe('OpenAiCompatibleProvider', () => {
         DOCS_AI_OPENAI_MODEL: 'test-model'
       })
     ).toBeInstanceOf(OpenAiCompatibleProvider);
+  });
+
+  it('fails fast when provider configuration is partial', () => {
+    expect(() =>
+      createOpenAiCompatibleProviderFromEnv({
+        DOCS_AI_OPENAI_API_KEY: 'test-key'
+      })
+    ).toThrow(OpenAiCompatibleProviderConfigurationError);
+    expect(() =>
+      createOpenAiCompatibleProviderFromEnv({
+        DOCS_AI_OPENAI_MODEL: 'test-model'
+      })
+    ).toThrow(OpenAiCompatibleProviderConfigurationError);
+  });
+
+  it('validates optional provider configuration values', () => {
+    expect(() =>
+      createOpenAiCompatibleProviderFromEnv({
+        DOCS_AI_OPENAI_API_KEY: 'test-key',
+        DOCS_AI_OPENAI_MODEL: 'test-model',
+        DOCS_AI_OPENAI_BASE_URL: 'file:///tmp/provider'
+      })
+    ).toThrow('DOCS_AI_OPENAI_BASE_URL must use http or https.');
+    expect(() =>
+      createOpenAiCompatibleProviderFromEnv({
+        DOCS_AI_OPENAI_API_KEY: 'test-key',
+        DOCS_AI_OPENAI_MODEL: 'test-model',
+        DOCS_AI_OPENAI_TEMPERATURE: 'high'
+      })
+    ).toThrow('DOCS_AI_OPENAI_TEMPERATURE must be a number between 0 and 2.');
   });
 });

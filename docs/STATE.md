@@ -78,17 +78,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 34: AI Provider Configuration Validation.
+Implement Phase 35: CLI Error Handling And Exit Codes.
 
 Required package:
 
 ```text
-packages/ai-orchestrator
-apps/api
+apps/cli
 docs
 ```
 
-The next step should validate AI provider environment configuration, document failure modes, and ensure optional AI generation cannot fail silently when credentials are partially configured.
+The next step should review CLI local/API mode failures, ensure non-zero exits are consistent, and document actionable operator error messages.
 
 ## Completed Implementation
 
@@ -691,6 +690,20 @@ Verification:
 
 ```text
 docs-only change
+```
+
+### 2026-05-29: Phase 34 AI Provider Configuration Validation
+
+- Added fail-fast validation for partial OpenAI-compatible provider configuration.
+- Required key and model whenever any AI provider environment variable is present.
+- Validated provider base URL protocol and temperature range.
+- Added tests for partial and invalid provider configuration.
+- Documented AI provider startup failure behavior in operations, deployment, and prompt contracts.
+
+Verification:
+
+```text
+pnpm verify
 ```
 
 ## Open Questions

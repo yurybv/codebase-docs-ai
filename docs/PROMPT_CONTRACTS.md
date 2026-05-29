@@ -91,7 +91,8 @@ Rules:
 
 - `DOCS_AI_OPENAI_MODEL` is required when AI generation is enabled;
 - no default model is hardcoded;
-- if API key or model is missing, the product uses deterministic local generation;
+- if no provider variables are configured, the product uses deterministic local generation;
+- partial provider configuration fails fast instead of silently falling back to deterministic generation;
 - AI output is parsed as JSON and validated with Zod before it becomes a documentation page;
 - invalid AI output fails the generation step instead of silently publishing malformed documentation.
 

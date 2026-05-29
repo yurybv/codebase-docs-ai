@@ -82,22 +82,45 @@ export function createOpenAiCompatibleProviderFromEnv(
 ): OpenAiCompatibleProvider | undefined {
   const apiKey = env.DOCS_AI_OPENAI_API_KEY ?? env.OPENAI_API_KEY;
   const model = env.DOCS_AI_OPENAI_MODEL ?? env.OPENAI_MODEL;
-  if (!apiKey || !model) {
+  const baseUrl = env.DOCS_AI_OPENAI_BASE_URL;
+  const temperature = env.DOCS_AI_OPENAI_TEMPERATURE;
+
+  if (!apiKey && !model && !baseUrl && !temperature) {
     return undefined;
+  }
+
+  if (!apiKey) {
+    throw new OpenAiCompatibleProviderConfigurationError(
+      'DOCS_AI_OPENAI_API_KEY or OPENAI_API_KEY is required when AI provider configuration is present.'
+    );
+  }
+
+  if (!model) {
+    throw new OpenAiCompatibleProviderConfigurationError(
+      'DOCS_AI_OPENAI_MODEL or OPENAI_MODEL is required when AI provider configuration is present.'
+    );
   }
 
   const config: OpenAiCompatibleProviderConfig = {
     apiKey,
     model
   };
-  if (env.DOCS_AI_OPENAI_BASE_URL) {
-    config.baseUrl = env.DOCS_AI_OPENAI_BASE_URL;
+  if (baseUrl) {
+    assertValidBaseUrl(baseUrl);
+    config.baseUrl = baseUrl;
   }
-  if (env.DOCS_AI_OPENAI_TEMPERATURE) {
-    config.temperature = Number.parseFloat(env.DOCS_AI_OPENAI_TEMPERATURE);
+  if (temperature) {
+    config.temperature = parseTemperature(temperature);
   }
 
   return new OpenAiCompatibleProvider(config);
+}
+
+export class OpenAiCompatibleProviderConfigurationError extends AiProviderError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OpenAiCompatibleProviderConfigurationError';
+  }
 }
 
 function parseJsonContent<TOutput>(content: string): TOutput {
@@ -106,4 +129,32 @@ function parseJsonContent<TOutput>(content: string): TOutput {
   } catch {
     throw new AiProviderError('AI provider response content was not valid JSON.');
   }
+}
+
+function assertValidBaseUrl(baseUrl: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw new OpenAiCompatibleProviderConfigurationError(
+      'DOCS_AI_OPENAI_BASE_URL must be a valid URL.'
+    );
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new OpenAiCompatibleProviderConfigurationError(
+      'DOCS_AI_OPENAI_BASE_URL must use http or https.'
+    );
+  }
+}
+
+function parseTemperature(value: string): number {
+  const temperature = Number.parseFloat(value);
+  if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) {
+    throw new OpenAiCompatibleProviderConfigurationError(
+      'DOCS_AI_OPENAI_TEMPERATURE must be a number between 0 and 2.'
+    );
+  }
+
+  return temperature;
 }

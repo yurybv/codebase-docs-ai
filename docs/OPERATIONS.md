@@ -152,6 +152,8 @@ export DOCS_AI_OPENAI_TEMPERATURE=0.2
 
 No model is hardcoded. Operators must choose the model explicitly.
 
+AI provider configuration is fail-fast. If any `DOCS_AI_OPENAI_*` variable or fallback OpenAI key/model variable is present, both key and model must be configured. `DOCS_AI_OPENAI_BASE_URL` must be an HTTP(S) URL, and `DOCS_AI_OPENAI_TEMPERATURE` must be a number between `0` and `2`.
+
 ## CLI Local Mode
 
 Use local mode for archives or folders:

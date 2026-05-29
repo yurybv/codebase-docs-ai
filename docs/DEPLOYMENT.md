@@ -90,6 +90,8 @@ DOCS_AI_OPENAI_BASE_URL=https://api.openai.com/v1
 DOCS_AI_OPENAI_TEMPERATURE=0.2
 ```
 
+AI provider configuration is fail-fast. Partial provider configuration should fail deployment startup instead of silently falling back to deterministic generation.
+
 The API must have writable storage at `DOCS_AI_TMP_DIR`.
 
 ## Web Container Runtime
