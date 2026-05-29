@@ -242,6 +242,93 @@ describe('CodebaseDocsAIClient', () => {
     expect(result.download?.fileName).toBe('PROJECT_DOCUMENTATION.md');
   });
 
+  it('preserves sanitized downloaded artifacts in the high-level archive flow', async () => {
+    const rawOpenAiKey = `sk-${'g'.repeat(24)}`;
+    const sanitizedMarkdown = [
+      '# 01. Overview',
+      '',
+      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+    ].join('\n');
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'created' }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'ready', sources: [] }))
+      .mockResolvedValueOnce(jsonResponse({ runId: 'run_123', status: 'running' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 'run_123', status: 'completed' }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runId: 'run_123',
+          status: 'completed',
+          renderedFormats: ['single-markdown'],
+          documentation: {
+            title: 'Sanitized SDK Docs',
+            summary: 'Generated',
+            pages: [
+              {
+                key: 'api-contracts',
+                title: '06. API Contracts',
+                order: 6,
+                markdown: sanitizedMarkdown,
+                sourceReferences: [],
+                warnings: []
+              }
+            ],
+            warnings: [],
+            sourceReferences: [],
+            generatedAt: '2026-05-29T00:00:00.000Z'
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(sanitizedMarkdown, {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="PROJECT_DOCUMENTATION.md"',
+            'content-type': 'text/markdown'
+          }
+        })
+      );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const result = await client.documentationRuns.generateFromArchives({
+      name: 'Sanitized SDK Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      },
+      sources: [
+        {
+          name: 'Frontend',
+          role: 'frontend',
+          fileName: 'frontend.zip',
+          file: new Blob([
+            `fetch("https://api.example.com/v1/${rawOpenAiKey}");\n`,
+            'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
+          ])
+        }
+      ],
+      poll: {
+        intervalMs: 0,
+        timeoutMs: 1000
+      },
+      downloadFormat: 'single-markdown'
+    });
+
+    const documentationPayload = JSON.stringify(result.result.documentation);
+    const downloadedMarkdown = await result.download?.content.text();
+    expect(documentationPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(documentationPayload).not.toContain(rawOpenAiKey);
+    expect(documentationPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(downloadedMarkdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(downloadedMarkdown).not.toContain(rawOpenAiKey);
+    expect(downloadedMarkdown).not.toContain('SHOULD_NOT_APPEAR');
+  });
+
   it('surfaces failed run messages while polling', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({
