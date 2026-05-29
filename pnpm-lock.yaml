@@ -114,6 +114,13 @@ importers:
       commander:
         specifier: ^12.1.0
         version: 12.1.0
+    devDependencies:
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.8
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.17
 
   apps/web:
     dependencies:

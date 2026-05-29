@@ -19,5 +19,9 @@
     "@codebase-docs-ai/shared": "workspace:*",
     "@codebase-docs-ai/source-loader": "workspace:*",
     "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "adm-zip": "^0.5.16"
   }
 }
