@@ -214,6 +214,44 @@ progress {
   color: #0f766e;
 }
 
+.warning-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #d8e0e6;
+  background: #fff8eb;
+  color: #6f4600;
+}
+
+.warning-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.warning-panel ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.warning-panel li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.warning-panel li span {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);

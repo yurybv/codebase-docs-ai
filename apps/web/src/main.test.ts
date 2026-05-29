@@ -149,7 +149,12 @@ describe('App API error handling', () => {
           status: 'completed',
           documentation: {
             pages: completedDocumentationPages(),
-            warnings: []
+            warnings: [
+              {
+                level: 'warning',
+                message: 'Backend exposes an unmatched route.'
+              }
+            ]
           }
         });
       }
@@ -214,6 +219,9 @@ describe('App API error handling', () => {
       })
     ]);
     expect(document.body.textContent).toContain('Documentation run completed (7/7)');
+    expect(document.querySelector('[aria-label="Generated documentation warnings"]')?.textContent).toContain(
+      'Backend exposes an unmatched route.'
+    );
     expect(document.body.textContent).toContain('01. Overview');
     expect(document.body.textContent).toContain('14. Source References');
     expect(document.body.textContent).toContain('| frontend | frontend |');

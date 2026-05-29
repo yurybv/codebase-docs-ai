@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 46: Web Generated Warnings Display.
+Implement Phase 47: Web Output Format Selection.
 
 Required package:
 
@@ -89,7 +89,7 @@ apps/web
 docs
 ```
 
-The next step should render generated documentation warnings in the Web completed state, add accessible warning semantics, and cover warning display with Web tests.
+The next step should let Web operators choose output formats before generation instead of always requesting all formats, keep download controls aligned to selected formats, and cover the format-selection behavior with Web tests.
 
 ## Completed Implementation
 
@@ -868,6 +868,22 @@ pnpm verify
 - Verified completed progress rendering, generated page navigation, Markdown preview switching, and JSON download URL generation.
 - Added a standalone `pnpm web:completed-state` command.
 - Documented the completed-state regression in Web QA and testing docs.
+
+Verification:
+
+```text
+pnpm web:completed-state
+pnpm --filter @codebase-docs-ai/web typecheck
+```
+
+### 2026-05-29: Phase 46 Web Generated Warnings Display
+
+- Rendered generated documentation warnings in the completed Web state.
+- Added a labeled warning region above generated page navigation.
+- Displayed warning level and message without requiring JSON output inspection.
+- Kept warnings separate from fatal run errors.
+- Extended completed-state Web regression coverage to include generated warning display.
+- Documented expected warning behavior in Web QA docs.
 
 Verification:
 

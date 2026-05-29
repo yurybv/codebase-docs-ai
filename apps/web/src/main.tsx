@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Download, FileArchive, Play, Upload, X } from 'lucide-react';
+import { AlertTriangle, Download, FileArchive, Play, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
 import { formatApiErrorMessage, parseApiError } from './api-errors.js';
@@ -230,38 +230,61 @@ export function App(): JSX.Element {
           </div>
 
           {runState.result ? (
-            <div className="result-grid">
-              <nav className="page-list" aria-label="Generated pages">
-                {runState.result.documentation.pages.map((page) => (
-                  <button
-                    key={page.key}
-                    className={page.key === selectedPageKey ? 'selected' : ''}
-                    type="button"
-                    onClick={() => setSelectedPageKey(page.key)}
-                  >
-                    {page.title}
-                  </button>
-                ))}
-              </nav>
+            <>
+              {runState.result.documentation.warnings.length > 0 ? (
+                <section
+                  className="warning-panel"
+                  role="region"
+                  aria-label="Generated documentation warnings"
+                >
+                  <div className="warning-heading">
+                    <AlertTriangle size={16} />
+                    <span>Warnings</span>
+                  </div>
+                  <ul>
+                    {runState.result.documentation.warnings.map((warning, index) => (
+                      <li key={`${warning.level}_${index}`}>
+                        <span>{warning.level}</span>
+                        {warning.message}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
-              <article className="preview">
-                <div className="download-row">
-                  {outputFormats.map((format) => (
+              <div className="result-grid">
+                <nav className="page-list" aria-label="Generated pages">
+                  {runState.result.documentation.pages.map((page) => (
                     <button
-                      key={format}
+                      key={page.key}
+                      className={page.key === selectedPageKey ? 'selected' : ''}
                       type="button"
-                      className="secondary-action"
-                      aria-label={`Download ${format} documentation`}
-                      onClick={() => downloadResult(runState.runId, format)}
+                      onClick={() => setSelectedPageKey(page.key)}
                     >
-                      <Download size={16} />
-                      {format}
+                      {page.title}
                     </button>
                   ))}
-                </div>
-                <pre>{selectedPage?.markdown ?? 'Select a page to preview generated markdown.'}</pre>
-              </article>
-            </div>
+                </nav>
+
+                <article className="preview">
+                  <div className="download-row">
+                    {outputFormats.map((format) => (
+                      <button
+                        key={format}
+                        type="button"
+                        className="secondary-action"
+                        aria-label={`Download ${format} documentation`}
+                        onClick={() => downloadResult(runState.runId, format)}
+                      >
+                        <Download size={16} />
+                        {format}
+                      </button>
+                    ))}
+                  </div>
+                  <pre>{selectedPage?.markdown ?? 'Select a page to preview generated markdown.'}</pre>
+                </article>
+              </div>
+            </>
           ) : null}
         </section>
       </section>
@@ -309,6 +332,11 @@ interface DocumentationRunResult {
     warnings: Array<{
       level: string;
       message: string;
+      sourceReferences?: Array<{
+        sourceName: string;
+        path: string;
+        line?: number;
+      }>;
     }>;
   };
 }

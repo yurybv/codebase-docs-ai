@@ -90,7 +90,17 @@ Covered:
 - source role changes before generation;
 - upload metadata sent to the API contract;
 - completed status and progress rendering;
+- generated warning display;
 - generated page navigation and Markdown preview updates;
 - JSON download URL generation.
 
 This regression complements the manual browser verification above. It runs without private archives and uses API-shaped mocked responses to catch Web flow regressions quickly.
+
+## Generated Warning Display
+
+Expected behavior:
+
+- generated documentation warnings render in the completed state;
+- warnings are exposed through a labeled `region` so operators can find them without opening JSON output;
+- warning level and message are visible above generated page navigation;
+- warning display does not block page preview or download controls.

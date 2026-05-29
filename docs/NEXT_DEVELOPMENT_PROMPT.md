@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 46: Web Generated Warnings Display.
+- Implement Phase 47: Web Output Format Selection.
 
-Phase 46 goal:
-- Render generated documentation warnings in the Web completed state.
-- Add accessible warning semantics that operators can scan without opening JSON output.
-- Cover warning display with Web tests.
+Phase 47 goal:
+- Let Web operators choose output formats before generation instead of always requesting all formats.
+- Keep generated download controls aligned to the selected formats.
+- Cover format-selection behavior with Web tests.
 - Update docs/WEB_QA.md and docs/STATE.md with the result.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
