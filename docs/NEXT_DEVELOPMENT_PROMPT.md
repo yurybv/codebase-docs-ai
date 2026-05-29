@@ -37,13 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 48: Web Output Format Browser Verification.
+- Implement Phase 49: Download Format Availability Contract.
 
-Phase 48 goal:
-- Verify output format selection in the real browser flow against the running Web app.
-- Confirm desktop and mobile first-viewport layouts remain clean.
-- Update docs/WEB_QA.md and docs/STATE.md with findings.
-- Run relevant verification, preferably pnpm verify after code or behavior changes.
+Phase 49 goal:
+- Expose rendered/downloadable output formats through API run or result responses.
+- Keep SDK types and tests aligned with the API response shape.
+- Document how API and SDK consumers can discover available downloads after a run completes.
+- Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
 
 Product direction reminders:

@@ -80,16 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 48: Web Output Format Browser Verification.
+Implement Phase 49: Download Format Availability Contract.
 
 Required package:
 
 ```text
-apps/web
+packages/shared
+apps/api
+packages/sdk
 docs
 ```
 
-The next step should verify output format selection in the real browser flow against the running Web app, confirm the first-viewport layout remains clean on desktop and mobile, and record any findings in `docs/WEB_QA.md`.
+The next step should expose the rendered/downloadable output formats through API run or result responses, keep SDK types aligned, and document how API/SDK consumers can discover available downloads after a run completes.
 
 ## Completed Implementation
 
@@ -906,6 +908,21 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm web:completed-state
+```
+
+### 2026-05-29: Phase 48 Web Output Format Browser Verification
+
+- Verified the running Web app at `http://localhost:5173/`.
+- Confirmed all output formats are selected by default.
+- Confirmed the running UI can be toggled down to JSON-only selection.
+- Checked desktop and mobile first-viewport layout after adding format controls.
+- Fixed narrow mobile heading clipping by tightening mobile heading sizing and constraining the topbar text container.
+- Recorded browser QA findings in `docs/WEB_QA.md`.
+
+Verification:
+
+```text
+Browser check at http://localhost:5173/
 ```
 
 ## Open Questions

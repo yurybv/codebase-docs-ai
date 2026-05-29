@@ -114,3 +114,12 @@ Expected behavior:
 - generation is blocked with a clear status message when no output format is selected;
 - the create-run API request includes only the selected output formats;
 - completed-state download controls show only formats rendered for that run.
+
+Browser verification:
+
+- checked the running Web app at `http://localhost:5173/`;
+- confirmed markdown tree, single Markdown, and JSON are selected by default;
+- toggled the running UI down to JSON-only and confirmed checkbox state updates correctly;
+- checked the desktop first viewport with the format panel visible and no obvious overlap;
+- checked the mobile first viewport with no horizontal document overflow;
+- reduced the mobile heading size and constrained the topbar text container after the narrow viewport exposed heading clipping.

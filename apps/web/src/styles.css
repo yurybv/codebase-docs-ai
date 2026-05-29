@@ -362,6 +362,17 @@ pre {
     flex-direction: column;
   }
 
+  .topbar > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 32px;
+    line-height: 1.12;
+    overflow-wrap: break-word;
+  }
+
   .page-list {
     border-right: 0;
     border-bottom: 1px solid #d8e0e6;
