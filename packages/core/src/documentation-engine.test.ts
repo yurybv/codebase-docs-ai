@@ -112,7 +112,7 @@ describe('DocumentationEngine', () => {
           })
         ],
         options: {
-          outputFormats: ['json'],
+          outputFormats: ['markdown-tree', 'single-markdown', 'json'],
           language: 'en',
           includeSourceReferences: true,
           includeWarnings: true
@@ -134,6 +134,17 @@ describe('DocumentationEngine', () => {
         'SHOULD_NOT_APPEAR'
       );
       expect(JSON.stringify(result.repositoryMaps)).not.toContain(rawOpenAiKey);
+
+      const generatedOutput = [
+        JSON.stringify(result.documentationTree),
+        ...[...result.rendered.values()].flatMap((rendered) =>
+          rendered.files.map((file) => file.content)
+        )
+      ].join('\n');
+      expect(generatedOutput).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(generatedOutput).not.toContain(rawOpenAiKey);
+      expect(generatedOutput).not.toContain('SHOULD_NOT_APPEAR');
+      expect(generatedOutput).not.toContain('.env');
     } finally {
       await rm(fixtureRoot, {
         recursive: true,

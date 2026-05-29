@@ -80,18 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 71: Documentation Output Sanitization Regression Coverage.
+Implement Phase 72: AI Provider Prompt Payload Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 packages/core
-packages/documentation-generator
+packages/ai-orchestrator
 docs
 ```
 
-The next step should add regression coverage proving generated documentation output does not contain raw denied or secret-bearing source content after sanitized analysis.
+The next step should add regression coverage proving AI provider prompt payloads only receive sanitized repository and system evidence.
 
 ## Completed Implementation
 
@@ -1238,6 +1238,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/repo-analyzer typecheck
 pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts
+```
+
+### 2026-05-29: Phase 71 Documentation Output Sanitization Regression Coverage
+
+- Extended core sanitization regression coverage to include generated `DocumentationTree` output.
+- Verified rendered markdown-tree, single-markdown, and JSON artifacts contain redacted source evidence instead of raw provider keys.
+- Verified denied `.env` evidence and raw denied-source variable names do not appear in generated documentation output.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/core/src/documentation-engine.test.ts
 ```
 
 ## Open Questions

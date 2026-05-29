@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 71: Documentation Output Sanitization Regression Coverage.
+- Implement Phase 72: AI Provider Prompt Payload Sanitization Regression Coverage.
 
-Phase 71 goal:
-- Add regression coverage proving generated documentation output does not contain raw denied or secret-bearing source content.
-- Verify sanitized repository maps remain the only source evidence used by documentation generation.
-- Keep core prompt sanitization and repository-analyzer reader injection coverage intact.
+Phase 72 goal:
+- Add regression coverage proving AI provider prompt payloads only receive sanitized repository and system evidence.
+- Verify raw denied files and raw secret values are absent from AI prompts when an AI provider is configured.
+- Keep core documentation output sanitization and repository-analyzer reader injection coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
