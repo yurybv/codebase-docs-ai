@@ -21,6 +21,29 @@ describe('markdown renderers', () => {
     expect(rendered.files[0]?.path).toBe('PROJECT_DOCUMENTATION.md');
     expect(rendered.files[0]?.content).toContain('---');
   });
+
+  it('preserves sanitized rendered content in single markdown files', () => {
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const rendered = renderSingleMarkdown({
+      ...documentationTreeFixture(),
+      pages: [
+        {
+          key: 'api-contracts',
+          title: '06. API Contracts',
+          order: 1,
+          markdown: '# API Contracts\n\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |',
+          sourceReferences: [],
+          warnings: []
+        }
+      ]
+    });
+    const content = rendered.files[0]?.content ?? '';
+
+    expect(content).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(content).not.toContain(rawOpenAiKey);
+    expect(content).not.toContain('SHOULD_NOT_APPEAR');
+    expect(content).not.toContain('.env');
+  });
 });
 
 describe('json renderer', () => {

@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 86: Renderer Single Markdown Sanitization Regression Coverage.
+- Implement Phase 87: Renderer Markdown Tree Sanitization Regression Coverage.
 
-Phase 86 goal:
-- Add renderer regression coverage proving single-Markdown rendering preserves sanitized documentation content without introducing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from renderer-produced single-Markdown artifacts.
-- Keep renderer JSON/zip and SDK/API/Web/CLI sanitization coverage intact.
+Phase 87 goal:
+- Add renderer regression coverage proving markdown-tree rendering preserves sanitized documentation content without introducing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from renderer-produced markdown-tree artifacts.
+- Keep renderer single-Markdown/JSON/zip and SDK/API/Web/CLI sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
