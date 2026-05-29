@@ -375,6 +375,60 @@ describe('CodebaseDocsAIClient', () => {
     );
   });
 
+  it('preserves sanitized JSON downloads', async () => {
+    const rawOpenAiKey = `sk-${'o'.repeat(24)}`;
+    const sanitizedJson = JSON.stringify(
+      {
+        title: 'Sanitized SDK JSON Download',
+        summary: 'Generated',
+        pages: [
+          {
+            key: 'api-contracts',
+            title: '06. API Contracts',
+            order: 6,
+            markdown: '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |',
+            sourceReferences: [],
+            warnings: []
+          }
+        ],
+        warnings: [],
+        sourceReferences: [],
+        generatedAt: '2026-05-29T00:00:00.000Z'
+      },
+      null,
+      2
+    );
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(sanitizedJson, {
+        status: 200,
+        headers: {
+          'content-disposition': 'attachment; filename="documentation-tree.json"',
+          'content-type': 'application/json'
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const download = await client.documentationRuns.download({
+      runId: 'run_123',
+      format: 'json'
+    });
+    const json = await download.content.text();
+
+    expect(download.fileName).toBe('documentation-tree.json');
+    expect(download.contentType).toContain('application/json');
+    expect(JSON.parse(json)).toMatchObject({
+      title: 'Sanitized SDK JSON Download'
+    });
+    expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(json).not.toContain(rawOpenAiKey);
+    expect(json).not.toContain('SHOULD_NOT_APPEAR');
+    expect(json).not.toContain('.env');
+  });
+
   it('preserves sanitized markdown-tree zip downloads', async () => {
     const rawOpenAiKey = `sk-${'j'.repeat(24)}`;
     const sanitizedZip = new AdmZip();

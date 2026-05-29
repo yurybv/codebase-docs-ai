@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 88: SDK JSON Download Sanitization Regression Coverage.
+Implement Phase 89: SDK Single Markdown Direct Download Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/sdk
 docs
 ```
 
-The next step should add SDK direct download regression coverage proving JSON artifacts returned through the TypeScript client preserve sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add SDK direct download regression coverage proving single-Markdown artifacts returned through the TypeScript client preserve sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1458,6 +1458,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/renderers typecheck
 pnpm test -- packages/renderers/src/renderers.test.ts
+```
+
+### 2026-05-29: Phase 88 SDK JSON Download Sanitization Regression Coverage
+
+- Added SDK direct download regression coverage for sanitized JSON artifacts.
+- Verified SDK-downloaded JSON artifacts preserve redacted source evidence.
+- Verified SDK-downloaded JSON artifacts exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm test -- packages/sdk/src/client.test.ts
 ```
 
 ## Open Questions
