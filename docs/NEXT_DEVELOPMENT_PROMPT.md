@@ -37,13 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 60: Source Loader Archive Limit Regression Coverage.
+- Implement Phase 61: Source Loader Folder Limit Regression Coverage.
 
-Phase 60 goal:
-- Add focused source-loader regression coverage for archive file count limits.
-- Add focused source-loader regression coverage for per-file size limits.
-- Add focused source-loader regression coverage for total size limits.
-- Keep supported and unsupported archive format coverage intact.
+Phase 61 goal:
+- Add focused source-loader regression coverage for folder file count limits.
+- Add focused source-loader regression coverage for folder per-file size limits.
+- Add focused source-loader regression coverage for folder total size limits.
+- Keep archive limit coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

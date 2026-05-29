@@ -118,6 +118,99 @@ describe('loadArchiveSource', () => {
     });
   });
 
+  it('rejects archives that exceed the file count limit', async () => {
+    const archivePath = path.join(tempRoot, 'too-many-files.zip');
+    writeZipArchive(archivePath, [
+      {
+        path: 'src/one.ts',
+        content: 'export const one = true;'
+      },
+      {
+        path: 'src/two.ts',
+        content: 'export const two = true;'
+      }
+    ]);
+
+    await expect(
+      loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-too-many-files'),
+        limits: {
+          maxFiles: 1
+        }
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive exceeds file count limit of 1'
+    });
+  });
+
+  it('rejects archive entries that exceed the per-file size limit', async () => {
+    const archivePath = path.join(tempRoot, 'large-file.zip');
+    writeZipArchive(archivePath, [
+      {
+        path: 'src/main.ts',
+        content: 'export const main = true;'
+      }
+    ]);
+
+    await expect(
+      loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-large-file'),
+        limits: {
+          maxFileSizeBytes: 5
+        }
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive entry exceeds file size limit of 5 bytes'
+    });
+  });
+
+  it('rejects archives that exceed the total size limit', async () => {
+    const archivePath = path.join(tempRoot, 'large-total.zip');
+    writeZipArchive(archivePath, [
+      {
+        path: 'src/one.ts',
+        content: '1234'
+      },
+      {
+        path: 'src/two.ts',
+        content: '5678'
+      }
+    ]);
+
+    await expect(
+      loadArchiveSource({
+        source: {
+          name: 'Backend',
+          role: 'backend'
+        },
+        archivePath,
+        extractionRoot: path.join(tempRoot, 'extract-large-total'),
+        limits: {
+          maxFileSizeBytes: 10,
+          maxTotalSizeBytes: 5
+        }
+      })
+    ).rejects.toMatchObject({
+      name: 'SourceLoaderError',
+      code: 'SOURCE_LIMIT_EXCEEDED',
+      message: 'Archive exceeds total size limit of 5 bytes'
+    });
+  });
+
   it('rejects unsafe relative paths before extraction', () => {
     expect(() => assertSafeRelativePath('../escape.ts')).toThrow(UnsafeArchivePathError);
     expect(() => assertSafeRelativePath('/absolute.ts')).toThrow(UnsafeArchivePathError);
@@ -144,4 +237,18 @@ async function writeTarFixtureArchive(archivePath: string, gzip: boolean): Promi
     },
     ['src/main.ts']
   );
+}
+
+function writeZipArchive(
+  archivePath: string,
+  entries: Array<{
+    path: string;
+    content: string;
+  }>
+): void {
+  const zip = new AdmZip();
+  for (const entry of entries) {
+    zip.addFile(entry.path, Buffer.from(entry.content));
+  }
+  zip.writeZip(archivePath);
 }
