@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 63: Source Loader Non-Regular Folder File Regression Coverage.
+Implement Phase 64: Security Nested Archive Filter Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/source-loader
+packages/security
 docs
 ```
 
-The next step should add focused source-loader regression coverage for skipping non-regular files in folder inputs.
+The next step should add focused security filter regression coverage for nested source archive files so nested archives are excluded from prompt/source context.
 
 ## Completed Implementation
 
@@ -1125,6 +1125,19 @@ pnpm test -- packages/source-loader/src/load-source.test.ts
 - Added source-loader regression coverage for tar hard link rejection.
 - Added source-loader regression coverage for zip symbolic link rejection.
 - Kept path traversal, folder limit, and archive limit coverage intact.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/source-loader typecheck
+pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-29: Phase 63 Source Loader Non-Regular Folder File Regression Coverage
+
+- Added source-loader regression coverage for symbolic links in folder inputs.
+- Verified folder symlinks are skipped with `not_regular_file` reporting.
+- Kept archive link rejection and folder limit coverage intact.
 
 Verification:
 

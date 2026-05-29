@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 63: Source Loader Non-Regular Folder File Regression Coverage.
+- Implement Phase 64: Security Nested Archive Filter Regression Coverage.
 
-Phase 63 goal:
-- Add focused source-loader regression coverage for skipping symbolic links in folder inputs.
-- Add focused source-loader regression coverage for `not_regular_file` skipped-file reporting.
-- Keep archive link rejection and folder limit coverage intact.
+Phase 64 goal:
+- Add focused security filter regression coverage for nested `.zip` files.
+- Add focused security filter regression coverage for nested `.tar`, `.tar.gz`, and `.tgz` files.
+- Verify nested archives are excluded from prompt/source context.
+- Keep source-loader archive and folder safety coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

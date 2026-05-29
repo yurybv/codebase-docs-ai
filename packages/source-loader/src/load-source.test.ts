@@ -1,4 +1,4 @@
-import { link, mkdtemp, mkdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
@@ -124,6 +124,31 @@ describe('loadFolderSource', () => {
       code: 'SOURCE_LIMIT_EXCEEDED',
       message: 'Source exceeds total size limit of 5 bytes'
     });
+  });
+
+  it('skips symbolic links in folder inputs as non-regular files', async () => {
+    const sourcePath = path.join(tempRoot, 'folder-with-link');
+    await mkdir(path.join(sourcePath, 'src'), {
+      recursive: true
+    });
+    await writeFile(path.join(sourcePath, 'src', 'target.ts'), 'export const target = true;');
+    await symlink('target.ts', path.join(sourcePath, 'src', 'link.ts'));
+
+    const loaded = await loadFolderSource({
+      source: {
+        name: 'Frontend',
+        role: 'frontend'
+      },
+      folderPath: sourcePath
+    });
+
+    expect(loaded.files.map((file) => file.path)).toEqual(['src/target.ts']);
+    expect(loaded.skippedFiles).toEqual([
+      {
+        path: 'src/link.ts',
+        reason: 'not_regular_file'
+      }
+    ]);
   });
 });
 
@@ -388,26 +413,24 @@ async function writeTarLinkFixtureArchive(
   archivePath: string,
   linkKind: 'symbolic' | 'hard'
 ): Promise<void> {
-  const sourceRoot = path.join(tempRoot, `fixture-${path.basename(archivePath)}`);
-  await mkdir(sourceRoot, {
-    recursive: true
-  });
-  const targetPath = path.join(sourceRoot, 'target.txt');
-  const linkPath = path.join(sourceRoot, 'link.txt');
-  await writeFile(targetPath, 'target');
-
-  if (linkKind === 'symbolic') {
-    await symlink('target.txt', linkPath);
-  } else {
-    await link(targetPath, linkPath);
-  }
-
-  await tar.c(
-    {
-      cwd: sourceRoot,
-      file: archivePath
-    },
-    ['target.txt', 'link.txt']
+  const targetContent = Buffer.from('target');
+  await writeFile(
+    archivePath,
+    Buffer.concat([
+      createTarHeader({
+        name: 'target.txt',
+        size: targetContent.byteLength,
+        typeFlag: '0'
+      }),
+      padTarData(targetContent),
+      createTarHeader({
+        name: 'link.txt',
+        size: 0,
+        typeFlag: linkKind === 'symbolic' ? '2' : '1',
+        linkName: 'target.txt'
+      }),
+      Buffer.alloc(1024)
+    ])
   );
 }
 
@@ -430,4 +453,45 @@ function writeZipSymlinkArchive(archivePath: string): void {
   const entry = zip.addFile('link.txt', Buffer.from('target.txt'));
   entry.attr = 0o120777 * 0x10000;
   zip.writeZip(archivePath);
+}
+
+function createTarHeader(input: {
+  name: string;
+  size: number;
+  typeFlag: '0' | '1' | '2';
+  linkName?: string;
+}): Buffer {
+  const header = Buffer.alloc(512, 0);
+  header.write(input.name, 0, 100, 'ascii');
+  writeTarOctal(header, 100, 8, 0o644);
+  writeTarOctal(header, 108, 8, 0);
+  writeTarOctal(header, 116, 8, 0);
+  writeTarOctal(header, 124, 12, input.size);
+  writeTarOctal(header, 136, 12, 0);
+  header.fill(' ', 148, 156);
+  header.write(input.typeFlag, 156, 1, 'ascii');
+  if (input.linkName) {
+    header.write(input.linkName, 157, 100, 'ascii');
+  }
+  header.write('ustar\0', 257, 6, 'ascii');
+  header.write('00', 263, 2, 'ascii');
+
+  let checksum = 0;
+  for (const byte of header) {
+    checksum += byte;
+  }
+  header.write(checksum.toString(8).padStart(6, '0'), 148, 6, 'ascii');
+  header[154] = 0;
+  header[155] = 0x20;
+  return header;
+}
+
+function writeTarOctal(buffer: Buffer, offset: number, length: number, value: number): void {
+  buffer.write(value.toString(8).padStart(length - 1, '0'), offset, length - 1, 'ascii');
+  buffer[offset + length - 1] = 0;
+}
+
+function padTarData(data: Buffer): Buffer {
+  const paddingLength = (512 - (data.byteLength % 512)) % 512;
+  return Buffer.concat([data, Buffer.alloc(paddingLength)]);
 }
