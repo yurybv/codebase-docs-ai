@@ -41,6 +41,43 @@ PRIVATE_KEY="inline-private-key"
     expect(result.redactions.some((redaction) => redaction.kind === 'database_url')).toBe(true);
   });
 
+  it('redacts provider tokens and JWTs', () => {
+    const openAiKey = `sk-${'a'.repeat(24)}`;
+    const githubToken = `github_pat_${'A'.repeat(24)}`;
+    const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.signature';
+    const result = redactSecrets(`
+OPENAI_API_KEY=${openAiKey}
+GITHUB_TOKEN=${githubToken}
+SESSION_JWT=${jwt}
+DATABASE_URL=mysql://user:password@example.com/app
+`);
+
+    expect(result.text).not.toContain(openAiKey);
+    expect(result.text).not.toContain(githubToken);
+    expect(result.text).not.toContain(jwt);
+    expect(result.text).not.toContain('password@example.com');
+    expect(result.redactions).toEqual(
+      expect.arrayContaining([
+        {
+          kind: 'openai_api_key',
+          count: 1
+        },
+        {
+          kind: 'github_token',
+          count: 1
+        },
+        {
+          kind: 'jwt',
+          count: 1
+        },
+        {
+          kind: 'database_url',
+          count: 1
+        }
+      ])
+    );
+  });
+
   it('redacts private key blocks', () => {
     const result = redactSecrets(`-----BEGIN PRIVATE KEY-----
 abc

@@ -80,17 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 68: Secret Redaction Provider Token Regression Coverage.
+Implement Phase 69: AI Prompt Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
+packages/core
 packages/security
 docs
 ```
 
-The next step should add focused secret redaction regression coverage for OpenAI, GitHub, JWT, and database URL provider token patterns.
+The next step should add focused regression coverage proving source context passed toward generation uses filtered and redacted file content, not raw denied or secret-bearing source.
 
 ## Completed Implementation
 
@@ -1191,6 +1192,20 @@ pnpm test -- packages/security/src/file-filter.test.ts
 - Added secret redaction regression coverage for common password, token, secret, and private key assignment names.
 - Verified assignment redaction is case-insensitive and preserves assignment syntax.
 - Verified assignment redaction counts remain meaningful.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/security typecheck
+pnpm test -- packages/security/src/redact-secrets.test.ts
+```
+
+### 2026-05-29: Phase 68 Secret Redaction Provider Token Regression Coverage
+
+- Added secret redaction regression coverage for OpenAI API keys.
+- Added secret redaction regression coverage for GitHub tokens and JWTs.
+- Added secret redaction regression coverage for database URLs.
+- Kept assignment redaction coverage intact.
 
 Verification:
 
