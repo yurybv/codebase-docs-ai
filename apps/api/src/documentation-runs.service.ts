@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { createOpenAiCompatibleProviderFromEnv } from '@codebase-docs-ai/ai-orchestrator';
@@ -49,6 +49,10 @@ interface DownloadResult {
   content: string | Buffer;
 }
 
+interface CleanupExpiredRunsResult {
+  deletedRunIds: string[];
+}
+
 const uploadSourcesMetadataSchema = z.object({
   sources: z.array(
     sourceInputMetadataSchema.extend({
@@ -71,6 +75,10 @@ const generationSteps = [
 export class DocumentationRunsService {
   private readonly engine = createDocumentationEngine();
   private readonly tempRoot = path.resolve(process.env.DOCS_AI_TMP_DIR ?? '.tmp/codebase-docs-ai');
+  private readonly runRetentionMs = Number.parseInt(
+    process.env.DOCS_AI_RUN_RETENTION_MS ?? String(24 * 60 * 60 * 1000),
+    10
+  );
 
   async createRun(body: unknown): Promise<{ runId: string; status: DocumentationRunStatus }> {
     const parsed = createDocumentationRunSchema.safeParse(body);
@@ -292,6 +300,35 @@ export class DocumentationRunsService {
     });
   }
 
+  async cleanupExpiredRuns(now: Date = new Date()): Promise<CleanupExpiredRunsResult> {
+    const deletedRunIds: string[] = [];
+    const cutoffTime = now.getTime() - this.runRetentionMs;
+
+    for (const entry of await this.listRunDirectoryNames()) {
+      const manifestPath = this.manifestPath(entry);
+      let storedRun: StoredRun;
+      try {
+        storedRun = await this.readJsonFile<StoredRun>(manifestPath);
+      } catch {
+        continue;
+      }
+
+      if (new Date(storedRun.run.updatedAt).getTime() > cutoffTime) {
+        continue;
+      }
+
+      await rm(storedRun.tempPath, {
+        recursive: true,
+        force: true
+      });
+      deletedRunIds.push(storedRun.run.id);
+    }
+
+    return {
+      deletedRunIds
+    };
+  }
+
   private async requireRun(runId: string): Promise<StoredRun> {
     try {
       return await this.readJsonFile<StoredRun>(this.manifestPath(runId));
@@ -381,6 +418,17 @@ export class DocumentationRunsService {
 
   private runPath(runId: string): string {
     return path.join(this.tempRoot, runId);
+  }
+
+  private async listRunDirectoryNames(): Promise<string[]> {
+    try {
+      const entries = await readdir(this.tempRoot, {
+        withFileTypes: true
+      });
+      return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    } catch {
+      return [];
+    }
   }
 }
 

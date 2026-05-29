@@ -184,6 +184,12 @@ Default:
 
 Each run stores a manifest and rendered result artifacts on disk so a process-local service restart can still read completed run results while the temporary directory exists.
 
+The API service exposes an internal cleanup boundary for removing expired run directories. The default run retention window is 24 hours and can be configured with:
+
+```text
+DOCS_AI_RUN_RETENTION_MS
+```
+
 ### Web
 
 ```text

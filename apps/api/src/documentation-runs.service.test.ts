@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
@@ -20,6 +20,7 @@ afterEach(async () => {
     force: true
   });
   delete process.env.DOCS_AI_TMP_DIR;
+  delete process.env.DOCS_AI_RUN_RETENTION_MS;
 });
 
 describe('DocumentationRunsService', () => {
@@ -137,5 +138,32 @@ describe('DocumentationRunsService', () => {
     expect(failedRun.status).toBe('failed');
     expect(failedRun.error?.message).toBeTruthy();
     expect(failedRun.progress?.currentStep).toBe('Failed');
+  });
+
+  it('cleans up expired run artifacts from the temp store', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
+    service = new DocumentationRunsService();
+    const created = await service.createRun({
+      name: 'Expired Docs',
+      options: {
+        outputFormats: ['markdown-tree'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const manifestPath = path.join(tempRoot, created.runId, 'run.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+      run: {
+        updatedAt: string;
+      };
+    };
+    manifest.run.updatedAt = '2026-05-29T00:00:00.000Z';
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+    const cleanup = await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:02.000Z'));
+
+    expect(cleanup.deletedRunIds).toEqual([created.runId]);
+    await expect(service.getRun(created.runId)).rejects.toThrow();
   });
 });

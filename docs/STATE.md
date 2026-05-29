@@ -77,7 +77,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 21: API Retention Cleanup.
+Implement Phase 22: API Upload Limits And Request Hardening.
 
 Required package:
 
@@ -85,7 +85,7 @@ Required package:
 apps/api
 ```
 
-The next step should add retention cleanup for old temporary API run artifacts. Start with configurable run TTL and a service method that removes expired run directories without changing public API behavior.
+The next step should enforce multipart upload limits at the HTTP boundary before source-loader extraction. Add configurable file count/file size request limits and safe error responses for oversized uploads.
 
 ## Completed Implementation
 
@@ -495,6 +495,22 @@ pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm test -- apps/cli/src/cli-options.test.ts
 pnpm lint
 pnpm smoke:e2e
+```
+
+### 2026-05-29: Phase 21 API Retention Cleanup
+
+- Added configurable API run retention via `DOCS_AI_RUN_RETENTION_MS`.
+- Added filesystem cleanup method for expired run manifests and artifacts.
+- Kept public HTTP API behavior unchanged.
+- Added API service test coverage for deleting expired run directories.
+- Documented temporary artifact retention and cleanup configuration.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm lint
 ```
 
 ## Open Questions
