@@ -50,6 +50,13 @@ Run API and Web through Docker Compose:
 docker compose up --build
 ```
 
+Build deployment images:
+
+```bash
+pnpm docker:build:api
+VITE_WEB_API_BASE_URL=http://localhost:3000 pnpm docker:build:web
+```
+
 ## API Runtime
 
 Default API port:

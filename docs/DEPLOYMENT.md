@@ -28,16 +28,13 @@ web
 Build the API image:
 
 ```bash
-docker build --target api -t codebase-docs-ai-api .
+pnpm docker:build:api
 ```
 
 Build the Web image:
 
 ```bash
-docker build \
-  --target web \
-  --build-arg VITE_WEB_API_BASE_URL=http://localhost:3000 \
-  -t codebase-docs-ai-web .
+VITE_WEB_API_BASE_URL=http://localhost:3000 pnpm docker:build:web
 ```
 
 `VITE_WEB_API_BASE_URL` is a Vite build-time value. Rebuild the Web image when the browser-facing API URL changes.
@@ -119,7 +116,7 @@ This value is baked into the Web bundle during `docker build`.
 Validate compose syntax:
 
 ```bash
-docker compose config
+pnpm docker:compose:config
 ```
 
 Run the repository verification before building deployment images:

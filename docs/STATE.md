@@ -78,17 +78,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 29: Docker Image Build Verification.
+Implement Phase 30: API Lifecycle Integration Tests.
 
 Required package:
 
 ```text
-Dockerfile
-docker-compose.yml
+apps/api
+scripts
 docs
 ```
 
-The next step should run and, if needed, optimize actual Docker image builds for API and Web targets so deployment packaging is proven beyond compose syntax validation.
+The next step should add focused HTTP-level API lifecycle tests around create, upload, start, result, download, delete, and standardized error envelopes without relying only on the broader smoke harness.
 
 ## Completed Implementation
 
@@ -619,6 +619,21 @@ pnpm verify
 Verification:
 
 ```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 29 Docker Image Build Verification
+
+- Verified the API Docker target builds successfully.
+- Verified the Web Docker target builds successfully with `VITE_WEB_API_BASE_URL`.
+- Added package scripts for API image build, Web image build, and compose config validation.
+- Updated deployment and operations docs to use the repeatable Docker scripts.
+
+Verification:
+
+```text
+docker build --target api -t codebase-docs-ai-api:local .
+docker build --target web --build-arg VITE_WEB_API_BASE_URL=http://localhost:3000 -t codebase-docs-ai-web:local .
 pnpm verify
 ```
 
