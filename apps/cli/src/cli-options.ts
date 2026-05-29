@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { documentationOutputFormatSchema, sourceRoleSchema } from '@codebase-docs-ai/shared';
 import type { DocumentationOutputFormat, SourceInputMetadata, SourceRole } from '@codebase-docs-ai/shared';
+import { CliError } from './cli-error.js';
 
 export type CliOutputFormat = DocumentationOutputFormat | 'zip';
 
@@ -30,7 +31,7 @@ export function parseGenerateOptions(options: {
 }): GenerateCommandOptions {
   const sources = options.source ?? [];
   if (sources.length === 0) {
-    throw new Error('At least one --source path:role input is required.');
+    throw new CliError('CLI_SOURCE_REQUIRED', 'At least one --source path:role input is required.');
   }
 
   const parsedOptions: GenerateCommandOptions = {
@@ -40,6 +41,7 @@ export function parseGenerateOptions(options: {
     name: options.name ?? 'Generated Project Documentation'
   };
   if (options.apiUrl) {
+    assertHttpUrl(options.apiUrl);
     parsedOptions.apiUrl = options.apiUrl;
   }
 
@@ -49,7 +51,7 @@ export function parseGenerateOptions(options: {
 export function parseCliSourceInput(value: string): CliSourceInput {
   const delimiterIndex = value.lastIndexOf(':');
   if (delimiterIndex <= 0 || delimiterIndex === value.length - 1) {
-    throw new Error(`Invalid source "${value}". Expected path:role.`);
+    throw new CliError('CLI_SOURCE_INVALID', `Invalid source "${value}". Expected path:role.`);
   }
 
   const inputPath = value.slice(0, delimiterIndex);
@@ -71,7 +73,10 @@ export function parseCliOutputFormat(value: string): CliOutputFormat {
 
   const parsed = documentationOutputFormatSchema.safeParse(value);
   if (!parsed.success) {
-    throw new Error(`Unsupported output format "${value}". Use markdown-tree, single-markdown, json, or zip.`);
+    throw new CliError(
+      'CLI_FORMAT_UNSUPPORTED',
+      `Unsupported output format "${value}". Use markdown-tree, single-markdown, json, or zip.`
+    );
   }
 
   return parsed.data;
@@ -80,7 +85,7 @@ export function parseCliOutputFormat(value: string): CliOutputFormat {
 function parseSourceRole(value: string): SourceRole {
   const parsed = sourceRoleSchema.safeParse(value);
   if (!parsed.success) {
-    throw new Error(`Unsupported source role "${value}".`);
+    throw new CliError('CLI_SOURCE_ROLE_UNSUPPORTED', `Unsupported source role "${value}".`);
   }
 
   return parsed.data;
@@ -89,4 +94,17 @@ function parseSourceRole(value: string): SourceRole {
 function sourceNameFromPath(inputPath: string): string {
   const baseName = path.basename(inputPath);
   return baseName.replace(/(\.tar\.gz|\.tgz|\.zip|\.tar)$/i, '') || 'source';
+}
+
+function assertHttpUrl(value: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new CliError('CLI_API_URL_INVALID', `Invalid API URL "${value}".`);
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new CliError('CLI_API_URL_INVALID', 'API URL must use http or https.');
+  }
 }

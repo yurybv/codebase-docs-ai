@@ -78,16 +78,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 35: CLI Error Handling And Exit Codes.
+Implement Phase 36: SDK Package Contract Documentation.
 
 Required package:
 
 ```text
-apps/cli
+packages/sdk
 docs
 ```
 
-The next step should review CLI local/API mode failures, ensure non-zero exits are consistent, and document actionable operator error messages.
+The next step should document SDK public method contracts, error handling, browser/Node file input expectations, and versioning boundaries for external TypeScript consumers.
 
 ## Completed Implementation
 
@@ -699,6 +699,21 @@ docs-only change
 - Validated provider base URL protocol and temperature range.
 - Added tests for partial and invalid provider configuration.
 - Documented AI provider startup failure behavior in operations, deployment, and prompt contracts.
+
+Verification:
+
+```text
+pnpm verify
+```
+
+### 2026-05-29: Phase 35 CLI Error Handling And Exit Codes
+
+- Added typed CLI errors with stable error codes and exit codes.
+- Added structured CLI failure JSON for user, API, and unexpected errors.
+- Validated API mode URLs before execution.
+- Classified common source, output, and rendering failures.
+- Documented CLI failure output and exit code semantics.
+- Added CLI tests for API URL validation and failure formatting.
 
 Verification:
 

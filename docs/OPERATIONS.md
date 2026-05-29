@@ -191,6 +191,21 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
 
 API mode accepts archive files. Use local mode for direct folder input.
 
+CLI failures are printed as JSON to stderr:
+
+```json
+{
+  "status": "failed",
+  "exitCode": 2,
+  "error": {
+    "code": "CLI_SOURCE_REQUIRED",
+    "message": "At least one --source path:role input is required."
+  }
+}
+```
+
+User input/configuration errors use exit code `2`. Runtime/API failures use exit code `1`.
+
 ## SDK Usage
 
 The SDK wraps the HTTP API and is optional. Non-Node systems should call the API directly.

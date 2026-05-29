@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { formatCliError } from './cli-error.js';
 import { collectRepeatedOption, parseGenerateOptions } from './cli-options.js';
 import { runGenerateCommand } from './generate-command.js';
 
@@ -32,17 +33,7 @@ program
 try {
   await program.parseAsync();
 } catch (error) {
-  console.error(
-    JSON.stringify(
-      {
-        status: 'failed',
-        error: {
-          message: error instanceof Error ? error.message : 'Unknown CLI error.'
-        }
-      },
-      null,
-      2
-    )
-  );
-  process.exitCode = 1;
+  const failure = formatCliError(error);
+  console.error(JSON.stringify(failure, null, 2));
+  process.exitCode = failure.exitCode;
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CliError, formatCliError } from './cli-error.js';
 import { parseCliOutputFormat, parseCliSourceInput, parseGenerateOptions } from './cli-options.js';
 
 describe('CLI option parsing', () => {
@@ -31,5 +32,25 @@ describe('CLI option parsing', () => {
         apiUrl: 'http://localhost:3000'
       }).apiUrl
     ).toBe('http://localhost:3000');
+  });
+
+  it('rejects unsupported API URL protocols', () => {
+    expect(() =>
+      parseGenerateOptions({
+        source: ['/tmp/frontend.zip:frontend'],
+        apiUrl: 'file:///tmp/api'
+      })
+    ).toThrow('API URL must use http or https.');
+  });
+
+  it('formats typed CLI failures with stable codes and exit codes', () => {
+    expect(formatCliError(new CliError('CLI_SOURCE_REQUIRED', 'Missing source.'))).toEqual({
+      status: 'failed',
+      exitCode: 2,
+      error: {
+        code: 'CLI_SOURCE_REQUIRED',
+        message: 'Missing source.'
+      }
+    });
   });
 });

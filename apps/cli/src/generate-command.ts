@@ -7,6 +7,7 @@ import { renderZip } from '@codebase-docs-ai/renderers';
 import { CodebaseDocsAIClient } from '@codebase-docs-ai/sdk';
 import type { DocumentationOutputFormat, LoadedSource, RenderedDocumentation } from '@codebase-docs-ai/shared';
 import { loadArchiveSource, loadFolderSource } from '@codebase-docs-ai/source-loader';
+import { CliError } from './cli-error.js';
 import { parseCliSourceInput, type GenerateCommandOptions } from './cli-options.js';
 
 export interface GenerateCommandResult {
@@ -42,7 +43,11 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
     });
     const renderedDocumentation = engineResult.rendered.get(coreOutputFormat(options.format));
     if (!renderedDocumentation) {
-      throw new Error(`Documentation output was not rendered for format: ${options.format}`);
+      throw new CliError(
+        'CLI_RENDERED_OUTPUT_MISSING',
+        `Documentation output was not rendered for format: ${options.format}`,
+        1
+      );
     }
 
     const writtenFiles = await writeOutput({
@@ -69,7 +74,7 @@ export async function runGenerateCommand(options: GenerateCommandOptions): Promi
 
 async function runApiGenerateCommand(options: GenerateCommandOptions): Promise<GenerateCommandResult> {
   if (!options.apiUrl) {
-    throw new Error('API URL is required for API mode.');
+    throw new CliError('CLI_API_URL_REQUIRED', 'API URL is required for API mode.');
   }
 
   const client = new CodebaseDocsAIClient({
@@ -134,7 +139,7 @@ async function loadCliSource(sourceInput: string, tempRoot: string): Promise<Loa
     });
   }
 
-  throw new Error(`Unsupported source path type: ${parsedSource.inputPath}`);
+  throw new CliError('CLI_SOURCE_PATH_UNSUPPORTED', `Unsupported source path type: ${parsedSource.inputPath}`);
 }
 
 async function loadApiArchiveSource(
@@ -149,7 +154,10 @@ async function loadApiArchiveSource(
   const inputPath = path.resolve(parsedSource.inputPath);
   const inputStat = await stat(inputPath);
   if (!inputStat.isFile()) {
-    throw new Error('API mode only accepts archive file sources. Use local mode for folder sources.');
+    throw new CliError(
+      'CLI_API_SOURCE_MUST_BE_ARCHIVE',
+      'API mode only accepts archive file sources. Use local mode for folder sources.'
+    );
   }
 
   return {
@@ -210,7 +218,11 @@ async function writeDownloadedOutput(input: {
 function assertOutputPathInsideRoot(outputRoot: string, relativeFilePath: string): string {
   const targetPath = path.resolve(outputRoot, relativeFilePath);
   if (targetPath !== outputRoot && !targetPath.startsWith(`${outputRoot}${path.sep}`)) {
-    throw new Error(`Rendered file escapes output directory: ${relativeFilePath}`);
+    throw new CliError(
+      'CLI_OUTPUT_PATH_ESCAPE',
+      `Rendered file escapes output directory: ${relativeFilePath}`,
+      1
+    );
   }
 
   return targetPath;
