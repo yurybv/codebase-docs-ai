@@ -13,6 +13,10 @@ export const defaultUploadConstraints: UploadConstraints = {
   maxFileSizeBytes: 100 * 1024 * 1024
 };
 
+export const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'] as const;
+export const supportedArchiveAccept = supportedArchiveExtensions.join(',');
+export const supportedArchiveLabel = `Supports ${supportedArchiveExtensions.join(', ')}`;
+
 export function validateSelectedFiles(
   existingFileCount: number,
   selectedFiles: File[],
@@ -22,6 +26,14 @@ export function validateSelectedFiles(
     return {
       acceptedFiles: [],
       errorMessage: `Upload up to ${constraints.maxFiles} source archive(s).`
+    };
+  }
+
+  const unsupportedFile = selectedFiles.find((file) => !isSupportedArchiveFile(file.name));
+  if (unsupportedFile) {
+    return {
+      acceptedFiles: [],
+      errorMessage: `${unsupportedFile.name} is not a supported source archive.`
     };
   }
 
@@ -36,6 +48,11 @@ export function validateSelectedFiles(
   return {
     acceptedFiles: selectedFiles
   };
+}
+
+export function isSupportedArchiveFile(fileName: string): boolean {
+  const lowerFileName = fileName.toLowerCase();
+  return supportedArchiveExtensions.some((extension) => lowerFileName.endsWith(extension));
 }
 
 export function formatBytes(bytes: number): string {

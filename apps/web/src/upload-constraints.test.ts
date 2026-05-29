@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatBytes, uploadConstraintsFromEnv, validateSelectedFiles } from './upload-constraints.js';
+import {
+  formatBytes,
+  isSupportedArchiveFile,
+  supportedArchiveAccept,
+  supportedArchiveLabel,
+  uploadConstraintsFromEnv,
+  validateSelectedFiles
+} from './upload-constraints.js';
 
 describe('upload constraints', () => {
   it('rejects too many selected files', () => {
@@ -19,6 +26,24 @@ describe('upload constraints', () => {
     });
 
     expect(result.errorMessage).toBe('large.zip exceeds the 1 KB upload limit.');
+  });
+
+  it('rejects unsupported archive file names', () => {
+    const result = validateSelectedFiles(0, [file('notes.txt', 10)], {
+      maxFiles: 2,
+      maxFileSizeBytes: 1024
+    });
+
+    expect(result.errorMessage).toBe('notes.txt is not a supported source archive.');
+    expect(result.acceptedFiles).toEqual([]);
+  });
+
+  it('matches API-supported archive extensions', () => {
+    expect(supportedArchiveAccept).toBe('.zip,.tar,.tar.gz,.tgz');
+    expect(supportedArchiveLabel).toBe('Supports .zip, .tar, .tar.gz, .tgz');
+    expect(isSupportedArchiveFile('frontend.zip')).toBe(true);
+    expect(isSupportedArchiveFile('backend.TAR.GZ')).toBe(true);
+    expect(isSupportedArchiveFile('docs.gz')).toBe(false);
   });
 
   it('formats bytes for UI labels', () => {

@@ -144,3 +144,17 @@ Browser verification:
 - checked the running Web app at `http://localhost:5173/`;
 - confirmed the file input `accept` attribute is `.zip,.tar,.tar.gz,.tgz`;
 - confirmed the dropzone displays `Supports .zip, .tar, .tar.gz, .tgz`.
+
+## Client-Side Archive Type Validation
+
+Expected behavior:
+
+- selecting an unsupported file name shows a status message before upload;
+- unsupported selections do not add source rows;
+- supported archive checks match the API-supported `.zip`, `.tar`, `.tar.gz`, and `.tgz` extensions.
+
+Browser verification:
+
+- selected a synthetic `notes.txt` file through the browser file input;
+- confirmed the status message `notes.txt is not a supported source archive.`;
+- confirmed no source row was added.

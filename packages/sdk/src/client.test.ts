@@ -205,7 +205,7 @@ describe('CodebaseDocsAIClient', () => {
   });
 
   it('times out while polling non-terminal runs', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async () =>
       jsonResponse({
         id: 'run_123',
         status: 'running'

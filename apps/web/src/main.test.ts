@@ -93,6 +93,35 @@ describe('App API error handling', () => {
     ).toBe('Generate documentation');
   });
 
+  it('shows a client-side error for unsupported archive file selections', async () => {
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File(['notes'], 'notes.txt', {
+          type: 'text/plain'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    expect(document.querySelector('[role="status"]')?.textContent).toContain(
+      'notes.txt is not a supported source archive.'
+    );
+    expect(document.querySelectorAll('.source-row')).toHaveLength(0);
+  });
+
   it('runs the completed documentation UI flow against the API contract', async () => {
     let createdRunBody:
       | {

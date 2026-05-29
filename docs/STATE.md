@@ -80,16 +80,19 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 54: Web Client-Side Archive Type Validation.
+Implement Phase 55: Shared Archive Type Contract.
 
 Required package:
 
 ```text
+packages/shared
+packages/source-loader
+apps/api
 apps/web
 docs
 ```
 
-The next step should add client-side selected-file validation for supported archive file names so unsupported files are rejected in the Web UI before upload, matching the API boundary.
+The next step should centralize supported source archive extensions in a shared contract and update source-loader, API, and Web usage to depend on that single definition.
 
 ## Completed Implementation
 
@@ -998,6 +1001,22 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm web:completed-state
+Browser check at http://localhost:5173/
+```
+
+### 2026-05-29: Phase 54 Web Client-Side Archive Type Validation
+
+- Added client-side validation for selected Web upload file names.
+- Rejected unsupported selected files before creating source rows or uploading to the API.
+- Kept Web supported archive checks aligned with `.zip`, `.tar`, `.tar.gz`, and `.tgz`.
+- Added unit and UI regression coverage for unsupported file selection.
+- Verified the unsupported-file path in a browser with a synthetic `notes.txt` selection.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/upload-constraints.test.ts apps/web/src/main.test.ts
 Browser check at http://localhost:5173/
 ```
 

@@ -12,6 +12,8 @@ import {
 } from './source-metadata.js';
 import {
   formatBytes,
+  supportedArchiveAccept,
+  supportedArchiveLabel,
   uploadConstraintsFromEnv,
   validateSelectedFiles
 } from './upload-constraints.js';
@@ -393,9 +395,6 @@ const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mo
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
-const supportedArchiveExtensions = ['.zip', '.tar', '.tar.gz', '.tgz'];
-const supportedArchiveAccept = supportedArchiveExtensions.join(',');
-const supportedArchiveLabel = `Supports ${supportedArchiveExtensions.join(', ')}`;
 const apiBaseUrl =
   import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 
