@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 90: CLI Markdown Tree Output Sanitization Regression Coverage.
+- Implement Phase 91: CLI API Mode Download Sanitization Regression Coverage.
 
-Phase 90 goal:
-- Add CLI-level regression coverage proving local markdown-tree output preserves sanitized documentation content without introducing raw secret-bearing source content.
-- Verify raw denied files and raw secret values are absent from CLI-written markdown-tree files.
-- Keep CLI single-Markdown/JSON/zip and SDK/API/Web/renderer sanitization coverage intact.
+Phase 91 goal:
+- Add CLI API-mode regression coverage proving downloaded artifacts written through the CLI preserve sanitized documentation content without introducing raw secret-bearing source content.
+- Verify raw denied files and raw secret values are absent from CLI-written API-mode download artifacts.
+- Keep CLI local single-Markdown/markdown-tree/JSON/zip and SDK/API/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

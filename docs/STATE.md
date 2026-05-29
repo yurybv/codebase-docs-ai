@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 90: CLI Markdown Tree Output Sanitization Regression Coverage.
+Implement Phase 91: CLI API Mode Download Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/cli
 docs
 ```
 
-The next step should add CLI-level regression coverage proving local markdown-tree output preserves sanitized documentation content without introducing raw secret-bearing source content.
+The next step should add CLI API-mode regression coverage proving downloaded artifacts written through the CLI preserve sanitized documentation content without introducing raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1484,6 +1484,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm test -- packages/sdk/src/client.test.ts
+```
+
+### 2026-05-29: Phase 90 CLI Markdown Tree Output Sanitization Regression Coverage
+
+- Added CLI regression coverage for local markdown-tree output from secret-bearing source inputs.
+- Verified CLI-written markdown-tree files preserve redacted source evidence.
+- Verified CLI-written markdown-tree files exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm test -- apps/cli/src/generate-command.test.ts
 ```
 
 ## Open Questions

@@ -38,6 +38,41 @@ describe('runGenerateCommand', () => {
     }
   });
 
+  it('writes sanitized local markdown-tree output', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const sourceRoot = path.join(tempRoot, 'source');
+    const outputRoot = path.join(tempRoot, 'out');
+    const rawOpenAiKey = `sk-${'q'.repeat(24)}`;
+
+    try {
+      await writeSanitizationSourceFixture(sourceRoot, rawOpenAiKey);
+
+      const result = await runGenerateCommand({
+        source: [`${sourceRoot}:frontend`],
+        output: outputRoot,
+        format: 'markdown-tree',
+        name: 'CLI Sanitized Markdown Tree Documentation'
+      });
+
+      expect(result.status).toBe('completed');
+      expect(result.files.length).toBeGreaterThan(1);
+      expect(result.files.every((filePath) => filePath.startsWith(outputRoot))).toBe(true);
+
+      const markdownTree = (await Promise.all(result.files.map((filePath) => readFile(filePath, 'utf8')))).join(
+        '\n'
+      );
+      expect(markdownTree).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(markdownTree).not.toContain(rawOpenAiKey);
+      expect(markdownTree).not.toContain('SHOULD_NOT_APPEAR');
+      expect(markdownTree).not.toContain('.env');
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
   it('writes sanitized packaged markdown output', async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
     const sourceRoot = path.join(tempRoot, 'source');
