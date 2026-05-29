@@ -84,15 +84,15 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 8: Web UI.
+Implement Phase 9: SDK.
 
-Required app:
+Required package:
 
 ```text
-apps/web
+packages/sdk
 ```
 
-The next step should add archive upload controls, source role selection, output format selection, run progress/status display, generated page preview, warnings display, and download controls backed by the API.
+The next step should add a typed HTTP client for creating runs, uploading archives, starting runs, polling status, retrieving results, and getting download URLs/content.
 
 ## Completed Implementation
 
@@ -257,6 +257,27 @@ pnpm build
 pnpm typecheck
 pnpm test
 pnpm lint
+```
+
+### 2026-05-29: Phase 8 Web UI Upload Flow
+
+- Replaced the placeholder Web UI with an operator workflow.
+- Added archive upload control.
+- Added source role and source name editing.
+- Added API-backed run creation, source upload, run start, result retrieval, and download controls.
+- Added generated page list and Markdown preview.
+- Added status/error display.
+- Added source metadata helper and tests.
+- Added browser smoke verification for the local Vite app.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+Browser smoke test at http://localhost:5173/
 ```
 
 ## Open Questions
