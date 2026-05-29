@@ -79,17 +79,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 38: SDK Consumer Examples.
+Implement Phase 39: Web API Error Envelope Handling.
 
 Required package:
 
 ```text
-packages/sdk
-examples
+apps/web
 docs
 ```
 
-The next step should add copy-pasteable SDK consumer examples for Node.js archive upload, browser `File` upload, custom polling, download persistence, and error handling.
+The next step should align Web UI error handling with the standardized API `{ error: ... }` envelope so upload/start/result failures show actionable API messages instead of generic HTTP failures.
 
 ## Completed Implementation
 
@@ -750,6 +749,20 @@ Verification:
 
 ```text
 pnpm verify
+```
+
+### 2026-05-29: Phase 38 SDK Consumer Examples
+
+- Added SDK examples for Node.js archive upload and Markdown download persistence.
+- Added a browser `File` upload example.
+- Added a custom polling and download example.
+- Added a `CodebaseDocsAIClientError` handling example.
+- Linked SDK examples from the SDK contract documentation.
+
+Verification:
+
+```text
+pnpm lint
 ```
 
 ## Open Questions

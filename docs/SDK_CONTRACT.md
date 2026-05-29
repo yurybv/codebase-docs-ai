@@ -73,6 +73,21 @@ const file = input.files?.[0];
 
 API mode accepts archives only. Folder inputs are CLI/local-engine concerns and are not part of the SDK upload contract.
 
+## Examples
+
+Copy-pasteable consumer examples live in:
+
+```text
+examples/sdk
+```
+
+They cover:
+
+- Node.js archive upload and download persistence;
+- browser `File` upload;
+- custom polling and download;
+- SDK error handling.
+
 ## Public Client Shape
 
 ```ts
