@@ -84,15 +84,16 @@ Web UI upload -> API run -> source extraction -> analysis -> documentation tree 
 
 ## Next Implementation Step
 
-Implement Phase 4: System Analyzer.
+Implement Phase 5: Documentation Generation.
 
-Required package:
+Required packages:
 
 ```text
-packages/system-analyzer
+packages/ai-orchestrator
+packages/documentation-generator
 ```
 
-The next step should correlate multiple `RepositoryMap` objects, match frontend API calls to backend endpoints, detect source relationships, connect environment variables, and produce `SystemMap`.
+The next step should add AI provider abstractions, prompt contracts in code, documentation plan generation, deterministic fallback page generation where possible, schema validation, and `DocumentationTree` output.
 
 ## Completed Implementation
 
@@ -168,6 +169,27 @@ pnpm lint
 - Added config file detection for TypeScript, Next, Nest, Docker, GitHub Actions, and Prisma.
 - Added repository risk output for missing metadata/readme evidence.
 - Added tests for frontend and backend fixture analysis.
+
+Verification:
+
+```text
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+### 2026-05-29: Phase 4 System Analyzer
+
+- Added `packages/system-analyzer`.
+- Added `SystemMap` shared contracts.
+- Added API contract matching between frontend calls and backend endpoints.
+- Added system relationships for matched API calls, shared dependencies, and environment coupling.
+- Added environment link detection across repositories.
+- Added auth flow evidence from auth-related dependencies.
+- Added known integration detection from dependencies.
+- Added system risks for unmatched consumer/provider API contracts.
+- Added tests for matched and unmatched frontend/backend contracts.
 
 Verification:
 

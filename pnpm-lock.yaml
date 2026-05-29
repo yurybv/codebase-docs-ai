@@ -134,6 +134,12 @@ importers:
         specifier: ^0.5.7
         version: 0.5.8
 
+  packages/system-analyzer:
+    dependencies:
+      '@codebase-docs-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+
 packages:
 
   '@babel/code-frame@7.29.7':

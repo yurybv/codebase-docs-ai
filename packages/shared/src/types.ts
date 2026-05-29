@@ -135,6 +135,64 @@ export interface RepositoryMap {
   generatedAt: string;
 }
 
+export interface SourceRelationship {
+  kind: 'frontend-calls-backend' | 'shared-dependency' | 'environment-coupling';
+  fromSource: string;
+  toSource: string;
+  confidence: 'low' | 'medium' | 'high';
+  evidence: SourceReference[];
+}
+
+export interface ApiContract {
+  method: string;
+  path: string;
+  consumer?: SourceReference;
+  provider?: SourceReference;
+  status: 'matched' | 'consumer-only' | 'provider-only';
+}
+
+export interface AuthFlow {
+  kind: string;
+  sources: string[];
+  confidence: 'low' | 'medium' | 'high';
+  evidence: SourceReference[];
+}
+
+export interface EnvironmentLink {
+  name: string;
+  sources: string[];
+  sourceReferences: SourceReference[];
+}
+
+export interface IntegrationPoint {
+  name: string;
+  sources: string[];
+  evidence: SourceReference[];
+}
+
+export interface SystemRisk {
+  level: WarningLevel;
+  message: string;
+  sourceReferences?: SourceReference[];
+}
+
+export interface SystemUnknown {
+  message: string;
+  sourceReferences?: SourceReference[];
+}
+
+export interface SystemMap {
+  sources: RepositoryMap[];
+  relationships: SourceRelationship[];
+  apiContracts: ApiContract[];
+  authFlows: AuthFlow[];
+  environmentLinks: EnvironmentLink[];
+  integrations: IntegrationPoint[];
+  risks: SystemRisk[];
+  unknowns: SystemUnknown[];
+  generatedAt: string;
+}
+
 export interface SourceReference {
   sourceName: string;
   path: string;
