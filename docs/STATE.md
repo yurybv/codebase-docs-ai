@@ -79,15 +79,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 37: SDK Contract Tests For Public Error Shapes.
+Implement Phase 38: SDK Consumer Examples.
 
 Required package:
 
 ```text
 packages/sdk
+examples
+docs
 ```
 
-The next step should add focused SDK contract tests for public method behavior, multipart upload metadata, deletion, timeout behavior, and API error shape preservation.
+The next step should add copy-pasteable SDK consumer examples for Node.js archive upload, browser `File` upload, custom polling, download persistence, and error handling.
 
 ## Completed Implementation
 
@@ -734,6 +736,20 @@ Verification:
 
 ```text
 pnpm lint
+```
+
+### 2026-05-29: Phase 37 SDK Contract Tests For Public Error Shapes
+
+- Added SDK test coverage for multipart upload metadata and generated file fields.
+- Added SDK delete method coverage.
+- Added SDK polling timeout coverage.
+- Added defensive coverage for legacy flat API error shapes.
+- Kept public API error envelope preservation covered through `CodebaseDocsAIClientError`.
+
+Verification:
+
+```text
+pnpm verify
 ```
 
 ## Open Questions

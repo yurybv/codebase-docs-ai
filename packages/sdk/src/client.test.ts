@@ -81,6 +81,38 @@ describe('CodebaseDocsAIClient', () => {
     const [, init] = fetchMock.mock.calls[0] ?? [];
     expect(init?.method).toBe('POST');
     expect(init?.body).toBeInstanceOf(FormData);
+    const formData = init?.body as FormData;
+    expect(JSON.parse(String(formData.get('metadata')))).toEqual({
+      sources: [
+        {
+          fileField: 'source_0',
+          name: 'Frontend',
+          role: 'frontend'
+        }
+      ]
+    });
+    expect(formData.get('source_0')).toBeInstanceOf(File);
+  });
+
+  it('deletes documentation runs through the HTTP API', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runId: 'run_123',
+        deleted: true
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(client.documentationRuns.delete('run_123')).resolves.toEqual({
+      runId: 'run_123',
+      deleted: true
+    });
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs/run_123', {
+      method: 'DELETE'
+    });
   });
 
   it('polls and runs the high-level archive generation flow', async () => {
@@ -170,6 +202,30 @@ describe('CodebaseDocsAIClient', () => {
     ).rejects.toThrow('Generation failed.');
   });
 
+  it('times out while polling non-terminal runs', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        id: 'run_123',
+        status: 'running'
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(
+      client.documentationRuns.waitUntilComplete('run_123', {
+        intervalMs: 0,
+        timeoutMs: 0
+      })
+    ).rejects.toMatchObject({
+      name: 'CodebaseDocsAIClientError',
+      status: 0,
+      message: 'Timed out waiting for documentation run run_123.'
+    });
+  });
+
   it('preserves API error codes and details', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
@@ -210,6 +266,38 @@ describe('CodebaseDocsAIClient', () => {
         }
       });
     }
+  });
+
+  it('preserves legacy flat API error shapes defensively', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 'LEGACY_ERROR',
+          message: 'Legacy flat error.',
+          details: {
+            reason: 'fixture'
+          }
+        }),
+        {
+          status: 422,
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    await expect(client.documentationRuns.get('run_123')).rejects.toMatchObject({
+      status: 422,
+      code: 'LEGACY_ERROR',
+      details: {
+        reason: 'fixture'
+      }
+    });
   });
 });
 
