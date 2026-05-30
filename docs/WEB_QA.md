@@ -116,6 +116,15 @@ Expected behavior:
 - Web-rendered error text redacts raw provider keys, denied `.env` evidence, denied-source values, and API run storage paths;
 - stale artifact content must not appear in the failed state after run storage cleanup.
 
+## Run History Display
+
+Expected behavior:
+
+- operators can refresh recent documentation run summaries from the API;
+- recent runs show status, source count, and rendered formats when available;
+- run history rendering remains a thin API client and does not perform analysis, generation, rendering, or cleanup logic in the Web app;
+- run history text redacts raw provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths.
+
 ## Output Format Selection
 
 Expected behavior:

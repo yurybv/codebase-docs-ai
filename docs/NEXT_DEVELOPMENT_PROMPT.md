@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 125: Web Run Listing Operator View.
+- Implement Phase 126: CLI API Run Listing Command.
 
-Phase 125 goal:
-- Expose the safe API run listing contract in the Web operator UI as a run history/status surface.
-- Keep Web as a thin API client and do not move core analysis, generation, rendering, or cleanup logic into the UI.
-- Verify rendered run history does not expose upload archive storage paths, artifact paths, raw source content, provider keys, denied `.env` evidence, or denied-source values.
+Phase 126 goal:
+- Expose the safe run listing contract through the CLI in API mode.
+- Add a CLI command that prints recent run summaries as sanitized JSON without downloading artifacts.
+- Verify CLI list output does not expose upload archive storage paths, artifact paths, raw source content, provider keys, denied `.env` evidence, or denied-source values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

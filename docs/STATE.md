@@ -80,16 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 125: Web Run Listing Operator View.
+Implement Phase 126: CLI API Run Listing Command.
 
 Required package:
 
 ```text
-apps/web
+apps/cli
+packages/sdk
 docs
 ```
 
-The next step should expose the safe API run listing contract in the Web operator UI as a run history/status surface without adding core logic to the Web app.
+The next step should expose the safe run listing contract through the CLI in API mode so operators can inspect recent run summaries from automation without downloading artifacts.
 
 ## Completed Implementation
 
@@ -1962,6 +1963,20 @@ Verification:
 ```text
 pnpm test -- packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 125 Web Run Listing Operator View
+
+- Added a Web run history panel that refreshes summaries from `GET /v1/documentation-runs`.
+- Kept run history as a thin API-backed operator surface with no analysis, generation, rendering, or cleanup logic in the Web app.
+- Added Web regression coverage proving rendered run history omits raw storage paths, raw source content, provider keys, denied `.env` evidence, and denied-source values.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 

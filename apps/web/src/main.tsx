@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AlertTriangle, Download, FileArchive, Play, Upload, X } from 'lucide-react';
+import { AlertTriangle, Download, FileArchive, Play, RefreshCw, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
 import { formatApiErrorMessage, parseApiError, sanitizeWebErrorText } from './api-errors.js';
@@ -25,6 +25,10 @@ export function App(): JSX.Element {
   const [selectedOutputFormats, setSelectedOutputFormats] =
     useState<DocumentationOutputFormat[]>(defaultOutputFormats);
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
+  const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
+  const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
+    status: 'idle'
+  });
   const [runState, setRunState] = useState<RunState>({
     status: 'idle'
   });
@@ -77,6 +81,28 @@ export function App(): JSX.Element {
         ? currentFormats.filter((currentFormat) => currentFormat !== format)
         : [...currentFormats, format]
     );
+  }
+
+  async function refreshRunHistory(): Promise<void> {
+    if (runHistoryState.status === 'loading') {
+      return;
+    }
+
+    try {
+      setRunHistoryState({
+        status: 'loading'
+      });
+      const list = await listRuns();
+      setRunHistory(sanitizeRunSummaries(list.runs));
+      setRunHistoryState({
+        status: 'loaded'
+      });
+    } catch (error) {
+      setRunHistoryState({
+        status: 'failed',
+        message: error instanceof Error ? error.message : 'Run history unavailable.'
+      });
+    }
   }
 
   async function generateDocumentation(): Promise<void> {
@@ -243,6 +269,48 @@ export function App(): JSX.Element {
               ))}
             </div>
           </fieldset>
+
+          <section className="run-history" aria-label="Recent documentation runs">
+            <div className="run-history-heading">
+              <span>Recent runs</span>
+              <button
+                className="secondary-action history-refresh"
+                type="button"
+                onClick={refreshRunHistory}
+                disabled={runHistoryState.status === 'loading'}
+                aria-label="Refresh recent documentation runs"
+              >
+                <RefreshCw size={15} />
+                Refresh
+              </button>
+            </div>
+            {runHistoryState.status === 'failed' ? (
+              <p className="history-error" role="alert">
+                {sanitizeWebErrorText(runHistoryState.message ?? '', 'Run history unavailable.')}
+              </p>
+            ) : null}
+            {runHistory.length > 0 ? (
+              <ul className="run-history-list">
+                {runHistory.map((run) => (
+                  <li key={run.id}>
+                    <div>
+                      <span className="run-name">{run.name}</span>
+                      <span className="run-meta">
+                        {run.status} · {run.sourceCount} source{run.sourceCount === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    {run.renderedFormats && run.renderedFormats.length > 0 ? (
+                      <span className="run-formats">{run.renderedFormats.join(', ')}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="history-empty">
+                {runHistoryState.status === 'loading' ? 'Loading runs.' : 'No runs loaded.'}
+              </p>
+            )}
+          </section>
         </aside>
 
         <section className="panel result-panel">
@@ -340,6 +408,12 @@ export function App(): JSX.Element {
 }
 
 type RunStatus = 'idle' | 'creating' | 'uploading' | 'running' | 'completed' | 'failed';
+type RunHistoryStatus = 'idle' | 'loading' | 'loaded' | 'failed';
+
+interface RunHistoryState {
+  status: RunHistoryStatus;
+  message?: string;
+}
 
 interface RunState {
   status: RunStatus;
@@ -391,6 +465,28 @@ interface DocumentationRunResult {
   };
 }
 
+interface RunSummary {
+  id: string;
+  name: string;
+  status: string;
+  sourceCount: number;
+  sources: Array<{
+    id?: string;
+    name: string;
+    role: SourceRole;
+  }>;
+  outputFormats: DocumentationOutputFormat[];
+  renderedFormats?: DocumentationOutputFormat[];
+  progress?: DocumentationRunProgress;
+  error?: DocumentationRunError;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface RunListResponse {
+  runs: RunSummary[];
+}
+
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
@@ -415,6 +511,11 @@ async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ 
     })
   });
 
+  return parseResponse(response);
+}
+
+async function listRuns(): Promise<RunListResponse> {
+  const response = await fetch(`${apiBaseUrl}/v1/documentation-runs`);
   return parseResponse(response);
 }
 
@@ -490,6 +591,35 @@ async function failedRunDetails(runId: string | undefined): Promise<Pick<RunStat
   } catch {
     return {};
   }
+}
+
+function sanitizeRunSummaries(runs: RunSummary[]): RunSummary[] {
+  return runs.map((run) => ({
+    ...run,
+    id: sanitizeWebErrorText(run.id, '[REDACTED]'),
+    name: sanitizeWebErrorText(run.name, '[REDACTED]'),
+    sources: run.sources.map((source) => ({
+      ...(source.id ? { id: sanitizeWebErrorText(source.id, '[REDACTED]') } : {}),
+      name: sanitizeWebErrorText(source.name, '[REDACTED]'),
+      role: source.role
+    })),
+    ...(run.progress
+      ? {
+          progress: {
+            ...run.progress,
+            currentStep: sanitizeWebErrorText(run.progress.currentStep, '[REDACTED]')
+          }
+        }
+      : {}),
+    ...(run.error
+      ? {
+          error: {
+            ...run.error,
+            message: sanitizeWebErrorText(run.error.message, 'Documentation generation failed.')
+          }
+        }
+      : {})
+  }));
 }
 
 const rootElement = document.getElementById('root');

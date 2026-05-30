@@ -94,6 +94,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Archive upload form.
 - Source role selection.
 - Output format selection.
+- Run history refresh.
 - Run progress display.
 - Warnings display.
 - Page preview.

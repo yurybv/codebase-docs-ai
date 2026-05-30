@@ -152,6 +152,91 @@ describe('App API error handling', () => {
     ).toBe('Generate documentation');
   });
 
+  it('renders sanitized run history summaries from the API contract', async () => {
+    const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_created',
+            name: `Created ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'created',
+            sources: [],
+            sourceCount: 0,
+            outputFormats: ['json'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:00:00.000Z'
+          },
+          {
+            id: 'run_completed',
+            name: 'Completed Docs',
+            status: 'completed',
+            sources: [
+              {
+                name: `Frontend ${rawStoragePath}`,
+                role: 'frontend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['single-markdown'],
+            renderedFormats: ['single-markdown'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          },
+          {
+            id: 'run_failed',
+            name: 'Failed Docs',
+            status: 'failed',
+            sources: [
+              {
+                name: `Backend .env SHOULD_NOT_APPEAR ${rawOpenAiKey}`,
+                role: 'backend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            error: {
+              message: `Documentation generation failed at ${rawStoragePath}.`
+            },
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:02:00.000Z'
+          }
+        ]
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Completed Docs');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('Recent runs');
+    expect(renderedText).toContain('created · 0 sources');
+    expect(renderedText).toContain('completed · 1 source');
+    expect(renderedText).toContain('failed · 1 source');
+    expect(renderedText).toContain('single-markdown');
+    expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
+    expect(renderedText).toContain('[REDACTED_DENIED_VALUE]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs');
+  });
+
   it('shows a client-side error for unsupported archive file selections', async () => {
     const rootElement = document.createElement('div');
     document.body.append(rootElement);
