@@ -14,7 +14,13 @@ import type {
 import { CliError } from './cli-error.js';
 
 export type CliOutputFormat = DocumentationOutputFormat | 'zip';
-export type RunListSort = 'updatedAt:desc' | 'updatedAt:asc' | 'createdAt:desc' | 'createdAt:asc';
+export type RunListSort =
+  | 'updatedAt:desc'
+  | 'updatedAt:asc'
+  | 'createdAt:desc'
+  | 'createdAt:asc'
+  | 'completedAt:desc'
+  | 'completedAt:asc';
 
 export interface CliSourceInput {
   inputPath: string;
@@ -69,7 +75,9 @@ const runListSortOptions: RunListSort[] = [
   'updatedAt:desc',
   'updatedAt:asc',
   'createdAt:desc',
-  'createdAt:asc'
+  'createdAt:asc',
+  'completedAt:desc',
+  'completedAt:asc'
 ];
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 

@@ -110,7 +110,7 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --format json \
   --min-sources 1 \
   --max-sources 2 \
-  --sort createdAt:asc \
+  --sort completedAt:asc \
   --created-after 2026-05-29T23:00:00.000Z \
   --created-before 2026-05-30T01:00:00.000Z \
   --completed-after 2026-05-30T00:00:00.000Z \

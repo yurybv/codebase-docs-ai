@@ -433,7 +433,7 @@ describe('CodebaseDocsAIClient', () => {
       format: 'json',
       minSources: 1,
       maxSources: 2,
-      sort: 'createdAt:asc',
+      sort: 'completedAt:asc',
       createdAfter: '2026-05-29T23:59:30.000Z',
       createdBefore: '2026-05-30T00:01:00.000Z',
       completedAfter: '2026-05-30T00:00:30.000Z',
@@ -462,7 +462,7 @@ describe('CodebaseDocsAIClient', () => {
     expect(payload).not.toContain('.env');
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=createdAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A00.000Z&completedAfter=2026-05-30T00%3A00%3A30.000Z&completedBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=completedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A00.000Z&completedAfter=2026-05-30T00%3A00%3A30.000Z&completedBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
       undefined
     );
   });
@@ -558,7 +558,14 @@ describe('CodebaseDocsAIClient', () => {
         'Run list sort must be a supported sort option.'
       );
       expect((error as CodebaseDocsAIClientError).details).toEqual({
-        allowedSorts: ['updatedAt:desc', 'updatedAt:asc', 'createdAt:desc', 'createdAt:asc']
+        allowedSorts: [
+          'updatedAt:desc',
+          'updatedAt:asc',
+          'createdAt:desc',
+          'createdAt:asc',
+          'completedAt:desc',
+          'completedAt:asc'
+        ]
       });
       expect(payload).not.toContain(rawSort);
       expect(payload).not.toContain(rawOpenAiKey);

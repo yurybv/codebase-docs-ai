@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 - Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
 - Phase 179: Run Listing Terminal Duration Contract Exploration.
+- Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose completed-at sort support through SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose completed-at sort support through Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2692,6 +2692,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 176 SDK And CLI Run Listing Completed-At Sort Option
+
+- Extended SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort` to accept `completedAt:desc` and `completedAt:asc`.
+- Kept SDK and CLI sort validation local to callers before network requests.
+- Updated SDK and CLI regression coverage for completed-at sorted list requests and sanitized invalid sort failures.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

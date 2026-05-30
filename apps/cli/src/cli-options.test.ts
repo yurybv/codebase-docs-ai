@@ -78,7 +78,7 @@ describe('CLI option parsing', () => {
         format: 'json',
         minSources: '1',
         maxSources: '2',
-        sort: 'createdAt:asc',
+        sort: 'completedAt:asc',
         createdAfter: '2026-05-29T23:59:30.000Z',
         createdBefore: '2026-05-30T00:01:00.000Z',
         completedAfter: '2026-05-30T00:00:30.000Z',
@@ -96,7 +96,7 @@ describe('CLI option parsing', () => {
       format: 'json',
       minSources: 1,
       maxSources: 2,
-      sort: 'createdAt:asc',
+      sort: 'completedAt:asc',
       createdAfter: '2026-05-29T23:59:30.000Z',
       createdBefore: '2026-05-30T00:01:00.000Z',
       completedAfter: '2026-05-30T00:00:30.000Z',
@@ -352,7 +352,14 @@ describe('CLI option parsing', () => {
           code: 'CLI_RUN_LIST_SORT_INVALID',
           message: 'Run list sort must be a supported sort option.',
           details: {
-            allowedSorts: ['updatedAt:desc', 'updatedAt:asc', 'createdAt:desc', 'createdAt:asc']
+            allowedSorts: [
+              'updatedAt:desc',
+              'updatedAt:asc',
+              'createdAt:desc',
+              'createdAt:asc',
+              'completedAt:desc',
+              'completedAt:asc'
+            ]
           }
         }
       });

@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
-- Then continue without stopping into Phase 177: Web Run History Completed-At Sort Control And Audit.
+- Implement Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Then continue without stopping into Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 179: Run Listing Terminal Duration Contract Exploration.
+- Then continue without stopping into Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 176 goal:
-- Expose completed-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI completed-at sort inputs before network requests where practical.
-- Verify SDK and CLI completed-at sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
 
 Phase 177 goal:
 - Expose completed-at sort options through the Web run history sort control.
@@ -63,6 +58,11 @@ Phase 179 goal:
 - Explore whether public run summaries should expose safe terminal duration metadata derived from `createdAt`, `completedAt`, and terminal failure timestamps.
 - If the contract is safe and useful, add an API-first duration contract with sanitized tests; otherwise document why it should be deferred.
 - Do not introduce raw artifact paths, upload storage paths, source content, or secret-bearing evidence into duration-related output or errors.
+
+Phase 180 goal:
+- If Phase 179 adds safe terminal duration metadata, expose it through SDK and CLI list outputs without adding core logic to those surfaces.
+- Add SDK and CLI regression coverage proving duration metadata remains sanitized and does not expose raw storage paths or secret-bearing evidence.
+- If Phase 179 defers duration metadata, remove this follow-up from the next prompt and choose the next highest-value product gap.
 
 Verification expectations:
 - Run focused tests for every touched surface.

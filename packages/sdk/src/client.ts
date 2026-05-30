@@ -572,7 +572,14 @@ function invalidRunListSourceCount(): CodebaseDocsAIClientError {
   );
 }
 
-const runListSortOptions = ['updatedAt:desc', 'updatedAt:asc', 'createdAt:desc', 'createdAt:asc'] as const;
+const runListSortOptions = [
+  'updatedAt:desc',
+  'updatedAt:asc',
+  'createdAt:desc',
+  'createdAt:asc',
+  'completedAt:desc',
+  'completedAt:asc'
+] as const;
 
 function parseRunListSort(value: unknown): (typeof runListSortOptions)[number] | undefined {
   if (value === undefined) {

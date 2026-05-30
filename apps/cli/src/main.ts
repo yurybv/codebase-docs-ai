@@ -42,7 +42,10 @@ program
   .option('--format <format>', 'Filter recent runs by output format')
   .option('--min-sources <count>', 'Filter recent runs by minimum source count')
   .option('--max-sources <count>', 'Filter recent runs by maximum source count')
-  .option('--sort <sort>', 'Sort recent runs: updatedAt:desc, updatedAt:asc, createdAt:desc, or createdAt:asc')
+  .option(
+    '--sort <sort>',
+    'Sort recent runs: updatedAt:desc, updatedAt:asc, createdAt:desc, createdAt:asc, completedAt:desc, or completedAt:asc'
+  )
   .option('--created-after <timestamp>', 'Filter recent runs created at or after an ISO timestamp')
   .option('--created-before <timestamp>', 'Filter recent runs created at or before an ISO timestamp')
   .option('--completed-after <timestamp>', 'Filter recent runs completed at or after an ISO timestamp')
