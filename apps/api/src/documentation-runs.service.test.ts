@@ -534,7 +534,7 @@ describe('DocumentationRunsService', () => {
     await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
     await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
     await setRunCompletedAt(older.runId, '2026-05-30T00:00:30.000Z');
-    await setRunCompletedAt(newer.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newer.runId, '2026-05-30T00:01:15.000Z');
 
     const firstPage = await service.listRuns({
       limit: '1',
@@ -572,8 +572,10 @@ describe('DocumentationRunsService', () => {
     const payload = JSON.stringify({ firstPage, secondPage });
 
     expect(firstPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(firstPage.runs[0]?.durationMs).toBe(30_000);
     expect(firstPage.nextCursor).toBeTruthy();
     expect(secondPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(secondPage.runs[0]?.durationMs).toBe(15_000);
     expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');

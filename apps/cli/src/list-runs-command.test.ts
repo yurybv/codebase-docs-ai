@@ -128,7 +128,8 @@ describe('runListRunsCommand', () => {
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
               updatedAt: '2026-05-30T00:01:00.000Z',
-              completedAt: '2026-05-30T00:01:00.000Z'
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             }
           ]
         }),
@@ -259,7 +260,8 @@ describe('runListRunsCommand', () => {
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
               updatedAt: '2026-05-30T00:01:00.000Z',
-              completedAt: '2026-05-30T00:01:00.000Z'
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             }
           ]
         }),
@@ -396,7 +398,8 @@ describe('runListRunsCommand', () => {
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
               updatedAt: '2026-05-30T00:01:00.000Z',
-              completedAt: '2026-05-30T00:01:00.000Z'
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             }
           ]
         }),
@@ -465,7 +468,8 @@ describe('runListRunsCommand', () => {
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
               updatedAt: '2026-05-30T00:01:00.000Z',
-              completedAt: '2026-05-30T00:01:00.000Z'
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             }
           ]
         }),
@@ -496,7 +500,8 @@ describe('runListRunsCommand', () => {
       status: 'completed',
       sourceCount: 1,
       renderedFormats: ['json'],
-      completedAt: '2026-05-30T00:01:00.000Z'
+      completedAt: '2026-05-30T00:01:00.000Z',
+      durationMs: 60000
     });
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_STORAGE_PATH]');

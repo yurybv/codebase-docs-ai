@@ -817,19 +817,20 @@ describe('Documentation runs HTTP API', () => {
     await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
     await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
     await setRunCompletedAt(older.runId, '2026-05-30T00:00:30.000Z');
-    await setRunCompletedAt(newer.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newer.runId, '2026-05-30T00:01:15.000Z');
 
     const filteredResponse = await fetch(
       `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&sort=completedAt:asc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&completedAfter=${encodeURIComponent('2026-05-30T00:00:00.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
     );
     const filteredPayload = await filteredResponse.text();
     const filtered = JSON.parse(filteredPayload) as {
-      runs: Array<{ id: string }>;
+      runs: Array<{ durationMs?: number; id: string }>;
       nextCursor?: string;
     };
 
     expect(filteredResponse.status).toBe(200);
     expect(filtered.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(filtered.runs[0]?.durationMs).toBe(30_000);
     expect(filtered.nextCursor).toBeTruthy();
     expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
@@ -844,12 +845,13 @@ describe('Documentation runs HTTP API', () => {
     );
     const secondPayload = await secondResponse.text();
     const second = JSON.parse(secondPayload) as {
-      runs: Array<{ id: string }>;
+      runs: Array<{ durationMs?: number; id: string }>;
       nextCursor?: string;
     };
 
     expect(secondResponse.status).toBe(200);
     expect(second.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(second.runs[0]?.durationMs).toBe(15_000);
     expect(second.nextCursor).toBeUndefined();
     expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(secondPayload).not.toContain(rawOpenAiKey);

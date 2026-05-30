@@ -409,7 +409,9 @@ describe('App API error handling', () => {
               outputFormats: ['json'],
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
-              updatedAt: '2026-05-30T00:02:00.000Z'
+              updatedAt: '2026-05-30T00:02:00.000Z',
+              completedAt: '2026-05-30T00:01:30.000Z',
+              durationMs: 90000
             }
           ],
           nextCursor: cursor
@@ -432,7 +434,9 @@ describe('App API error handling', () => {
               outputFormats: ['json'],
               renderedFormats: ['json'],
               createdAt: '2026-05-30T00:00:00.000Z',
-              updatedAt: '2026-05-30T00:01:00.000Z'
+              updatedAt: '2026-05-30T00:01:00.000Z',
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             }
           ]
         })
@@ -549,6 +553,8 @@ describe('App API error handling', () => {
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('Page One');
     expect(renderedText).toContain('Page Two');
+    expect(renderedText).toContain('completed · 1 source · duration 1m 30s');
+    expect(renderedText).toContain('completed · 1 source · duration 1m 0s');
     expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
     expect(renderedText).toContain('[REDACTED_DENIED_VALUE]');

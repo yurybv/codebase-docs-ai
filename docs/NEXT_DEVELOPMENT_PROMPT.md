@@ -37,13 +37,31 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 182: Terminal Duration Cross-Surface Regression Audit.
+- Implement Phase 183: API Run Listing Duration Sort Contract.
+- Then continue without stopping into Phase 184: SDK And CLI Run Listing Duration Sort Option.
+- Then continue without stopping into Phase 185: Web Run History Duration Sort Control.
+- Then continue without stopping into Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
-Phase 182 goal:
-- Audit API, SDK, CLI, and Web duration behavior as one public operator contract.
-- Add or tighten regression coverage proving duration metadata composes with run listing filters, sorting, and pagination where applicable.
-- Verify raw duration-related inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
+Phase 183 goal:
+- Add safe API run listing duration sort options, such as `durationMs:desc` and `durationMs:asc`, using only public terminal duration metadata derived from run timestamps.
+- Keep non-terminal runs deterministic in duration sorting without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
+- Cover duration-sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
+
+Phase 184 goal:
+- Expose duration sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
+- Validate SDK and CLI duration sort inputs before network requests where practical.
+- Verify SDK and CLI duration-sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
+
+Phase 185 goal:
+- Expose duration sorting through the Web run history sort selector.
+- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when duration sorting is applied.
+- Verify duration-sorted Web history displays sanitized duration metadata without adding core logic to the Web surface.
+
+Phase 186 goal:
+- Audit API, SDK, CLI, and Web duration sort behavior as one public operator contract.
+- Add or tighten regression coverage proving duration sorting composes with run listing filters and pagination where applicable.
+- Verify raw sort inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.
