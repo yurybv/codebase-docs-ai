@@ -37,14 +37,9 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
-- Then continue without stopping into Phase 181: Web Terminal Duration Display Follow-Up.
+- Implement Phase 181: Web Terminal Duration Display Follow-Up.
 - Then continue without stopping into Phase 182: Terminal Duration Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 180 goal:
-- Expose the safe API terminal `durationMs` run summary metadata through SDK and CLI list outputs without adding core logic to those surfaces.
-- Add SDK and CLI regression coverage proving duration metadata remains sanitized and does not expose raw storage paths or secret-bearing evidence.
 
 Phase 181 goal:
 - Display safe API terminal `durationMs` metadata in Web run history without adding core logic to the Web surface.

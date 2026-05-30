@@ -37,7 +37,9 @@ describe('runListRunsCommand', () => {
               outputFormats: ['single-markdown'],
               renderedFormats: ['single-markdown'],
               createdAt: '2026-05-30T00:00:00.000Z',
-              updatedAt: '2026-05-30T00:01:00.000Z'
+              updatedAt: '2026-05-30T00:01:00.000Z',
+              completedAt: '2026-05-30T00:01:00.000Z',
+              durationMs: 60000
             },
             {
               id: 'run_failed',
@@ -55,7 +57,8 @@ describe('runListRunsCommand', () => {
                 message: `Documentation generation failed at ${rawStoragePath}.`
               },
               createdAt: '2026-05-30T00:00:00.000Z',
-              updatedAt: '2026-05-30T00:02:00.000Z'
+              updatedAt: '2026-05-30T00:02:00.000Z',
+              durationMs: 120000
             }
           ]
         }),
@@ -82,6 +85,8 @@ describe('runListRunsCommand', () => {
       'run_failed'
     ]);
     expect(result.runs[1]?.renderedFormats).toEqual(['single-markdown']);
+    expect(result.runs[1]?.durationMs).toBe(60000);
+    expect(result.runs[2]?.durationMs).toBe(120000);
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_STORAGE_PATH]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');

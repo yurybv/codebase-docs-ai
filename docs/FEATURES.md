@@ -123,6 +123,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Typed requests/responses.
 - Run listing helper.
 - Paginated run listing helper.
+- Terminal run duration metadata in listed summaries.
 - Sorted run listing helper.
 - Created-at filtered run listing helper.
 - Completed-at filtered run listing helper.
@@ -151,6 +152,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Filter API-backed run summaries by output format.
 - Filter API-backed run summaries by source count.
 - Paginate API-backed run summaries.
+- Show terminal run duration metadata in API-backed run summaries.
 - Select output format.
 - Write output to local folder.
 

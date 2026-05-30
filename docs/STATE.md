@@ -82,21 +82,20 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
 - Phase 181: Web Terminal Duration Display Follow-Up.
 - Phase 182: Terminal Duration Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
-packages/shared
+apps/web
+apps/api
 apps/cli
 packages/sdk
-apps/web
 docs
 ```
 
-The next step should expose the safe API terminal `durationMs` summary contract through SDK, CLI, Web, and cross-surface coverage. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should display the safe API terminal `durationMs` summary contract in Web run history, then audit API, SDK, CLI, and Web as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2747,6 +2746,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 180 SDK And CLI Terminal Duration Surface Follow-Up
+
+- Preserved API-provided terminal `durationMs` metadata through SDK `documentationRuns.list` results and CLI `list-runs` output without duplicating duration computation.
+- Added SDK and CLI regression coverage proving duration-bearing summaries remain sanitized.
+- Updated SDK and operations documentation for duration-bearing list summaries.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

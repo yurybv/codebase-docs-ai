@@ -184,7 +184,7 @@ Returns:
 
 `nextCursor` is omitted when no further matching run summaries are available.
 
-Run summaries include safe public metadata such as run id, name, status, source count, source names/roles, requested output formats, rendered formats, progress, failure summary, and timestamps. The SDK sanitizes list response text before exposing it to callers; list results must not include upload archive storage paths, result artifact paths, raw source content, or secret-bearing evidence.
+Run summaries include safe public metadata such as run id, name, status, source count, source names/roles, requested output formats, rendered formats, progress, failure summary, timestamps, and terminal `durationMs` when the API can derive it safely. The SDK sanitizes list response text before exposing it to callers; list results must not include upload archive storage paths, result artifact paths, raw source content, or secret-bearing evidence.
 
 ### `uploadSources(runId, sources)`
 

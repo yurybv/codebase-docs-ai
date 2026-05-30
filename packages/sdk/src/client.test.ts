@@ -88,7 +88,9 @@ describe('CodebaseDocsAIClient', () => {
               totalSteps: 7
             },
             createdAt: '2026-05-30T00:00:00.000Z',
-            updatedAt: '2026-05-30T00:01:00.000Z'
+            updatedAt: '2026-05-30T00:01:00.000Z',
+            completedAt: '2026-05-30T00:01:00.000Z',
+            durationMs: 60000
           },
           {
             id: 'run_failed',
@@ -107,7 +109,8 @@ describe('CodebaseDocsAIClient', () => {
               code: `FAILED_${rawOpenAiKey}`
             },
             createdAt: '2026-05-30T00:00:00.000Z',
-            updatedAt: '2026-05-30T00:02:00.000Z'
+            updatedAt: '2026-05-30T00:02:00.000Z',
+            durationMs: 120000
           }
         ]
       })
@@ -133,11 +136,13 @@ describe('CodebaseDocsAIClient', () => {
     expect(list.runs[1]).toMatchObject({
       status: 'completed',
       sourceCount: 1,
-      renderedFormats: ['single-markdown']
+      renderedFormats: ['single-markdown'],
+      durationMs: 60000
     });
     expect(list.runs[2]).toMatchObject({
       status: 'failed',
-      sourceCount: 1
+      sourceCount: 1,
+      durationMs: 120000
     });
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_STORAGE_PATH]');
