@@ -318,6 +318,13 @@ describe('App API error handling', () => {
     await act(async () => {
       setTextInputValue(maxSourcesInput, '2');
     });
+    const sortSelect = document.querySelector(
+      'select[aria-label="Recent run sort"]'
+    ) as HTMLSelectElement;
+    sortSelect.value = 'updatedAt:asc';
+    await act(async () => {
+      sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     const createdAfterInput = document.querySelector(
       'input[aria-label="Recent run created after"]'
     ) as HTMLInputElement;
@@ -358,7 +365,7 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A00%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=updatedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A00%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
     );
   });
 
@@ -470,6 +477,13 @@ describe('App API error handling', () => {
     await act(async () => {
       setTextInputValue(maxSourcesInput, '2');
     });
+    const sortSelect = document.querySelector(
+      'select[aria-label="Recent run sort"]'
+    ) as HTMLSelectElement;
+    sortSelect.value = 'updatedAt:asc';
+    await act(async () => {
+      sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     const createdAfterInput = document.querySelector(
       'input[aria-label="Recent run created after"]'
     ) as HTMLInputElement;
@@ -517,11 +531,11 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=updatedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
+      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=updatedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
     );
   });
 
@@ -772,6 +786,53 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:3000/v1/documentation-runs?limit=50&minSources=1'
+    );
+  });
+
+  it('sanitizes run history sort API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_SORT_INVALID', {
+        message: `Invalid run list sort from ${rawStoragePath}.`,
+        details: {
+          sort: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const sortSelect = document.querySelector(
+      'select[aria-label="Recent run sort"]'
+    ) as HTMLSelectElement;
+    sortSelect.value = 'updatedAt:asc';
+    await act(async () => {
+      sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_SORT_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_SORT_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=50&sort=updatedAt%3Aasc'
     );
   });
 

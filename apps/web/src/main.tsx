@@ -34,6 +34,7 @@ export function App(): JSX.Element {
   const [runHistoryFormat, setRunHistoryFormat] = useState<RunHistoryFormatFilter>('all');
   const [runHistoryMinSources, setRunHistoryMinSources] = useState('');
   const [runHistoryMaxSources, setRunHistoryMaxSources] = useState('');
+  const [runHistorySort, setRunHistorySort] = useState<RunHistorySort>('updatedAt:desc');
   const [runHistoryCreatedAfter, setRunHistoryCreatedAfter] = useState('');
   const [runHistoryCreatedBefore, setRunHistoryCreatedBefore] = useState('');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
@@ -134,6 +135,7 @@ export function App(): JSX.Element {
         runHistoryFormat,
         runHistoryMinSources,
         runHistoryMaxSources,
+        runHistorySort,
         runHistoryCreatedAfter,
         runHistoryCreatedBefore,
         runHistoryUpdatedAfter,
@@ -437,6 +439,24 @@ export function App(): JSX.Element {
                   />
                 </label>
                 <label className="history-limit">
+                  <span>Sort</span>
+                  <select
+                    value={runHistorySort}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run sort"
+                    onChange={(event) => {
+                      setRunHistorySort(event.currentTarget.value as RunHistorySort);
+                      resetRunHistoryPagination();
+                    }}
+                  >
+                    {runHistorySortOptions.map((sort) => (
+                      <option value={sort} key={sort}>
+                        {sort}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="history-limit">
                   <span>Created after</span>
                   <input
                     value={runHistoryCreatedAfter}
@@ -717,9 +737,11 @@ type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 type RunHistoryStatusFilter = DocumentationRunStatus | 'all';
 type RunHistoryRoleFilter = SourceRole | 'all';
 type RunHistoryFormatFilter = DocumentationOutputFormat | 'all';
+type RunHistorySort = 'updatedAt:desc' | 'updatedAt:asc';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
+const runHistorySortOptions: RunHistorySort[] = ['updatedAt:desc', 'updatedAt:asc'];
 const runHistoryStatusOptions: DocumentationRunStatus[] = [
   'created',
   'ready',
@@ -760,6 +782,7 @@ async function listRuns(
   format: RunHistoryFormatFilter,
   minSources: string,
   maxSources: string,
+  sort: RunHistorySort,
   createdAfter: string,
   createdBefore: string,
   updatedAfter: string,
@@ -793,6 +816,9 @@ async function listRuns(
   }
   if (maxSourcesFilter) {
     query.set('maxSources', maxSourcesFilter);
+  }
+  if (sort !== 'updatedAt:desc') {
+    query.set('sort', sort);
   }
   if (createdAfterFilter) {
     query.set('createdAfter', createdAfterFilter);

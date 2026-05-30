@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 165: Web Run History Sort Direction Control And Audit.
-- Then continue without stopping into Phase 166: Run Listing Sort Direction Cross-Surface Regression Audit.
+- Implement Phase 166: Run Listing Sort Direction Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 167: API Run Listing Created-At Sort Contract.
 - Then continue without stopping into Phase 168: SDK And CLI Run Listing Created-At Sort Option.
+- Then continue without stopping into Phase 169: Web Run History Created-At Sort Control And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 165 goal:
-- Expose sort-direction filtering through the Web run history operator surface.
-- Preserve Web run history limit/status/role/name/format/source-count/created-at/updated-at/cursor behavior when sort direction is applied.
-- Audit API, SDK, CLI, and Web sort-direction behavior as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 166 goal:
 - Audit API, SDK, CLI, and Web sort-direction behavior as one public operator contract.
@@ -65,6 +59,12 @@ Phase 168 goal:
 - Expose created-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI created-at sort inputs before network requests where practical.
 - Verify SDK and CLI created-at sorted list requests preserve sanitized list output and invalid sort errors do not expose raw values.
+
+Phase 169 goal:
+- Expose created-at sort options through the Web run history operator surface.
+- Preserve Web run history limit/status/role/name/format/source-count/created-at/updated-at/cursor behavior when created-at sort is applied.
+- Audit API, SDK, CLI, and Web created-at sort behavior as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.
