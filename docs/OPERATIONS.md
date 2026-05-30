@@ -209,6 +209,8 @@ CLI failures are printed as JSON to stderr:
 
 User input/configuration errors use exit code `2`. Runtime/API failures use exit code `1`.
 
+CLI failure output is sanitized before printing. It must not include raw provider keys, denied source evidence, or API run storage paths.
+
 ## SDK Usage
 
 The SDK wraps the HTTP API and is optional. Non-Node systems should call the API directly.

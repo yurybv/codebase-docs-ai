@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 116: CLI API Expired Run Error Regression Coverage.
+Implement Phase 117: Web Expired Run Error Display Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+apps/web
 docs
 ```
 
-The next step should add CLI API-mode regression coverage proving expired and missing-artifact SDK/API errors are printed safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
+The next step should add Web regression coverage proving expired and missing-artifact API error envelopes render safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
 
 ## Completed Implementation
 
@@ -1835,6 +1835,20 @@ Verification:
 ```text
 pnpm test -- packages/sdk/src/client.test.ts
 pnpm --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 116 CLI API Expired Run Error Regression Coverage
+
+- Added CLI error formatting redaction for storage-looking paths.
+- Added API-mode CLI regression coverage for expired polling failures and missing rendered artifact download failures.
+- Verified CLI failure JSON preserves useful API codes/details while omitting raw storage paths and secret-bearing artifact evidence.
+
+Verification:
+
+```text
+pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/generate-command.test.ts
+pnpm --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

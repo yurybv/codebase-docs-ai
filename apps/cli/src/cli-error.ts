@@ -97,5 +97,10 @@ function sanitizePublicValue(value: unknown): unknown {
 }
 
 function sanitizePublicString(value: string, fallback: string): string {
-  return sanitizePublicText(value, { fallback });
+  return sanitizePublicText(value.replace(storagePathPattern, '[REDACTED_STORAGE_PATH]'), {
+    fallback
+  });
 }
+
+const storagePathPattern =
+  /(?:\/(?:Users|home|tmp|private|var|data|mnt)\/[^\s"'<>),;]+|[A-Za-z]:\\[^\s"'<>),;]+)/g;

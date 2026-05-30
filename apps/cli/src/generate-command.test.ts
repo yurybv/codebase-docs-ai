@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { formatCliError } from './cli-error.js';
 import { runGenerateCommand } from './generate-command.js';
 
 describe('runGenerateCommand', () => {
@@ -270,6 +271,124 @@ describe('runGenerateCommand', () => {
     }
   });
 
+  it('formats sanitized API-mode expired run failures', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const sourcePath = path.join(tempRoot, 'frontend.zip');
+    const outputRoot = path.join(tempRoot, 'out');
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_expired', status: 'created' }))
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_expired', status: 'ready', sources: [] }))
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_expired', status: 'running' }))
+        .mockResolvedValueOnce(
+          jsonResponse({
+            id: 'run_expired',
+            status: 'expired',
+            error: {
+              message: `Documentation run expired while reading ${rawStoragePath}.`
+            }
+          })
+        )
+    );
+
+    try {
+      await writeSanitizationArchiveFixture(sourcePath, rawOpenAiKey);
+      await runGenerateCommand({
+        source: [`${sourcePath}:frontend`],
+        output: outputRoot,
+        format: 'single-markdown',
+        name: 'CLI API Expired Documentation',
+        apiUrl: 'http://localhost:3000'
+      });
+      throw new Error('Expected API-mode generation to fail.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+
+      expect(failure.exitCode).toBe(1);
+      expect(failure.error.code).toBe('API_REQUEST_FAILED');
+      expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+      expectSafeCliFailure(payload, rawOpenAiKey, rawStoragePath);
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
+  it('formats sanitized API-mode missing artifact download failures', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const sourcePath = path.join(tempRoot, 'frontend.zip');
+    const outputRoot = path.join(tempRoot, 'out');
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/rendered-single-markdown.json`;
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_missing', status: 'created' }))
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_missing', status: 'ready', sources: [] }))
+        .mockResolvedValueOnce(jsonResponse({ runId: 'run_missing', status: 'running' }))
+        .mockResolvedValueOnce(jsonResponse({ id: 'run_missing', status: 'completed' }))
+        .mockResolvedValueOnce(
+          jsonResponse({
+            runId: 'run_missing',
+            status: 'completed',
+            renderedFormats: ['single-markdown'],
+            documentation: {
+              title: 'CLI API Missing Artifact Documentation',
+              summary: 'Generated',
+              pages: [],
+              warnings: [],
+              sourceReferences: [],
+              generatedAt: '2026-05-29T00:00:00.000Z'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          jsonErrorResponse(
+            400,
+            'DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING',
+            `Documentation download artifact is unavailable at ${rawStoragePath}.`,
+            {
+              path: rawStoragePath
+            }
+          )
+        )
+    );
+
+    try {
+      await writeSanitizationArchiveFixture(sourcePath, rawOpenAiKey);
+      await runGenerateCommand({
+        source: [`${sourcePath}:frontend`],
+        output: outputRoot,
+        format: 'single-markdown',
+        name: 'CLI API Missing Artifact Documentation',
+        apiUrl: 'http://localhost:3000'
+      });
+      throw new Error('Expected API-mode generation to fail.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+
+      expect(failure.exitCode).toBe(1);
+      expect(failure.error.code).toBe('DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING');
+      expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+      expect(payload).toContain('"status":400');
+      expectSafeCliFailure(payload, rawOpenAiKey, rawStoragePath);
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
   it('rejects unsupported API mode archive file names before upload', async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
     const sourcePath = path.join(tempRoot, 'notes.txt');
@@ -429,4 +548,35 @@ function jsonResponse(payload: unknown): Response {
       'content-type': 'application/json'
     }
   });
+}
+
+function jsonErrorResponse(
+  status: number,
+  code: string,
+  message: string,
+  details: unknown
+): Response {
+  return new Response(
+    JSON.stringify({
+      error: {
+        code,
+        message,
+        details
+      }
+    }),
+    {
+      status,
+      headers: {
+        'content-type': 'application/json'
+      }
+    }
+  );
+}
+
+function expectSafeCliFailure(payload: string, rawOpenAiKey: string, rawStoragePath: string): void {
+  expect(payload).not.toContain(rawStoragePath);
+  expect(payload).not.toContain('/private/tmp');
+  expect(payload).not.toContain(rawOpenAiKey);
+  expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+  expect(payload).not.toContain('.env');
 }

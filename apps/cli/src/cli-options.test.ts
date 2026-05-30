@@ -78,4 +78,27 @@ describe('CLI option parsing', () => {
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(payload).not.toContain('.env');
   });
+
+  it('formats API failures without raw run storage paths', () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
+    const failure = formatCliError({
+      name: 'CodebaseDocsAIClientError',
+      status: 400,
+      code: 'DOCUMENTATION_RESULT_ARTIFACT_MISSING',
+      message: `Documentation result artifact is unavailable at ${rawStoragePath}.`,
+      details: {
+        path: rawStoragePath
+      }
+    });
+    const payload = JSON.stringify(failure);
+
+    expect(failure.error.code).toBe('DOCUMENTATION_RESULT_ARTIFACT_MISSING');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+  });
 });
