@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 114: HTTP Run Expiration Boundary Regression Coverage.
+Implement Phase 115: SDK Expired Run Error Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/api
+packages/sdk
 docs
 ```
 
-The next step should add HTTP-level regression coverage proving expired and missing run artifacts produce safe public API envelopes for status, result, download, and delete requests.
+The next step should add SDK regression coverage proving expired and missing-artifact API envelopes are surfaced as safe `CodebaseDocsAIClientError` instances without raw storage paths or stale artifact content.
 
 ## Completed Implementation
 
@@ -1806,6 +1806,20 @@ Verification:
 
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 114 HTTP Run Expiration Boundary Regression Coverage
+
+- Added HTTP API regression coverage for expired completed runs after cleanup across status, result, download, and delete requests.
+- Added HTTP API regression coverage for missing persisted result and rendered artifacts.
+- Verified public error envelopes omit raw run storage paths, raw secret-bearing artifact paths, and stale generated artifact content.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.http.test.ts
 pnpm --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```

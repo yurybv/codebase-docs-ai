@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { INestApplication } from '@nestjs/common';
@@ -8,6 +8,7 @@ import AdmZip from 'adm-zip';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { configureApp } from './app-bootstrap.js';
 import { AppModule } from './app.module.js';
+import { DocumentationRunsService } from './documentation-runs.service.js';
 
 let app: INestApplication;
 let apiBaseUrl: string;
@@ -302,6 +303,84 @@ describe('Documentation runs HTTP API', () => {
     expectConsistentMultiSourceArtifact(zipContent);
   });
 
+  it('returns safe public errors after expired run cleanup removes artifacts', async () => {
+    const created = await createCompletedHttpRun('HTTP Expired Storage Documentation', [
+      'single-markdown',
+      'json'
+    ]);
+    await setRunUpdatedAt(created.runId, '2026-05-01T00:00:00.000Z');
+
+    const cleanup = await app
+      .get(DocumentationRunsService)
+      .cleanupExpiredRuns(new Date('2026-05-30T00:00:00.000Z'));
+    expect(cleanup.deletedRunIds).toEqual([created.runId]);
+
+    for (const url of [
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}`,
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`,
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
+    ]) {
+      const response = await fetch(url);
+      const payload = await response.text();
+      expect(response.status).toBe(404);
+      expect(payload).toContain('DOCUMENTATION_RUN_NOT_FOUND');
+      expect(payload).not.toContain(tempRoot);
+      expect(payload).not.toContain('# 01. Overview');
+    }
+
+    const deleteResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs/${created.runId}`, {
+      method: 'DELETE'
+    });
+    const deletePayload = await deleteResponse.text();
+    expect(deleteResponse.status).toBe(404);
+    expect(deletePayload).toContain('DOCUMENTATION_RUN_NOT_FOUND');
+    expect(deletePayload).not.toContain(tempRoot);
+    expect(deletePayload).not.toContain('# 01. Overview');
+  });
+
+  it('returns safe public errors when persisted result artifacts are missing', async () => {
+    const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+    const created = await createCompletedHttpRun('HTTP Missing Artifact Documentation', [
+      'single-markdown'
+    ]);
+    const manifestPath = path.join(tempRoot, created.runId, 'run.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+      documentationTreePath: string;
+      renderedPaths: {
+        'single-markdown': string;
+      };
+    };
+    manifest.documentationTreePath = path.join(
+      tempRoot,
+      `prefix_${rawOpenAiKey}`,
+      '.env',
+      'SHOULD_NOT_APPEAR-documentation-tree.json'
+    );
+    manifest.renderedPaths['single-markdown'] = path.join(
+      tempRoot,
+      `prefix_${rawOpenAiKey}`,
+      '.env',
+      'SHOULD_NOT_APPEAR-rendered-single-markdown.json'
+    );
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+    const resultResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`
+    );
+    const resultPayload = await resultResponse.text();
+    expect(resultResponse.status).toBe(400);
+    expect(resultPayload).toContain('DOCUMENTATION_RESULT_ARTIFACT_MISSING');
+    expectSafePublicArtifactError(resultPayload, rawOpenAiKey);
+
+    const downloadResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
+    );
+    const downloadPayload = await downloadResponse.text();
+    expect(downloadResponse.status).toBe(400);
+    expect(downloadPayload).toContain('DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING');
+    expectSafePublicArtifactError(downloadPayload, rawOpenAiKey);
+  });
+
   it('sanitizes uploaded source content in results and downloads', async () => {
     const rawOpenAiKey = `sk-${'c'.repeat(24)}`;
     const created = await fetchJson<{ runId: string; status: string }>(
@@ -442,6 +521,56 @@ async function archiveBlob(): Promise<Blob> {
   });
 }
 
+async function createCompletedHttpRun(
+  name: string,
+  outputFormats: string[]
+): Promise<{ runId: string }> {
+  const created = await fetchJson<{ runId: string; status: string }>(
+    `${apiBaseUrl}/v1/documentation-runs`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        options: {
+          outputFormats,
+          language: 'en',
+          includeSourceReferences: true,
+          includeWarnings: true
+        }
+      })
+    }
+  );
+  const formData = new FormData();
+  formData.append(
+    'metadata',
+    JSON.stringify({
+      sources: [
+        {
+          fileField: 'frontend',
+          name: 'Frontend',
+          role: 'frontend'
+        }
+      ]
+    })
+  );
+  formData.append('frontend', await archiveBlob(), 'frontend.zip');
+
+  await fetchJson(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/sources`, {
+    method: 'POST',
+    body: formData
+  });
+  await fetchJson(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/start`, {
+    method: 'POST'
+  });
+
+  return {
+    runId: created.runId
+  };
+}
+
 async function sanitizationArchiveBlob(rawOpenAiKey: string): Promise<Blob> {
   const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
   const archive = new AdmZip();
@@ -540,6 +669,24 @@ function expectConsistentMultiSourceArtifact(content: string): void {
   expect(content).toContain('matched');
   expect(content).not.toContain('No source input was marked as frontend');
   expect(content).not.toContain('No source input was marked as backend');
+}
+
+function expectSafePublicArtifactError(payload: string, rawOpenAiKey: string): void {
+  expect(payload).not.toContain(rawOpenAiKey);
+  expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+  expect(payload).not.toContain('.env');
+  expect(payload).not.toContain(tempRoot);
+}
+
+async function setRunUpdatedAt(runId: string, updatedAt: string): Promise<void> {
+  const manifestPath = path.join(tempRoot, runId, 'run.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+    run: {
+      updatedAt: string;
+    };
+  };
+  manifest.run.updatedAt = updatedAt;
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 
 async function writeArchive(archive: AdmZip, fileName = 'frontend.zip'): Promise<string> {

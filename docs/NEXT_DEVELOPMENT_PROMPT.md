@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 114: HTTP Run Expiration Boundary Regression Coverage.
+- Implement Phase 115: SDK Expired Run Error Regression Coverage.
 
-Phase 114 goal:
-- Add HTTP-level regression coverage proving expired and missing run artifacts produce safe public API envelopes for status, result, download, and delete requests.
-- Verify raw run storage paths, raw secret-bearing artifact paths, and stale artifact contents are absent from public error responses.
+Phase 115 goal:
+- Add SDK regression coverage proving expired and missing-artifact API envelopes are surfaced as safe `CodebaseDocsAIClientError` instances without raw storage paths or stale artifact content.
+- Verify SDK polling, result retrieval, download, and delete paths preserve error codes and sanitized details for expired or missing artifacts.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
