@@ -298,8 +298,10 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         message: 'Documentation result is not ready yet.'
       });
     }
-    const documentationTree = await this.readJsonFile<DocumentationTree>(
-      storedRun.documentationTreePath
+    const documentationTree = await this.readArtifactJsonFile<DocumentationTree>(
+      storedRun.documentationTreePath,
+      'DOCUMENTATION_RESULT_ARTIFACT_MISSING',
+      'Documentation result artifact is unavailable.'
     );
 
     return {
@@ -334,7 +336,11 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         message: `Output format was not rendered for this run: ${format}.`
       });
     }
-    const rendered = await this.readJsonFile<RenderedDocumentation>(renderedPath);
+    const rendered = await this.readArtifactJsonFile<RenderedDocumentation>(
+      renderedPath,
+      'DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING',
+      'Documentation download artifact is unavailable.'
+    );
 
     if (parsedFormat.data === 'markdown-tree') {
       return {
@@ -512,6 +518,21 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     return JSON.parse(await readFile(filePath, 'utf8')) as TValue;
   }
 
+  private async readArtifactJsonFile<TValue>(
+    filePath: string,
+    code: string,
+    message: string
+  ): Promise<TValue> {
+    try {
+      return await this.readJsonFile<TValue>(filePath);
+    } catch {
+      throw new BadRequestException({
+        code,
+        message
+      });
+    }
+  }
+
   private manifestPath(runId: string): string {
     return path.join(this.runPath(runId), 'run.json');
   }
@@ -525,7 +546,10 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       const entries = await readdir(this.tempRoot, {
         withFileTypes: true
       });
-      return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+      return entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .sort((left, right) => left.localeCompare(right));
     } catch {
       return [];
     }

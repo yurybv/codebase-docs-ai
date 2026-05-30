@@ -215,6 +215,12 @@ Response:
 }
 ```
 
+If the run manifest exists but its persisted result artifact is no longer available, the API returns a safe error envelope with:
+
+```text
+DOCUMENTATION_RESULT_ARTIFACT_MISSING
+```
+
 ## Download Result
 
 ```http
@@ -230,6 +236,12 @@ json
 ```
 
 Use `renderedFormats` from `GET /v1/documentation-runs/:runId` or `/result` to discover which of these formats are available for a specific completed run.
+
+If the run manifest exists but a persisted rendered artifact is no longer available, the API returns a safe error envelope with:
+
+```text
+DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING
+```
 
 ## Delete Run
 

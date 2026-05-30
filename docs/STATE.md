@@ -80,18 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 113: Run Storage Expiration Regression Coverage.
+Implement Phase 114: HTTP Run Expiration Boundary Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 apps/api
-packages/core
 docs
 ```
 
-The next step should add regression coverage for API run storage expiration and cleanup behavior so completed, failed, and abandoned runs expire predictably without exposing stale artifacts.
+The next step should add HTTP-level regression coverage proving expired and missing run artifacts produce safe public API envelopes for status, result, download, and delete requests.
 
 ## Completed Implementation
 
@@ -1794,6 +1793,20 @@ Verification:
 
 ```text
 pnpm smoke:e2e
+pnpm verify
+```
+
+### 2026-05-30: Phase 113 Run Storage Expiration Regression Coverage
+
+- Added API service regression coverage for cleanup of expired completed, failed, and abandoned runs while preserving fresh runs.
+- Made missing persisted result and rendered artifact reads return explicit safe API errors instead of raw storage read failures.
+- Verified expired run cleanup removes stale result/download artifacts and does not expose raw secret-bearing artifact paths in missing-artifact errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

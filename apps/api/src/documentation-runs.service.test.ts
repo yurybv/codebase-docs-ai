@@ -336,6 +336,103 @@ describe('DocumentationRunsService', () => {
     await expect(service.getRun(created.runId)).rejects.toThrow();
   });
 
+  it('expires completed, failed, and abandoned runs without leaving stale artifacts', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
+    service = new DocumentationRunsService();
+    const completed = await createCompletedRun('Completed Expiration Docs');
+    const failed = await createFailedRun('Failed Expiration Docs');
+    const abandoned = await service.createRun({
+      name: 'Abandoned Expiration Docs',
+      options: {
+        outputFormats: ['single-markdown'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const fresh = await createCompletedRun('Fresh Expiration Docs');
+
+    await setRunUpdatedAt(completed.runId, '2026-05-29T00:00:00.000Z');
+    await setRunUpdatedAt(failed.runId, '2026-05-29T00:00:00.000Z');
+    await setRunUpdatedAt(abandoned.runId, '2026-05-29T00:00:00.000Z');
+    await setRunUpdatedAt(fresh.runId, '2026-05-29T00:00:01.500Z');
+
+    const cleanup = await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:02.000Z'));
+
+    expect(cleanup.deletedRunIds).toEqual(
+      [abandoned.runId, completed.runId, failed.runId].sort((left, right) =>
+        left.localeCompare(right)
+      )
+    );
+    await expect(readdir(path.join(tempRoot, completed.runId))).rejects.toThrow();
+    await expect(readdir(path.join(tempRoot, failed.runId))).rejects.toThrow();
+    await expect(readdir(path.join(tempRoot, abandoned.runId))).rejects.toThrow();
+    await expect(service.getRun(completed.runId)).rejects.toMatchObject({
+      response: {
+        code: 'DOCUMENTATION_RUN_NOT_FOUND',
+        message: `Documentation run was not found: ${completed.runId}.`
+      }
+    });
+    await expect(service.getResult(completed.runId)).rejects.toMatchObject({
+      response: {
+        code: 'DOCUMENTATION_RUN_NOT_FOUND'
+      }
+    });
+    await expect(service.getDownload(completed.runId, 'single-markdown')).rejects.toMatchObject({
+      response: {
+        code: 'DOCUMENTATION_RUN_NOT_FOUND'
+      }
+    });
+    await expect(service.getRun(fresh.runId)).resolves.toMatchObject({
+      id: fresh.runId,
+      status: 'completed'
+    });
+  });
+
+  it('returns safe errors when persisted result artifacts are missing', async () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const completed = await createCompletedRun('Missing Artifact Docs');
+    const manifestPath = path.join(tempRoot, completed.runId, 'run.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+      documentationTreePath: string;
+      renderedPaths: {
+        'single-markdown': string;
+      };
+    };
+    manifest.documentationTreePath = path.join(
+      tempRoot,
+      `prefix_${rawOpenAiKey}`,
+      '.env',
+      'SHOULD_NOT_APPEAR-documentation-tree.json'
+    );
+    manifest.renderedPaths['single-markdown'] = path.join(
+      tempRoot,
+      `prefix_${rawOpenAiKey}`,
+      '.env',
+      'SHOULD_NOT_APPEAR-rendered-single-markdown.json'
+    );
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+    await expect(service.getResult(completed.runId)).rejects.toMatchObject({
+      response: {
+        code: 'DOCUMENTATION_RESULT_ARTIFACT_MISSING',
+        message: 'Documentation result artifact is unavailable.'
+      }
+    });
+    await expect(service.getDownload(completed.runId, 'single-markdown')).rejects.toMatchObject({
+      response: {
+        code: 'DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING',
+        message: 'Documentation download artifact is unavailable.'
+      }
+    });
+
+    await expectSafeMissingArtifactError(service.getResult(completed.runId), rawOpenAiKey);
+    await expectSafeMissingArtifactError(
+      service.getDownload(completed.runId, 'single-markdown'),
+      rawOpenAiKey
+    );
+  });
+
   it('runs expired run cleanup when the module starts and on the configured interval', async () => {
     process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '1000';
     service = new DocumentationRunsService();
@@ -410,4 +507,91 @@ function sourceMetadata(): string {
       }
     ]
   });
+}
+
+async function createCompletedRun(name: string): Promise<{ runId: string }> {
+  const created = await service.createRun({
+    name,
+    options: {
+      outputFormats: ['single-markdown'],
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    }
+  });
+  await service.uploadSources(
+    created.runId,
+    [
+      {
+        fieldname: 'frontend',
+        originalname: 'frontend.zip',
+        buffer: frontendArchive().toBuffer()
+      }
+    ],
+    sourceMetadata()
+  );
+  await service.startRun(created.runId);
+  return {
+    runId: created.runId
+  };
+}
+
+async function createFailedRun(name: string): Promise<{ runId: string }> {
+  const created = await service.createRun({
+    name,
+    options: {
+      outputFormats: ['single-markdown'],
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    }
+  });
+  await service.uploadSources(
+    created.runId,
+    [
+      {
+        fieldname: 'frontend',
+        originalname: 'frontend.zip',
+        buffer: frontendArchive().toBuffer()
+      }
+    ],
+    sourceMetadata()
+  );
+  await rm(path.join(tempRoot, created.runId, 'uploads'), {
+    recursive: true,
+    force: true
+  });
+  await expect(service.startRun(created.runId)).rejects.toThrow();
+  return {
+    runId: created.runId
+  };
+}
+
+async function setRunUpdatedAt(runId: string, updatedAt: string): Promise<void> {
+  const manifestPath = path.join(tempRoot, runId, 'run.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+    run: {
+      updatedAt: string;
+    };
+  };
+  manifest.run.updatedAt = updatedAt;
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+async function expectSafeMissingArtifactError(
+  action: Promise<unknown>,
+  rawOpenAiKey: string
+): Promise<void> {
+  let caughtError: unknown;
+  try {
+    await action;
+  } catch (error) {
+    caughtError = error;
+  }
+
+  expect(caughtError).toBeDefined();
+  const payload = JSON.stringify(caughtError);
+  expect(payload).not.toContain(rawOpenAiKey);
+  expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+  expect(payload).not.toContain('.env');
 }

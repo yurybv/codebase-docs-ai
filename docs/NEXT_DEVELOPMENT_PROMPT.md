@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 113: Run Storage Expiration Regression Coverage.
+- Implement Phase 114: HTTP Run Expiration Boundary Regression Coverage.
 
-Phase 113 goal:
-- Add regression coverage for API run storage expiration and cleanup behavior so completed, failed, and abandoned runs expire predictably without exposing stale artifacts.
-- Sanitize any expiration or missing-artifact errors if needed.
+Phase 114 goal:
+- Add HTTP-level regression coverage proving expired and missing run artifacts produce safe public API envelopes for status, result, download, and delete requests.
+- Verify raw run storage paths, raw secret-bearing artifact paths, and stale artifact contents are absent from public error responses.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
