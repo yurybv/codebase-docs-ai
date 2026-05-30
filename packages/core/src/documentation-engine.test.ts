@@ -192,6 +192,53 @@ describe('DocumentationEngine', () => {
       });
     }
   });
+
+  it('sanitizes lower-layer generation errors before propagating them', async () => {
+    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'core-engine-error-test-'));
+    const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+
+    try {
+      await writeSanitizationFixture(fixtureRoot, rawOpenAiKey);
+
+      const engine = new DocumentationEngine({
+        aiProvider: new LocalJsonProvider(() => {
+          throw new Error(`Provider failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`);
+        })
+      });
+
+      try {
+        await engine.generateDocumentation({
+          title: 'Core Engine Error Sanitization Test',
+          loadedSources: [
+            await loadedSourceFixture(fixtureRoot, {
+              name: 'Frontend',
+              role: 'frontend'
+            })
+          ],
+          options: {
+            outputFormats: ['json'],
+            language: 'en',
+            includeSourceReferences: true,
+            includeWarnings: true
+          }
+        });
+        throw new Error('Expected generation to fail.');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        expect(message).toContain('[REDACTED_OPENAI_API_KEY]');
+        expect(message).toContain('[REDACTED_DENIED_FILE]');
+        expect(message).toContain('[REDACTED_DENIED_VALUE]');
+        expect(message).not.toContain(rawOpenAiKey);
+        expect(message).not.toContain('SHOULD_NOT_APPEAR');
+        expect(message).not.toContain('.env');
+      }
+    } finally {
+      await rm(fixtureRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
 });
 
 async function writeSanitizationFixture(rootPath: string, rawOpenAiKey: string): Promise<void> {

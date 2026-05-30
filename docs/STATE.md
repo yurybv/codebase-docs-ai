@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 98: Core Engine Error Propagation Sanitization Regression Coverage.
+Implement Phase 99: AI Orchestrator Provider Error Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/core
+packages/ai-orchestrator
 docs
 ```
 
-The next step should add core regression coverage proving lower-layer generation errors propagated through the engine do not expose raw secret-bearing source content.
+The next step should add AI orchestrator regression coverage proving provider/HTTP failures do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1588,6 +1588,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/source-loader typecheck
 pnpm test -- packages/source-loader/src/load-source.test.ts
+```
+
+### 2026-05-30: Phase 98 Core Engine Error Propagation Sanitization Regression Coverage
+
+- Added core-level sanitization for lower-layer generation errors propagated by `DocumentationEngine`.
+- Added core regression coverage for AI provider failures containing a fake provider key and denied `.env` evidence.
+- Verified core-thrown generation errors preserve redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/core/src/documentation-engine.test.ts
 ```
 
 ## Open Questions

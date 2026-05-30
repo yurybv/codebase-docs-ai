@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 98: Core Engine Error Propagation Sanitization Regression Coverage.
+- Implement Phase 99: AI Orchestrator Provider Error Sanitization Regression Coverage.
 
-Phase 98 goal:
-- Add core regression coverage proving lower-layer generation errors propagated through the engine do not expose raw secret-bearing source content.
-- Sanitize core-level propagated errors if needed so raw denied files and raw secret values are absent from thrown errors.
-- Keep source-loader and API/CLI/SDK/Web/renderer sanitization coverage intact.
+Phase 99 goal:
+- Add AI orchestrator regression coverage proving provider/HTTP failures do not expose raw secret-bearing source content.
+- Sanitize AI provider errors if needed so raw denied files and raw secret values are absent from thrown errors.
+- Keep core/source-loader and API/CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

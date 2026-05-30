@@ -64,38 +64,60 @@ export class DocumentationEngine {
   async generateDocumentation(
     input: GenerateDocumentationInput
   ): Promise<GenerateDocumentationResult> {
-    const repositoryMaps = await Promise.all(
-      input.loadedSources.map((loadedSource) => {
-        const filteredSource = filterLoadedSource(loadedSource);
-        return analyzeRepository({
-          source: loadedSource.source,
-          rootPath: loadedSource.rootPath,
-          files: filteredSource.includedFiles,
-          readTextFile: readRedactedSourceFile
-        });
-      })
-    );
-    const systemMap = analyzeSystem({
-      repositories: repositoryMaps
-    });
-    const documentationTree = await generateDocumentationTreeWithAi({
-      title: input.title,
-      systemMap,
-      ...(this.config.aiProvider ? { aiProvider: this.config.aiProvider } : {})
-    });
+    try {
+      const repositoryMaps = await Promise.all(
+        input.loadedSources.map((loadedSource) => {
+          const filteredSource = filterLoadedSource(loadedSource);
+          return analyzeRepository({
+            source: loadedSource.source,
+            rootPath: loadedSource.rootPath,
+            files: filteredSource.includedFiles,
+            readTextFile: readRedactedSourceFile
+          });
+        })
+      );
+      const systemMap = analyzeSystem({
+        repositories: repositoryMaps
+      });
+      const documentationTree = await generateDocumentationTreeWithAi({
+        title: input.title,
+        systemMap,
+        ...(this.config.aiProvider ? { aiProvider: this.config.aiProvider } : {})
+      });
 
-    return {
-      repositoryMaps,
-      systemMap,
-      documentationTree,
-      rendered: renderDocumentation(documentationTree, input.options.outputFormats)
-    };
+      return {
+        repositoryMaps,
+        systemMap,
+        documentationTree,
+        rendered: renderDocumentation(documentationTree, input.options.outputFormats)
+      };
+    } catch (error) {
+      throw sanitizeCoreGenerationError(error);
+    }
   }
 }
 
 async function readRedactedSourceFile(file: SourceFile): Promise<string> {
   const content = await readFile(file.absolutePath, 'utf8');
   return redactSecrets(content).text;
+}
+
+function sanitizeCoreGenerationError(error: unknown): Error {
+  const message =
+    error instanceof Error && error.message.length > 0
+      ? sanitizePublicString(error.message, 'Documentation generation failed.')
+      : 'Documentation generation failed.';
+
+  return new Error(message);
+}
+
+function sanitizePublicString(value: string, fallback: string): string {
+  const sanitized = value
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
+    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
+
+  return sanitized.length > 0 ? sanitized : fallback;
 }
 
 export function renderDocumentation(
