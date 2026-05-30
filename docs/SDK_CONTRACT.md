@@ -131,13 +131,19 @@ Returns:
 }
 ```
 
-### `list()`
+### `list(options?)`
 
 Lists persisted run summaries for operator surfaces.
 
 ```ts
-const runs = await client.documentationRuns.list();
+const runs = await client.documentationRuns.list({
+  limit: 25
+});
 ```
+
+Options:
+
+- `limit`: optional integer from `1` to `100`. When omitted, the API default is used.
 
 Returns:
 

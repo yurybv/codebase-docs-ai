@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 128: SDK Run Listing Limit Option.
+Implement Phase 129: Web Run Listing Limit Control.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose the API run listing `limit` option through the TypeScript SDK and keep list result sanitization intact.
+The next step should expose the API run listing `limit` option through the Web operator run history view and keep rendered list sanitization intact.
 
 ## Completed Implementation
 
@@ -2006,6 +2006,20 @@ Verification:
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm --filter @codebase-docs-ai/shared build
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 128 SDK Run Listing Limit Option
+
+- Added a `documentationRuns.list({ limit })` SDK option that maps to the API run listing limit query.
+- Added SDK-side validation for list limits before network requests, with sanitized stable invalid-limit errors.
+- Added SDK regression coverage proving limited list responses remain sanitized and invalid secret-bearing limit values are not exposed.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

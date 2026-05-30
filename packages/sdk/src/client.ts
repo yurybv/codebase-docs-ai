@@ -3,6 +3,7 @@ import {
   type DocumentationRun,
   type DocumentationRunListResponse,
   type DocumentationRunSummary,
+  maxDocumentationRunListLimit,
   isSupportedSourceArchiveFileName,
   sanitizePublicErrorText,
   sanitizePublicErrorValue,
@@ -12,6 +13,7 @@ import type {
   CodebaseDocsAIClientConfig,
   CreateDocumentationRunInput,
   CreateDocumentationRunResponse,
+  DocumentationRunListOptions,
   GenerateFromArchivesInput,
   GenerateFromArchivesResult,
   DocumentationRunResult,
@@ -45,8 +47,10 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     });
   }
 
-  async list(): Promise<DocumentationRunListResponse> {
-    return sanitizeRunListResponse(await this.http.json('/v1/documentation-runs'));
+  async list(options: DocumentationRunListOptions = {}): Promise<DocumentationRunListResponse> {
+    const limit = parseRunListLimit(options.limit);
+    const query = limit === undefined ? '' : `?limit=${limit}`;
+    return sanitizeRunListResponse(await this.http.json(`/v1/documentation-runs${query}`));
   }
 
   async uploadSources(
@@ -315,4 +319,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function sanitizeSdkErrorString(value: string, fallback: string): string {
   return sanitizePublicErrorText(value, { fallback });
+}
+
+function parseRunListLimit(value: unknown): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    typeof value !== 'number' ||
+    !Number.isInteger(value) ||
+    value < 1 ||
+    value > maxDocumentationRunListLimit
+  ) {
+    throw invalidRunListLimit();
+  }
+
+  return value;
+}
+
+function invalidRunListLimit(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    `Run list limit must be an integer between 1 and ${maxDocumentationRunListLimit}.`,
+    0,
+    'RUN_LIST_LIMIT_INVALID',
+    {
+      min: 1,
+      max: maxDocumentationRunListLimit
+    }
+  );
 }

@@ -60,6 +60,10 @@ export interface PollDocumentationRunOptions {
   timeoutMs?: number;
 }
 
+export interface DocumentationRunListOptions {
+  limit?: number;
+}
+
 export interface GenerateFromArchivesInput {
   name: string;
   options: DocumentationRunOptions;
@@ -76,7 +80,7 @@ export interface GenerateFromArchivesResult {
 
 export interface DocumentationRunsClient {
   create(input: CreateDocumentationRunInput): Promise<CreateDocumentationRunResponse>;
-  list(): Promise<DocumentationRunListResponse>;
+  list(options?: DocumentationRunListOptions): Promise<DocumentationRunListResponse>;
   uploadSources(
     runId: string,
     sources: UploadDocumentationSourceInput[]

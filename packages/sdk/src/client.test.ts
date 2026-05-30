@@ -154,6 +154,98 @@ describe('CodebaseDocsAIClient', () => {
     );
   });
 
+  it('passes run list limits through the HTTP API while preserving sanitization', async () => {
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/artifact.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_limited',
+            name: `Limited Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'completed',
+            sources: [
+              {
+                id: 'source_limited',
+                name: `Frontend ${rawStoragePath}`,
+                role: 'frontend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            renderedFormats: ['json'],
+            progress: {
+              currentStep: `Completed from ${rawStoragePath}`,
+              completedSteps: 7,
+              totalSteps: 7
+            },
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          }
+        ]
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const list = await client.documentationRuns.list({ limit: 2 });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs).toHaveLength(1);
+    expect(list.runs[0]).toMatchObject({
+      id: 'run_limited',
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['json']
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=2',
+      undefined
+    );
+  });
+
+  it('rejects invalid run list limits without network requests or raw value exposure', async () => {
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    try {
+      await client.documentationRuns.list({ limit: rawLimit as unknown as number });
+      throw new Error('Expected list to reject invalid limit.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+      expect((error as CodebaseDocsAIClientError).status).toBe(0);
+      expect((error as CodebaseDocsAIClientError).code).toBe('RUN_LIST_LIMIT_INVALID');
+      expect((error as CodebaseDocsAIClientError).message).toBe(
+        'Run list limit must be an integer between 1 and 100.'
+      );
+      expect((error as CodebaseDocsAIClientError).details).toEqual({
+        min: 1,
+        max: 100
+      });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('uploads sources as multipart form data', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
