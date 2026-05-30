@@ -1,6 +1,7 @@
 import path from 'node:path';
 import {
   documentationOutputFormatSchema,
+  maxDocumentationRunListLimit,
   sourceRoleSchema,
   stripSupportedSourceArchiveExtension
 } from '@codebase-docs-ai/shared';
@@ -28,6 +29,7 @@ export interface GenerateCommandOptions {
 
 export interface ListRunsCommandOptions {
   apiUrl: string;
+  limit?: number;
 }
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
@@ -60,7 +62,7 @@ export function parseGenerateOptions(options: {
   return parsedOptions;
 }
 
-export function parseListRunsOptions(options: { apiUrl?: string }): ListRunsCommandOptions {
+export function parseListRunsOptions(options: { apiUrl?: string; limit?: string }): ListRunsCommandOptions {
   if (!options.apiUrl) {
     throw new CliError(
       'CLI_API_URL_REQUIRED',
@@ -69,8 +71,10 @@ export function parseListRunsOptions(options: { apiUrl?: string }): ListRunsComm
   }
 
   assertHttpUrl(options.apiUrl);
+  const limit = parseRunListLimit(options.limit);
   return {
-    apiUrl: options.apiUrl
+    apiUrl: options.apiUrl,
+    ...(limit === undefined ? {} : { limit })
   };
 }
 
@@ -115,6 +119,32 @@ function parseSourceRole(value: string): SourceRole {
   }
 
   return parsed.data;
+}
+
+function parseRunListLimit(value: string | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (
+    !Number.isInteger(parsed) ||
+    String(parsed) !== value ||
+    parsed < 1 ||
+    parsed > maxDocumentationRunListLimit
+  ) {
+    throw new CliError(
+      'CLI_RUN_LIST_LIMIT_INVALID',
+      `Run list limit must be an integer between 1 and ${maxDocumentationRunListLimit}.`,
+      2,
+      {
+        min: 1,
+        max: maxDocumentationRunListLimit
+      }
+    );
+  }
+
+  return parsed;
 }
 
 function sourceNameFromPath(inputPath: string): string {

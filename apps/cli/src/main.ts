@@ -35,7 +35,8 @@ program
   .command('list-runs')
   .description('List recent documentation runs from a remote API.')
   .option('--api-url <url>', 'Remote codebase-docs-ai API URL')
-  .action(async (options: { apiUrl?: string }) => {
+  .option('--limit <count>', 'Maximum number of recent runs to list, from 1 to 100')
+  .action(async (options: { apiUrl?: string; limit?: string }) => {
     const result = await runListRunsCommand(parseListRunsOptions(options));
     console.log(JSON.stringify(result, null, 2));
   });

@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 130: CLI Run Listing Limit Flag.
+Implement Phase 131: API Run Listing Status Filter Contract.
 
 Required package:
 
 ```text
 packages/shared
-apps/cli
+apps/api
 docs
 ```
 
-The next step should expose the API run listing `limit` option through the CLI `list-runs` command and keep command output sanitization intact.
+The next step should add a safe API run listing status filter for operator surfaces and keep run summary sanitization intact.
 
 ## Completed Implementation
 
@@ -2034,6 +2034,20 @@ Verification:
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
 pnpm --filter @codebase-docs-ai/web typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 130 CLI Run Listing Limit Flag
+
+- Added a `list-runs --limit <count>` CLI option that maps to the API run listing limit through the SDK.
+- Added CLI preflight validation for list limits, with sanitized stable invalid-limit failures before network requests.
+- Added CLI regression coverage for limited list output and secret-bearing invalid limit values.
+
+Verification:
+
+```text
+pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

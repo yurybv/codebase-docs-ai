@@ -60,6 +60,45 @@ describe('CLI option parsing', () => {
     });
   });
 
+  it('parses run listing limits', () => {
+    expect(parseListRunsOptions({ apiUrl: 'https://docs.example.test', limit: '25' })).toEqual({
+      apiUrl: 'https://docs.example.test',
+      limit: 25
+    });
+  });
+
+  it('rejects invalid run listing limits without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+    const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        limit: rawLimit
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid limit.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toEqual({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_LIMIT_INVALID',
+          message: 'Run list limit must be an integer between 1 and 100.',
+          details: {
+            min: 1,
+            max: 100
+          }
+        }
+      });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('formats typed CLI failures with stable codes and exit codes', () => {
     expect(formatCliError(new CliError('CLI_SOURCE_REQUIRED', 'Missing source.'))).toEqual({
       status: 'failed',

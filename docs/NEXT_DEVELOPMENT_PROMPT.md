@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 130: CLI Run Listing Limit Flag.
+- Implement Phase 131: API Run Listing Status Filter Contract.
 
-Phase 130 goal:
-- Expose the API run listing `limit` option through the CLI `list-runs` command.
-- Validate CLI list limit inputs before network requests where practical.
-- Verify CLI list limit requests preserve sanitized list output and invalid-limit errors do not expose raw values.
+Phase 131 goal:
+- Add a safe API run listing status filter for operator surfaces.
+- Return filtered run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover valid status filtering and sanitized invalid-status errors.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

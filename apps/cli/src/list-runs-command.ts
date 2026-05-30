@@ -14,7 +14,9 @@ export async function runListRunsCommand(
   const client = new CodebaseDocsAIClient({
     apiBaseUrl: options.apiUrl
   });
-  const list = await client.documentationRuns.list();
+  const list = await client.documentationRuns.list(
+    options.limit === undefined ? undefined : { limit: options.limit }
+  );
 
   return {
     status: 'completed',
