@@ -37,13 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 139: API Run Listing Pagination Cursor Contract.
+- Implement Phase 140: SDK Run Listing Pagination Cursor Option.
 
-Phase 139 goal:
-- Add a safe API run listing pagination cursor contract for operator surfaces.
-- Return deterministic pages of persisted run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Validate pagination cursor inputs before storage access where practical.
-- Cover listing behavior for first-page and subsequent-page requests, including sanitized invalid-cursor errors.
+Phase 140 goal:
+- Expose the API run listing `cursor` pagination option through the SDK `documentationRuns.list` helper.
+- Validate SDK list cursor inputs before network requests where practical.
+- Verify SDK cursor-paginated list requests preserve sanitized list output and invalid-cursor errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

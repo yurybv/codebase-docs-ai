@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 139: API Run Listing Pagination Cursor Contract.
+Implement Phase 140: SDK Run Listing Pagination Cursor Option.
 
 Required package:
 
 ```text
 packages/shared
-apps/api
+packages/sdk
 docs
 ```
 
-The next step should add a safe API run listing pagination cursor contract for operator surfaces and keep run summary sanitization intact.
+The next step should expose the API run listing pagination cursor through the SDK list helper and keep SDK list response sanitization intact.
 
 ## Completed Implementation
 
@@ -2160,6 +2160,20 @@ Verification:
 ```text
 pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 139 API Run Listing Pagination Cursor Contract
+
+- Added an optional API `cursor` query parameter for paginating persisted run summaries.
+- Returned `nextCursor` for deterministic `updatedAt`/run id ordered pages while preserving sanitized run summary payloads.
+- Added service and HTTP regression coverage for first-page, subsequent-page, and invalid secret-bearing cursor requests.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/schemas.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

@@ -323,4 +323,5 @@ export interface DocumentationRunSummary {
 
 export interface DocumentationRunListResponse {
   runs: DocumentationRunSummary[];
+  nextCursor?: string;
 }

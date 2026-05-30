@@ -313,6 +313,93 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('paginates run list responses with safe cursor query parameters', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const oldest = await service.createRun({
+      name: `HTTP Oldest Cursor ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const newest = await service.createRun({
+      name: `HTTP Newest Cursor ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const middle = await service.createRun({
+      name: `HTTP Middle Cursor ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const firstResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?limit=2`);
+    const firstPayload = await firstResponse.text();
+    const firstPage = JSON.parse(firstPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newest.runId, middle.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const secondPage = JSON.parse(secondPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.runs.map((run) => run.id)).toEqual([oldest.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const invalidCursor = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?cursor=${invalidCursor}`
+    );
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_CURSOR_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list status query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;

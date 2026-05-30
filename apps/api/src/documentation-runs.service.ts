@@ -73,6 +73,12 @@ interface ListRunsOptions {
   limit?: unknown;
   status?: unknown;
   role?: unknown;
+  cursor?: unknown;
+}
+
+interface RunListCursor {
+  updatedAt: string;
+  id: string;
 }
 
 const uploadSourcesMetadataSchema = z.object({
@@ -112,6 +118,12 @@ const runListFilterStatuses: DocumentationRunStatus[] = [
 ];
 const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
+const maxRunListCursorLength = 512;
+
+const runListCursorSchema = z.object({
+  updatedAt: z.string().datetime(),
+  id: z.string().min(1)
+});
 
 @Injectable()
 export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
@@ -189,6 +201,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
+    const cursor = parseRunListCursor(options.cursor);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
@@ -205,8 +218,18 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    const sortedRuns = sortRunSummaries(runs);
+    const pagedRuns = cursor
+      ? sortedRuns.filter((run) => compareRunSummaryToCursor(run, cursor) > 0)
+      : sortedRuns;
+    const page = pagedRuns.slice(0, limit);
+    const hasMore = pagedRuns.length > page.length;
+
     return {
-      runs: runs.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)).slice(0, limit)
+      runs: page,
+      ...(hasMore && page.length > 0
+        ? { nextCursor: encodeRunListCursor(page[page.length - 1]!) }
+        : {})
     };
   }
 
@@ -706,6 +729,44 @@ function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
   };
 }
 
+function sortRunSummaries(runs: DocumentationRunSummary[]): DocumentationRunSummary[] {
+  return [...runs].sort((left, right) => {
+    const updatedAtOrder = right.updatedAt.localeCompare(left.updatedAt);
+    if (updatedAtOrder !== 0) {
+      return updatedAtOrder;
+    }
+
+    return right.id.localeCompare(left.id);
+  });
+}
+
+function compareRunSummaryToCursor(run: DocumentationRunSummary, cursor: RunListCursor): number {
+  if (run.updatedAt < cursor.updatedAt) {
+    return 1;
+  }
+  if (run.updatedAt > cursor.updatedAt) {
+    return -1;
+  }
+  if (run.id < cursor.id) {
+    return 1;
+  }
+  if (run.id > cursor.id) {
+    return -1;
+  }
+
+  return 0;
+}
+
+function encodeRunListCursor(run: DocumentationRunSummary): string {
+  return Buffer.from(
+    JSON.stringify({
+      updatedAt: run.updatedAt,
+      id: run.id
+    }),
+    'utf8'
+  ).toString('base64url');
+}
+
 function assertSupportedArchiveFile(fileName: string): void {
   if (isSupportedSourceArchiveFileName(fileName)) {
     return;
@@ -826,6 +887,40 @@ function invalidRunListSourceRole(): BadRequestException {
     details: {
       allowedRoles: [...sourceRoleSchema.options]
     }
+  });
+}
+
+function parseRunListCursor(value: unknown): RunListCursor | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListCursor();
+  }
+
+  const rawCursor = String(value);
+  if (rawCursor.length === 0 || rawCursor.length > maxRunListCursorLength) {
+    throw invalidRunListCursor();
+  }
+
+  try {
+    const decoded = JSON.parse(Buffer.from(rawCursor, 'base64url').toString('utf8'));
+    const parsed = runListCursorSchema.safeParse(decoded);
+    if (!parsed.success) {
+      throw invalidRunListCursor();
+    }
+
+    return parsed.data;
+  } catch {
+    throw invalidRunListCursor();
+  }
+}
+
+function invalidRunListCursor(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_CURSOR_INVALID',
+    message: 'Run list cursor is invalid.'
   });
 }
 

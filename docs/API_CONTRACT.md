@@ -63,7 +63,7 @@ Response:
 ## List Runs
 
 ```http
-GET /v1/documentation-runs?limit=50&status=completed&role=backend
+GET /v1/documentation-runs?limit=50&status=completed&role=backend&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
 Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
@@ -77,6 +77,8 @@ Query:
 - invalid status values return `RUN_LIST_STATUS_INVALID`;
 - `role`: optional source role filter. Runs match when at least one uploaded source has this role;
 - invalid role values return `RUN_LIST_SOURCE_ROLE_INVALID`.
+- `cursor`: optional opaque pagination cursor returned by a previous list response;
+- invalid cursor values return `RUN_LIST_CURSOR_INVALID`.
 
 Response:
 
@@ -104,9 +106,12 @@ Response:
       "createdAt": "2026-05-30T00:00:00.000Z",
       "updatedAt": "2026-05-30T00:01:00.000Z"
     }
-  ]
+  ],
+  "nextCursor": "eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ"
 }
 ```
+
+`nextCursor` is omitted when no further matching run summaries are available. Cursor tokens are opaque public pagination state and must not contain artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 
 Run summaries must not expose upload archive storage paths, extracted source paths, result artifact paths, raw source content, or secret-bearing evidence.
 

@@ -284,6 +284,40 @@ describe('DocumentationRunsService', () => {
     expect(list.runs.map((run) => run.id)).toEqual([newest.runId, middle.runId]);
   });
 
+  it('paginates listed run summaries with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldest = await createCompletedRun('Oldest Cursor Docs', secretSourceName);
+    const newest = await createCompletedRun('Newest Cursor Docs', secretSourceName);
+    const middle = await createCompletedRun('Middle Cursor Docs', secretSourceName);
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2' });
+    const secondPage = await service.listRuns({ limit: '2', cursor: firstPage.nextCursor });
+    const firstPayload = JSON.stringify(firstPage);
+    const secondPayload = JSON.stringify(secondPage);
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newest.runId, middle.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    expect(secondPage.runs.map((run) => run.id)).toEqual([oldest.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+  });
+
   it('rejects invalid run listing limits without echoing raw values', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -430,6 +464,29 @@ describe('DocumentationRunsService', () => {
     } catch (error) {
       const payload = JSON.stringify(error);
       expect(payload).not.toContain(rawRole);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing cursors without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const rawCursor = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ cursor: rawCursor })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_CURSOR_INVALID',
+        message: 'Run list cursor is invalid.'
+      }
+    });
+
+    try {
+      await service.listRuns({ cursor: rawCursor });
+      throw new Error('Expected listRuns to reject invalid cursor.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawCursor);
       expect(payload).not.toContain(rawOpenAiKey);
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
