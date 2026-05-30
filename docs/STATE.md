@@ -2496,6 +2496,20 @@ pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk 
 pnpm verify
 ```
 
+### 2026-05-30: Phase 162 Run Listing Created-At Cross-Surface Regression Audit
+
+- Audited API, SDK, CLI, and Web created-at filtering as one public operator contract.
+- Tightened API service and HTTP coverage so created-at filtering composes with limit, status, role, name, format, source-count range, updated-at range, and cursor pagination.
+- Kept SDK, CLI, and Web created-at filtered list coverage aligned with sanitized output and sanitized invalid timestamp errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
 ## Open Questions
 
 - Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.

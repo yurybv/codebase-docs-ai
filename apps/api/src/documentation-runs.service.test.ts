@@ -344,26 +344,78 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
-  it('filters listed run summaries by created-at range without exposing raw values', async () => {
+  it('filters listed run summaries by created-at range with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
-    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
-    const oldest = await createCompletedRun('Oldest Created Range Docs', secretSourceName);
-    const newest = await createCompletedRun('Newest Created Range Docs', secretSourceName);
-    const middle = await createCompletedRun('Middle Created Range Docs', secretSourceName);
-    await setRunCreatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunCreatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
-    await setRunCreatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
-    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
-    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
-
-    const list = await service.listRuns({
-      createdAfter: '2026-05-30T00:00:30.000Z',
-      createdBefore: '2026-05-30T00:01:30.000Z'
+    const older = await createCompletedRun(
+      `Older Backend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend',
+      ['json']
+    );
+    const newer = await createCompletedRun(
+      `Completed Backend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend',
+      ['json']
+    );
+    await createCompletedRun(
+      `HTTP Frontend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'frontend',
+      ['json']
+    );
+    await createCompletedRun(
+      `Markdown Backend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend'
+    );
+    await service.createRun({
+      name: `Zero Source Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
     });
-    const payload = JSON.stringify(list);
+    await setRunCreatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCreatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
-    expect(list.runs.map((run) => run.id)).toEqual([middle.runId]);
+    const firstPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend created search',
+      format: 'json',
+      minSources: '1',
+      maxSources: '1',
+      createdAfter: '2026-05-29T23:59:59.000Z',
+      createdBefore: '2026-05-30T00:01:30.000Z',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const secondPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend created search',
+      format: 'json',
+      minSources: '1',
+      maxSources: '1',
+      createdAfter: '2026-05-29T23:59:59.000Z',
+      createdBefore: '2026-05-30T00:01:30.000Z',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
     expect(payload).toContain('[REDACTED_DENIED_VALUE]');
