@@ -30,6 +30,7 @@ export function App(): JSX.Element {
   const [runHistoryLimit, setRunHistoryLimit] = useState(defaultDocumentationRunListLimit);
   const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
   const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
+  const [runHistoryName, setRunHistoryName] = useState('');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
   const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
@@ -124,6 +125,7 @@ export function App(): JSX.Element {
         runHistoryLimit,
         runHistoryStatus,
         runHistoryRole,
+        runHistoryName,
         runHistoryUpdatedAfter,
         runHistoryUpdatedBefore,
         cursor
@@ -368,6 +370,18 @@ export function App(): JSX.Element {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label className="history-limit">
+                  <span>Name</span>
+                  <input
+                    value={runHistoryName}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run name"
+                    onChange={(event) => {
+                      setRunHistoryName(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
                 </label>
                 <label className="history-limit">
                   <span>Updated after</span>
@@ -664,6 +678,7 @@ async function listRuns(
   limit: number,
   status: RunHistoryStatusFilter,
   role: RunHistoryRoleFilter,
+  name: string,
   updatedAfter: string,
   updatedBefore: string,
   cursor?: string
@@ -677,8 +692,12 @@ async function listRuns(
   if (role !== 'all') {
     query.set('role', role);
   }
+  const nameFilter = name.trim();
   const updatedAfterFilter = updatedAfter.trim();
   const updatedBeforeFilter = updatedBefore.trim();
+  if (nameFilter) {
+    query.set('name', nameFilter);
+  }
   if (updatedAfterFilter) {
     query.set('updatedAfter', updatedAfterFilter);
   }

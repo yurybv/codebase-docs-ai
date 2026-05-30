@@ -237,7 +237,7 @@ describe('App API error handling', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
   });
 
-  it('requests run history with selected limit, status, role, and updated-at range while preserving sanitized summaries', async () => {
+  it('requests run history with selected limit, status, role, name, and updated-at range while preserving sanitized summaries', async () => {
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
     const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
@@ -293,6 +293,12 @@ describe('App API error handling', () => {
     await act(async () => {
       roleSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    const nameInput = document.querySelector(
+      'input[aria-label="Recent run name"]'
+    ) as HTMLInputElement;
+    await act(async () => {
+      setTextInputValue(nameInput, 'backend search');
+    });
     const updatedAfterInput = document.querySelector(
       'input[aria-label="Recent run updated after"]'
     ) as HTMLInputElement;
@@ -321,7 +327,7 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
     );
   });
 
@@ -408,6 +414,12 @@ describe('App API error handling', () => {
     await act(async () => {
       roleSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    const nameInput = document.querySelector(
+      'input[aria-label="Recent run name"]'
+    ) as HTMLInputElement;
+    await act(async () => {
+      setTextInputValue(nameInput, 'backend search');
+    });
     const updatedAfterInput = document.querySelector(
       'input[aria-label="Recent run updated after"]'
     ) as HTMLInputElement;
@@ -443,11 +455,11 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
+      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
     );
   });
 
@@ -560,6 +572,52 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
+  });
+
+  it('sanitizes run history name API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_NAME_INVALID', {
+        message: `Invalid run list name from ${rawStoragePath}.`,
+        details: {
+          name: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const nameInput = document.querySelector(
+      'input[aria-label="Recent run name"]'
+    ) as HTMLInputElement;
+    await act(async () => {
+      setTextInputValue(nameInput, 'backend search');
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_NAME_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_NAME_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=50&name=backend+search'
+    );
   });
 
   it('sanitizes run history updated-at API errors before rendering', async () => {

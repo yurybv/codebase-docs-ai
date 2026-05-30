@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 149: Web Run History Name Search Control And Audit.
-- Then continue without stopping into Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
+- Implement Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 151: API Run Listing Output Format Filter Contract.
 - Then continue without stopping into Phase 152: SDK And CLI Run Listing Output Format Filters.
+- Then continue without stopping into Phase 153: Web Run History Output Format Filter Control And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 149 goal:
-- Expose run-name search through the Web run history operator surface.
-- Preserve Web run history limit/status/role/updated-at/cursor behavior when name search is applied.
-- Audit API, SDK, CLI, and Web name-search filtering as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 150 goal:
 - Audit API, SDK, CLI, and Web run-name search filtering as one public operator contract.
@@ -65,6 +59,12 @@ Phase 152 goal:
 - Expose the API run listing output-format filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI output-format filter inputs before network requests where practical.
 - Verify SDK and CLI format-filtered list requests preserve sanitized list output and invalid-format errors do not expose raw values.
+
+Phase 153 goal:
+- Expose output-format filtering through the Web run history operator surface.
+- Preserve Web run history limit/status/role/name/updated-at/cursor behavior when output format filtering is applied.
+- Audit API, SDK, CLI, and Web output-format filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.
