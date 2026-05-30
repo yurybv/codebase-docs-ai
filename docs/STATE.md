@@ -2482,6 +2482,20 @@ pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk 
 pnpm verify
 ```
 
+### 2026-05-30: Phase 161 Web Run History Created-At Range Controls And Audit
+
+- Added Web run history `createdAfter` and `createdBefore` controls that forward API created-at range filters.
+- Preserved selected limit, status, source role, name, output format, source-count range, created-at range, updated-at range, and cursor values across Web run history pagination.
+- Added Web regression coverage for sanitized created-at filtered list output and sanitized created-at API errors.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
 ## Open Questions
 
 - Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.

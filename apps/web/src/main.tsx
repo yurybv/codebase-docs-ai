@@ -34,6 +34,8 @@ export function App(): JSX.Element {
   const [runHistoryFormat, setRunHistoryFormat] = useState<RunHistoryFormatFilter>('all');
   const [runHistoryMinSources, setRunHistoryMinSources] = useState('');
   const [runHistoryMaxSources, setRunHistoryMaxSources] = useState('');
+  const [runHistoryCreatedAfter, setRunHistoryCreatedAfter] = useState('');
+  const [runHistoryCreatedBefore, setRunHistoryCreatedBefore] = useState('');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
   const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
@@ -132,6 +134,8 @@ export function App(): JSX.Element {
         runHistoryFormat,
         runHistoryMinSources,
         runHistoryMaxSources,
+        runHistoryCreatedAfter,
+        runHistoryCreatedBefore,
         runHistoryUpdatedAfter,
         runHistoryUpdatedBefore,
         cursor
@@ -428,6 +432,30 @@ export function App(): JSX.Element {
                     aria-label="Recent run maximum sources"
                     onChange={(event) => {
                       setRunHistoryMaxSources(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
+                  <span>Created after</span>
+                  <input
+                    value={runHistoryCreatedAfter}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run created after"
+                    onChange={(event) => {
+                      setRunHistoryCreatedAfter(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
+                  <span>Created before</span>
+                  <input
+                    value={runHistoryCreatedBefore}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run created before"
+                    onChange={(event) => {
+                      setRunHistoryCreatedBefore(event.currentTarget.value);
                       resetRunHistoryPagination();
                     }}
                   />
@@ -732,6 +760,8 @@ async function listRuns(
   format: RunHistoryFormatFilter,
   minSources: string,
   maxSources: string,
+  createdAfter: string,
+  createdBefore: string,
   updatedAfter: string,
   updatedBefore: string,
   cursor?: string
@@ -748,6 +778,8 @@ async function listRuns(
   const nameFilter = name.trim();
   const minSourcesFilter = minSources.trim();
   const maxSourcesFilter = maxSources.trim();
+  const createdAfterFilter = createdAfter.trim();
+  const createdBeforeFilter = createdBefore.trim();
   const updatedAfterFilter = updatedAfter.trim();
   const updatedBeforeFilter = updatedBefore.trim();
   if (nameFilter) {
@@ -761,6 +793,12 @@ async function listRuns(
   }
   if (maxSourcesFilter) {
     query.set('maxSources', maxSourcesFilter);
+  }
+  if (createdAfterFilter) {
+    query.set('createdAfter', createdAfterFilter);
+  }
+  if (createdBeforeFilter) {
+    query.set('createdBefore', createdBeforeFilter);
   }
   if (updatedAfterFilter) {
     query.set('updatedAfter', updatedAfterFilter);
