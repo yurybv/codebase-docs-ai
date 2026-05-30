@@ -26,6 +26,10 @@ export interface GenerateCommandOptions {
   apiUrl?: string;
 }
 
+export interface ListRunsCommandOptions {
+  apiUrl: string;
+}
+
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
@@ -54,6 +58,20 @@ export function parseGenerateOptions(options: {
   }
 
   return parsedOptions;
+}
+
+export function parseListRunsOptions(options: { apiUrl?: string }): ListRunsCommandOptions {
+  if (!options.apiUrl) {
+    throw new CliError(
+      'CLI_API_URL_REQUIRED',
+      'API URL is required for listing remote documentation runs.'
+    );
+  }
+
+  assertHttpUrl(options.apiUrl);
+  return {
+    apiUrl: options.apiUrl
+  };
 }
 
 export function parseCliSourceInput(value: string): CliSourceInput {

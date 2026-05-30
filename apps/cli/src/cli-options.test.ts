@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { CliError, formatCliError } from './cli-error.js';
-import { parseCliOutputFormat, parseCliSourceInput, parseGenerateOptions } from './cli-options.js';
+import {
+  parseCliOutputFormat,
+  parseCliSourceInput,
+  parseGenerateOptions,
+  parseListRunsOptions
+} from './cli-options.js';
 
 describe('CLI option parsing', () => {
   it('parses source path and role', () => {
@@ -41,6 +46,18 @@ describe('CLI option parsing', () => {
         apiUrl: 'file:///tmp/api'
       })
     ).toThrow('API URL must use http or https.');
+  });
+
+  it('requires an API URL for listing remote runs', () => {
+    expect(() => parseListRunsOptions({})).toThrow(
+      'API URL is required for listing remote documentation runs.'
+    );
+  });
+
+  it('parses API mode URL for remote run listing', () => {
+    expect(parseListRunsOptions({ apiUrl: 'https://docs.example.test' })).toEqual({
+      apiUrl: 'https://docs.example.test'
+    });
   });
 
   it('formats typed CLI failures with stable codes and exit codes', () => {

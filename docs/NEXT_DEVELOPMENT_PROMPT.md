@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 126: CLI API Run Listing Command.
+- Implement Phase 127: API Run Listing Limit Contract.
 
-Phase 126 goal:
-- Expose the safe run listing contract through the CLI in API mode.
-- Add a CLI command that prints recent run summaries as sanitized JSON without downloading artifacts.
-- Verify CLI list output does not expose upload archive storage paths, artifact paths, raw source content, provider keys, denied `.env` evidence, or denied-source values.
+Phase 127 goal:
+- Add a bounded API run listing limit contract so operator run history remains predictable as retained run storage grows.
+- Support a safe `limit` query parameter with validation, a documented default, and a maximum.
+- Verify invalid limits return sanitized API errors and valid limits preserve latest-updated ordering without exposing storage paths or secret-bearing evidence.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

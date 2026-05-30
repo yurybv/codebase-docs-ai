@@ -196,6 +196,13 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts generate \
 
 API mode accepts `.zip`, `.tar`, `.tar.gz`, and `.tgz` archive files. Use local mode for direct folder input.
 
+List recent API runs without downloading artifacts:
+
+```bash
+pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
+  --api-url http://localhost:3000
+```
+
 CLI failures are printed as JSON to stderr:
 
 ```json

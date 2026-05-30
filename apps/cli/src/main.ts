@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { formatCliError } from './cli-error.js';
-import { collectRepeatedOption, parseGenerateOptions } from './cli-options.js';
+import { collectRepeatedOption, parseGenerateOptions, parseListRunsOptions } from './cli-options.js';
 import { runGenerateCommand } from './generate-command.js';
+import { runListRunsCommand } from './list-runs-command.js';
 
 const program = new Command();
 
@@ -28,6 +29,15 @@ program
         2
       )
     );
+  });
+
+program
+  .command('list-runs')
+  .description('List recent documentation runs from a remote API.')
+  .option('--api-url <url>', 'Remote codebase-docs-ai API URL')
+  .action(async (options: { apiUrl?: string }) => {
+    const result = await runListRunsCommand(parseListRunsOptions(options));
+    console.log(JSON.stringify(result, null, 2));
   });
 
 try {

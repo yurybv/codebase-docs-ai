@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 126: CLI API Run Listing Command.
+Implement Phase 127: API Run Listing Limit Contract.
 
 Required package:
 
 ```text
-apps/cli
-packages/sdk
+apps/api
+packages/shared
 docs
 ```
 
-The next step should expose the safe run listing contract through the CLI in API mode so operators can inspect recent run summaries from automation without downloading artifacts.
+The next step should add a bounded API run listing limit contract so operator run history remains predictable as retained run storage grows.
 
 ## Completed Implementation
 
@@ -1977,6 +1977,20 @@ Verification:
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
 pnpm --filter @codebase-docs-ai/web typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 126 CLI API Run Listing Command
+
+- Added `codebase-docs-ai list-runs --api-url ...` for API-backed run summary inspection without artifact downloads.
+- Added CLI option parsing and command coverage for sanitized run list output.
+- Documented CLI run listing in README, feature, and operations docs.
+
+Verification:
+
+```text
+pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 
