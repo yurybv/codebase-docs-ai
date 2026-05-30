@@ -422,6 +422,7 @@ describe('DocumentationRunsService', () => {
       format: 'json',
       minSources: '1',
       maxSources: '1',
+      sort: 'updatedAt:asc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
       updatedAfter: '2026-05-29T23:59:59.000Z',
@@ -435,6 +436,7 @@ describe('DocumentationRunsService', () => {
       format: 'json',
       minSources: '1',
       maxSources: '1',
+      sort: 'updatedAt:asc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
       updatedAfter: '2026-05-29T23:59:59.000Z',
@@ -443,9 +445,9 @@ describe('DocumentationRunsService', () => {
     });
     const payload = JSON.stringify({ firstPage, secondPage });
 
-    expect(firstPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([older.runId]);
     expect(firstPage.nextCursor).toBeTruthy();
-    expect(secondPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(secondPage.runs.map((run) => run.id)).toEqual([newer.runId]);
     expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');

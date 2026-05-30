@@ -606,7 +606,7 @@ describe('Documentation runs HTTP API', () => {
     await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
     const filteredResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&sort=updatedAt:asc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
     );
     const filteredPayload = await filteredResponse.text();
     const filtered = JSON.parse(filteredPayload) as {
@@ -615,7 +615,7 @@ describe('Documentation runs HTTP API', () => {
     };
 
     expect(filteredResponse.status).toBe(200);
-    expect(filtered.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(filtered.runs.map((run) => run.id)).toEqual([older.runId]);
     expect(filtered.nextCursor).toBeTruthy();
     expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
@@ -626,7 +626,7 @@ describe('Documentation runs HTTP API', () => {
     expect(filteredPayload).not.toContain(tempRoot);
 
     const secondResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&sort=updatedAt:asc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
     );
     const secondPayload = await secondResponse.text();
     const second = JSON.parse(secondPayload) as {
@@ -635,7 +635,7 @@ describe('Documentation runs HTTP API', () => {
     };
 
     expect(secondResponse.status).toBe(200);
-    expect(second.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(second.runs.map((run) => run.id)).toEqual([newer.runId]);
     expect(second.nextCursor).toBeUndefined();
     expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(secondPayload).not.toContain(rawOpenAiKey);

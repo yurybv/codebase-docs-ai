@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 166: Run Listing Sort Direction Cross-Surface Regression Audit.
-- Then continue without stopping into Phase 167: API Run Listing Created-At Sort Contract.
+- Implement Phase 167: API Run Listing Created-At Sort Contract.
 - Then continue without stopping into Phase 168: SDK And CLI Run Listing Created-At Sort Option.
 - Then continue without stopping into Phase 169: Web Run History Created-At Sort Control And Audit.
+- Then continue without stopping into Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 166 goal:
-- Audit API, SDK, CLI, and Web sort-direction behavior as one public operator contract.
-- Add or tighten regression coverage proving sort direction composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
-- Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
-- Update docs only if the audit changes public behavior or testing expectations.
 
 Phase 167 goal:
 - Add an API run listing sort-field contract for created-at ordering, such as `sort=createdAt:desc` and `sort=createdAt:asc`.
@@ -65,6 +59,12 @@ Phase 169 goal:
 - Preserve Web run history limit/status/role/name/format/source-count/created-at/updated-at/cursor behavior when created-at sort is applied.
 - Audit API, SDK, CLI, and Web created-at sort behavior as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
+
+Phase 170 goal:
+- Audit API, SDK, CLI, and Web created-at sort behavior as one public operator contract.
+- Add or tighten regression coverage proving created-at sort composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
+- Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
+- Update docs only if the audit changes public behavior or testing expectations.
 
 Verification expectations:
 - Run focused tests for every touched surface.
