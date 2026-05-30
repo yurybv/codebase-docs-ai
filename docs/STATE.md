@@ -80,13 +80,14 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 104: Public Sanitizer Embedded Secret Regression Coverage.
+Implement Phase 105: Shared Public Sanitizer Consolidation.
 
 Required package:
 
 ```text
 packages/shared
 packages/documentation-generator
+packages/security
 packages/source-loader
 packages/core
 packages/ai-orchestrator
@@ -96,7 +97,7 @@ apps/cli
 docs
 ```
 
-The next step should add regression coverage proving public error/output sanitizers redact embedded provider keys inside underscore-delimited or otherwise adjacent analyzer text, not only standalone tokens.
+The next step should consolidate duplicated public text sanitizer behavior into a shared package helper so API, CLI, SDK, core, AI orchestration, source-loader, and documentation-generator redaction behavior stays consistent.
 
 ## Completed Implementation
 
@@ -1674,6 +1675,20 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/documentation-generator typecheck
 pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 104 Public Sanitizer Embedded Secret Regression Coverage
+
+- Tightened public provider-key sanitizers so embedded keys adjacent to underscores or analyzer text are redacted consistently.
+- Added/updated regression coverage across source-loader, API error envelopes, CLI error formatting, SDK errors, core propagated errors, AI provider errors, and the security redactor.
+- Verified public errors preserve redaction markers while excluding raw embedded provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm -r --filter @codebase-docs-ai/security --filter @codebase-docs-ai/source-loader --filter @codebase-docs-ai/ai-orchestrator --filter @codebase-docs-ai/core --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli typecheck
+pnpm test -- packages/security/src/redact-secrets.test.ts packages/source-loader/src/load-source.test.ts packages/ai-orchestrator/src/openai-compatible-provider.test.ts packages/core/src/documentation-engine.test.ts apps/api/src/api-exception.filter.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts
 pnpm verify
 ```
 

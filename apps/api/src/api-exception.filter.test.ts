@@ -58,16 +58,17 @@ describe('createApiErrorResponse', () => {
 
   it('sanitizes secret-bearing HTTP exception envelopes', () => {
     const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const response = createApiErrorResponse(
       new BadRequestException({
         code: 'INVALID_SOURCE_METADATA',
-        message: `Invalid source ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
+        message: `Invalid source ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
         details: {
           fieldErrors: {
-            sources: [`Remove ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
+            sources: [`Remove ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
           }
         },
-        suggestion: `Upload a safe archive without ${rawOpenAiKey} or .env SHOULD_NOT_APPEAR.`
+        suggestion: `Upload a safe archive without ${embeddedOpenAiKey} or .env SHOULD_NOT_APPEAR.`
       })
     );
     const payload = JSON.stringify(response.body);

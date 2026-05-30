@@ -52,10 +52,11 @@ describe('OpenAiCompatibleProvider', () => {
 
   it('sanitizes secret-bearing provider transport errors', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockRejectedValue(
-        new Error(`Provider transport failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`)
+        new Error(`Provider transport failed for ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`)
       );
     const provider = new OpenAiCompatibleProvider({
       apiKey: 'test-key',

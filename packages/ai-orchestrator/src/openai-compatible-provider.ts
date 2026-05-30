@@ -178,7 +178,7 @@ function parseTemperature(value: string): number {
 function sanitizeProviderErrorMessage(error: unknown): string {
   const message = error instanceof Error && error.message.length > 0 ? error.message : 'Request failed.';
   const sanitized = message
-    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/sk-[A-Za-z0-9_-]{20,}/g, '[REDACTED_OPENAI_API_KEY]')
     .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
     .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
 

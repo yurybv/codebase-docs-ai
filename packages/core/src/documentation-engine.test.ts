@@ -196,13 +196,14 @@ describe('DocumentationEngine', () => {
   it('sanitizes lower-layer generation errors before propagating them', async () => {
     const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'core-engine-error-test-'));
     const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
 
     try {
       await writeSanitizationFixture(fixtureRoot, rawOpenAiKey);
 
       const engine = new DocumentationEngine({
         aiProvider: new LocalJsonProvider(() => {
-          throw new Error(`Provider failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`);
+          throw new Error(`Provider failed for ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`);
         })
       });
 

@@ -595,15 +595,16 @@ describe('CodebaseDocsAIClient', () => {
 
   it('sanitizes secret-bearing API errors before throwing', async () => {
     const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
           error: {
             code: 'SOURCE_UPLOAD_INVALID',
-            message: `Upload failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
+            message: `Upload failed for ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
             details: {
               fieldErrors: {
-                sources: [`Remove ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
+                sources: [`Remove ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
               }
             }
           }
@@ -633,7 +634,7 @@ describe('CodebaseDocsAIClient', () => {
       expect((error as CodebaseDocsAIClientError).details).toEqual({
         fieldErrors: {
           sources: [
-            'Remove [REDACTED_OPENAI_API_KEY] from [REDACTED_DENIED_FILE] [REDACTED_DENIED_VALUE].'
+            'Remove prefix_[REDACTED_OPENAI_API_KEY] from [REDACTED_DENIED_FILE] [REDACTED_DENIED_VALUE].'
           ]
         }
       });

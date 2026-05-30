@@ -43,16 +43,18 @@ PRIVATE_KEY="inline-private-key"
 
   it('redacts provider tokens and JWTs', () => {
     const openAiKey = `sk-${'a'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${openAiKey}`;
     const githubToken = `github_pat_${'A'.repeat(24)}`;
     const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.signature';
     const result = redactSecrets(`
-OPENAI_API_KEY=${openAiKey}
+OPENAI_API_KEY=${embeddedOpenAiKey}
 GITHUB_TOKEN=${githubToken}
 SESSION_JWT=${jwt}
 DATABASE_URL=mysql://user:password@example.com/app
 `);
 
     expect(result.text).not.toContain(openAiKey);
+    expect(result.text).not.toContain(embeddedOpenAiKey);
     expect(result.text).not.toContain(githubToken);
     expect(result.text).not.toContain(jwt);
     expect(result.text).not.toContain('password@example.com');

@@ -383,10 +383,11 @@ describe('loadArchiveSource', () => {
 
   it('sanitizes secret-bearing unsafe archive path errors', async () => {
     const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const archivePath = path.join(tempRoot, 'unsafe-secret-path.tar');
     await writeTarUnsafePathArchive(
       archivePath,
-      `../${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR.ts`
+      `../${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR.ts`
     );
 
     try {

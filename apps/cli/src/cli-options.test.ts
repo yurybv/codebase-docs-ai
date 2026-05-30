@@ -56,14 +56,15 @@ describe('CLI option parsing', () => {
 
   it('formats API failures without raw secret-bearing error content', () => {
     const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const failure = formatCliError({
       name: 'CodebaseDocsAIClientError',
       status: 400,
       code: 'SOURCE_UPLOAD_INVALID',
-      message: `Upload failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
+      message: `Upload failed for ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`,
       details: {
         fieldErrors: {
-          sources: [`Remove ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
+          sources: [`Remove ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
         }
       }
     });

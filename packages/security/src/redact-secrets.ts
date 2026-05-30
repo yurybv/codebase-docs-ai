@@ -20,7 +20,7 @@ const redactionPatterns: RedactionPattern[] = [
   },
   {
     kind: 'openai_api_key',
-    pattern: /\bsk-[A-Za-z0-9_-]{20,}\b/g,
+    pattern: /sk-[A-Za-z0-9_-]{20,}/g,
     replacement: '[REDACTED_OPENAI_API_KEY]'
   },
   {
