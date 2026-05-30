@@ -480,8 +480,9 @@ describe('App API error handling', () => {
 
   it('renders sanitized completed results without raw secret-bearing source content', async () => {
     const rawOpenAiKey = `sk-${'i'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const sanitizedMarkdown =
-      '# 01. Overview\n\n| Method | Path |\n| --- | --- |\n| POST | /v1/[REDACTED_OPENAI_API_KEY] |';
+      '# 01. Overview\n\n| Method | Path |\n| --- | --- |\n| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] |';
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
@@ -509,7 +510,7 @@ describe('App API error handling', () => {
         return jsonResponse({
           id: 'run_sanitized_result',
           status: 'completed',
-          renderedFormats: ['json'],
+          renderedFormats: ['markdown-tree', 'single-markdown', 'json'],
           progress: {
             currentStep: 'Documentation run completed',
             completedSteps: 7,
@@ -522,7 +523,7 @@ describe('App API error handling', () => {
         return jsonResponse({
           runId: 'run_sanitized_result',
           status: 'completed',
-          renderedFormats: ['json'],
+          renderedFormats: ['markdown-tree', 'single-markdown', 'json'],
           documentation: {
             pages: [
               {
@@ -534,7 +535,8 @@ describe('App API error handling', () => {
             warnings: [
               {
                 level: 'medium',
-                message: 'A source reference contained [REDACTED_OPENAI_API_KEY].'
+                message:
+                  'A source reference contained prefix_[REDACTED_OPENAI_API_KEY] in [REDACTED_DENIED_FILE] with [REDACTED_DENIED_VALUE].'
               }
             ]
           }
@@ -559,7 +561,7 @@ describe('App API error handling', () => {
       value: [
         new File(
           [
-            `fetch("https://api.example.com/v1/${rawOpenAiKey}");\n`,
+            `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR");\n`,
             'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
           ],
           'frontend.tar',
@@ -586,22 +588,37 @@ describe('App API error handling', () => {
     const renderedText = document.body.textContent ?? '';
 
     expect(previewText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(previewText).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(previewText).toContain('[REDACTED_DENIED_FILE]');
+    expect(previewText).toContain('[REDACTED_DENIED_VALUE]');
     expect(warningText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(warningText).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(warningText).toContain('[REDACTED_DENIED_FILE]');
+    expect(warningText).toContain('[REDACTED_DENIED_VALUE]');
     expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain(embeddedOpenAiKey);
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(renderedText).not.toContain('.env');
 
-    await act(async () => {
-      getButtonByText('json').dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    for (const format of ['markdown-tree', 'single-markdown', 'json']) {
+      expect(getButtonByText(format).textContent).not.toContain(rawOpenAiKey);
+      await act(async () => {
+        getButtonByText(format).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    }
 
-    const openedUrl = String(openMock.mock.calls[0]?.[0] ?? '');
-    expect(openedUrl).toBe(
+    expect(openMock.mock.calls.map((call) => String(call[0]))).toEqual([
+      'http://localhost:3000/v1/documentation-runs/run_sanitized_result/download?format=markdown-tree',
+      'http://localhost:3000/v1/documentation-runs/run_sanitized_result/download?format=single-markdown',
       'http://localhost:3000/v1/documentation-runs/run_sanitized_result/download?format=json'
-    );
-    expect(openedUrl).not.toContain(rawOpenAiKey);
-    expect(openedUrl).not.toContain('SHOULD_NOT_APPEAR');
-    expect(openedUrl).not.toContain('.env');
+    ]);
+    for (const [openedUrl] of openMock.mock.calls) {
+      const url = String(openedUrl);
+      expect(url).not.toContain(rawOpenAiKey);
+      expect(url).not.toContain(embeddedOpenAiKey);
+      expect(url).not.toContain('SHOULD_NOT_APPEAR');
+      expect(url).not.toContain('.env');
+    }
   });
 
   it('requires at least one selected output format', async () => {

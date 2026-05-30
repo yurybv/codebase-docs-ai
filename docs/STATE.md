@@ -80,18 +80,20 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 109: Web Embedded Secret Result Display Regression Coverage.
+Implement Phase 110: Multi-Source Artifact Consistency Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/security
-apps/web
+packages/core
+apps/api
+apps/cli
+packages/sdk
 docs
 ```
 
-The next step should add Web regression coverage proving embedded secret-bearing documentation results from the API remain sanitized in displayed previews, warnings, and download controls.
+The next step should add regression coverage proving multi-source frontend/backend runs expose consistent documentation trees, rendered formats, and download behavior across API, CLI, and SDK flows.
 
 ## Completed Implementation
 
@@ -1739,6 +1741,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.http.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 109 Web Embedded Secret Result Display Regression Coverage
+
+- Expanded Web completed-state sanitization coverage for embedded provider keys and denied source evidence returned by the API.
+- Verified generated preview markdown and warning content preserve redaction markers for embedded provider keys, denied `.env` evidence, and denied-source values.
+- Verified Web download controls for markdown-tree, single-Markdown, and JSON outputs open artifact URLs that do not include raw embedded secret-bearing source content.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/main.test.ts
 pnpm verify
 ```
 

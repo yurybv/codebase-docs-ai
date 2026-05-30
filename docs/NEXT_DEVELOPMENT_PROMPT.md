@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 109: Web Embedded Secret Result Display Regression Coverage.
+- Implement Phase 110: Multi-Source Artifact Consistency Regression Coverage.
 
-Phase 109 goal:
-- Add Web regression coverage proving embedded secret-bearing documentation results from the API remain sanitized in displayed previews, warnings, and download controls.
-- Verify raw embedded provider keys, denied `.env` evidence, and denied-source values are absent from rendered Web content and download requests.
-- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
+Phase 110 goal:
+- Add regression coverage proving multi-source frontend/backend runs expose consistent documentation trees, rendered formats, and download behavior across API, CLI, and SDK flows.
+- Verify generated artifacts preserve source roles, matched API contracts, warnings, and output format selections consistently across local and HTTP flows.
+- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.
