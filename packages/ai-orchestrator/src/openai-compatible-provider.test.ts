@@ -50,6 +50,38 @@ describe('OpenAiCompatibleProvider', () => {
     );
   });
 
+  it('sanitizes secret-bearing provider transport errors', async () => {
+    const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValue(
+        new Error(`Provider transport failed for ${rawOpenAiKey} from .env SHOULD_NOT_APPEAR.`)
+      );
+    const provider = new OpenAiCompatibleProvider({
+      apiKey: 'test-key',
+      model: 'test-model',
+      baseUrl: 'https://example.test/v1/',
+      fetch: fetchMock
+    });
+
+    try {
+      await provider.generateObject<{ ok: boolean }>({
+        systemPrompt: 'system',
+        userPrompt: 'user',
+        schemaName: 'TestSchema'
+      });
+      throw new Error('Expected provider request to fail.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      expect(message).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(message).toContain('[REDACTED_DENIED_FILE]');
+      expect(message).toContain('[REDACTED_DENIED_VALUE]');
+      expect(message).not.toContain(rawOpenAiKey);
+      expect(message).not.toContain('SHOULD_NOT_APPEAR');
+      expect(message).not.toContain('.env');
+    }
+  });
+
   it('creates a provider only when key and model are configured', () => {
     expect(createOpenAiCompatibleProviderFromEnv({})).toBeUndefined();
     expect(

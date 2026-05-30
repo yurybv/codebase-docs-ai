@@ -34,36 +34,52 @@ export class OpenAiCompatibleProvider implements AiProvider {
   }
 
   async generateObject<TOutput>(input: GenerateObjectInput): Promise<TOutput> {
-    const response = await this.fetchClient(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: this.config.model,
-        temperature: this.temperature,
-        response_format: {
-          type: 'json_object'
+    let response: Response;
+    try {
+      response = await this.fetchClient(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
         },
-        messages: [
-          {
-            role: 'system',
-            content: `${input.systemPrompt}\n\nReturn only valid JSON for schema ${input.schemaName}.`
+        body: JSON.stringify({
+          model: this.config.model,
+          temperature: this.temperature,
+          response_format: {
+            type: 'json_object'
           },
-          {
-            role: 'user',
-            content: input.userPrompt
-          }
-        ]
-      })
-    });
+          messages: [
+            {
+              role: 'system',
+              content: `${input.systemPrompt}\n\nReturn only valid JSON for schema ${input.schemaName}.`
+            },
+            {
+              role: 'user',
+              content: input.userPrompt
+            }
+          ]
+        })
+      });
+    } catch (error) {
+      throw new AiProviderError(
+        `AI provider request failed: ${sanitizeProviderErrorMessage(error)}`
+      );
+    }
 
     if (!response.ok) {
       throw new AiProviderError(`AI provider request failed with status ${response.status}.`);
     }
 
-    const parsedResponse = chatCompletionResponseSchema.safeParse(await response.json());
+    let responseBody: unknown;
+    try {
+      responseBody = await response.json();
+    } catch (error) {
+      throw new AiProviderError(
+        `AI provider response could not be parsed: ${sanitizeProviderErrorMessage(error)}`
+      );
+    }
+
+    const parsedResponse = chatCompletionResponseSchema.safeParse(responseBody);
     if (!parsedResponse.success) {
       throw new AiProviderError('AI provider response did not match the expected chat completion shape.');
     }
@@ -157,4 +173,14 @@ function parseTemperature(value: string): number {
   }
 
   return temperature;
+}
+
+function sanitizeProviderErrorMessage(error: unknown): string {
+  const message = error instanceof Error && error.message.length > 0 ? error.message : 'Request failed.';
+  const sanitized = message
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
+    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
+
+  return sanitized.length > 0 ? sanitized : 'Request failed.';
 }

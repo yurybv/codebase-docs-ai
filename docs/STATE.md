@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 99: AI Orchestrator Provider Error Sanitization Regression Coverage.
+Implement Phase 100: Documentation Generator AI Error Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/ai-orchestrator
+packages/documentation-generator
 docs
 ```
 
-The next step should add AI orchestrator regression coverage proving provider/HTTP failures do not expose raw secret-bearing source content.
+The next step should add documentation-generator regression coverage proving AI page-generation validation errors do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1601,6 +1601,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/core typecheck
 pnpm test -- packages/core/src/documentation-engine.test.ts
+```
+
+### 2026-05-30: Phase 99 AI Orchestrator Provider Error Sanitization Regression Coverage
+
+- Added AI provider sanitization for OpenAI-compatible transport and response parsing errors.
+- Added AI orchestrator regression coverage for provider transport failures containing a fake provider key and denied `.env` evidence.
+- Verified AI provider errors preserve redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/ai-orchestrator typecheck
+pnpm test -- packages/ai-orchestrator/src/openai-compatible-provider.test.ts
 ```
 
 ## Open Questions
