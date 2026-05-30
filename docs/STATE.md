@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 100: Documentation Generator AI Error Sanitization Regression Coverage.
+Implement Phase 101: Documentation Generator AI Output Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/documentation-generator
 docs
 ```
 
-The next step should add documentation-generator regression coverage proving AI page-generation validation errors do not expose raw secret-bearing source content.
+The next step should add documentation-generator regression coverage proving accepted AI page output does not reintroduce raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1614,6 +1614,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/ai-orchestrator typecheck
 pnpm test -- packages/ai-orchestrator/src/openai-compatible-provider.test.ts
+```
+
+### 2026-05-30: Phase 100 Documentation Generator AI Error Sanitization Regression Coverage
+
+- Added documentation-generator regression coverage for AI page validation failures with secret-bearing invalid output.
+- Verified validation errors remain generic and do not include raw invalid AI output values.
+- Verified documentation-generator AI validation errors exclude raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/documentation-generator typecheck
+pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
 ```
 
 ## Open Questions

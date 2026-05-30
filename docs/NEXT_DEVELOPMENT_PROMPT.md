@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 100: Documentation Generator AI Error Sanitization Regression Coverage.
+- Implement Phase 101: Documentation Generator AI Output Sanitization Regression Coverage.
 
-Phase 100 goal:
-- Add documentation-generator regression coverage proving AI page-generation validation errors do not expose raw secret-bearing source content.
-- Sanitize documentation-generator AI errors if needed so raw denied files and raw secret values are absent from thrown errors.
-- Keep AI orchestrator/core/source-loader and API/CLI/SDK/Web/renderer sanitization coverage intact.
+Phase 101 goal:
+- Add documentation-generator regression coverage proving accepted AI page output does not reintroduce raw secret-bearing source content.
+- Sanitize accepted AI page markdown, warnings, and source references if needed so raw denied files and raw secret values are absent from generated documentation.
+- Keep documentation-generator AI error and AI orchestrator/core/source-loader/API/CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

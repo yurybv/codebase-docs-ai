@@ -42,6 +42,41 @@ describe('createDocumentationPlan', () => {
       path: 'package.json'
     });
   });
+
+  it('keeps validation errors sanitized when AI output contains raw secret-bearing content', async () => {
+    const rawOpenAiKey = `sk-${'a'.repeat(25)}`;
+    const provider = new LocalJsonProvider(() => ({
+      key: rawOpenAiKey,
+      markdown: `# Unsafe\n\nGenerated from .env SHOULD_NOT_APPEAR.`,
+      sourceReferences: [
+        {
+          sourceName: 'Frontend',
+          path: `.env/${rawOpenAiKey}/SHOULD_NOT_APPEAR.ts`
+        }
+      ],
+      warnings: [
+        {
+          level: 'medium',
+          message: `Unsafe warning ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`
+        }
+      ]
+    }));
+
+    try {
+      await generateDocumentationTreeWithAi({
+        title: 'Customer Portal Documentation',
+        systemMap: systemMapFixture(),
+        aiProvider: provider
+      });
+      throw new Error('Expected AI page validation to fail.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      expect(message).toContain('AI page output is invalid');
+      expect(message).not.toContain(rawOpenAiKey);
+      expect(message).not.toContain('SHOULD_NOT_APPEAR');
+      expect(message).not.toContain('.env');
+    }
+  });
 });
 
 describe('generateDocumentationTree', () => {
