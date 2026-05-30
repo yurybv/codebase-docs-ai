@@ -35,6 +35,8 @@ export interface ListRunsCommandOptions {
   role?: SourceRole;
   name?: string;
   format?: DocumentationOutputFormat;
+  minSources?: number;
+  maxSources?: number;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -96,6 +98,8 @@ export function parseListRunsOptions(options: {
   role?: string;
   name?: string;
   format?: string;
+  minSources?: string;
+  maxSources?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -113,6 +117,7 @@ export function parseListRunsOptions(options: {
   const role = parseRunListSourceRole(options.role);
   const name = parseRunListName(options.name);
   const format = parseRunListFormat(options.format);
+  const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
   const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
@@ -123,6 +128,8 @@ export function parseListRunsOptions(options: {
     ...(role === undefined ? {} : { role }),
     ...(name === undefined ? {} : { name }),
     ...(format === undefined ? {} : { format }),
+    ...(sourceCountRange.minSources === undefined ? {} : { minSources: sourceCountRange.minSources }),
+    ...(sourceCountRange.maxSources === undefined ? {} : { maxSources: sourceCountRange.maxSources }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
     ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
@@ -284,6 +291,47 @@ function parseRunListFormat(value: string | undefined): DocumentationOutputForma
   }
 
   return parsed.data;
+}
+
+function parseRunListSourceCountRange(
+  minSourcesValue: string | undefined,
+  maxSourcesValue: string | undefined
+): { minSources?: number; maxSources?: number } {
+  const minSources = parseRunListSourceCount(minSourcesValue);
+  const maxSources = parseRunListSourceCount(maxSourcesValue);
+
+  if (minSources !== undefined && maxSources !== undefined && minSources > maxSources) {
+    throw invalidRunListSourceCount();
+  }
+
+  return {
+    ...(minSources === undefined ? {} : { minSources }),
+    ...(maxSources === undefined ? {} : { maxSources })
+  };
+}
+
+function parseRunListSourceCount(value: string | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || String(parsed) !== value || parsed < 0) {
+    throw invalidRunListSourceCount();
+  }
+
+  return parsed;
+}
+
+function invalidRunListSourceCount(): CliError {
+  return new CliError(
+    'CLI_RUN_LIST_SOURCE_COUNT_INVALID',
+    'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.',
+    2,
+    {
+      min: 0
+    }
+  );
 }
 
 function parseRunListUpdatedAfter(value: string | undefined): string | undefined {

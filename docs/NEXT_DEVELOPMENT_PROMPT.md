@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 156: SDK And CLI Run Listing Source Count Filters.
-- Then continue without stopping into Phase 157: Web Run History Source Count Filter Control And Audit.
+- Implement Phase 157: Web Run History Source Count Filter Control And Audit.
 - Then continue without stopping into Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 159: API Run Listing Created-At Range Filter Contract.
+- Then continue without stopping into Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 156 goal:
-- Expose API run listing source-count filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI source-count filter inputs before network requests where practical.
-- Verify SDK and CLI source-count filtered list requests preserve sanitized list output and invalid source-count errors do not expose raw values.
 
 Phase 157 goal:
 - Expose source-count filtering through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 159 goal:
 - Validate created-at filter inputs before storage access where practical.
 - Return persisted run summaries whose `createdAt` values match the selected range without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid created-at filtering and invalid secret-bearing created-at errors.
+
+Phase 160 goal:
+- Expose API run listing created-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI created-at filter inputs before network requests where practical.
+- Verify SDK and CLI created-at filtered list requests preserve sanitized list output and invalid created-at errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 156: SDK And CLI Run Listing Source Count Filters.
 - Phase 157: Web Run History Source Count Filter Control And Audit.
 - Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
 - Phase 159: API Run Listing Created-At Range Filter Contract.
+- Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose source-count filtering through SDK, CLI, and Web, audit it as one cross-surface contract, then continue into created-at range filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose source-count filtering through Web, audit it as one cross-surface contract, then continue into created-at range filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2407,6 +2407,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 156 SDK And CLI Run Listing Source Count Filters
+
+- Added `minSources` and `maxSources` options to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight source-count validation, with sanitized stable invalid source-count failures before network requests.
+- Added SDK and CLI regression coverage for source-count filtered list requests and secret-bearing invalid source-count values.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

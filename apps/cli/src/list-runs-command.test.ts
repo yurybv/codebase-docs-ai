@@ -477,6 +477,8 @@ describe('runListRunsCommand', () => {
       role: 'backend',
       name: 'backend search',
       format: 'json',
+      minSources: 1,
+      maxSources: 2,
       updatedAfter: '2026-05-30T00:00:30.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -501,7 +503,7 @@ describe('runListRunsCommand', () => {
     expect(payload).not.toContain('.env');
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
       undefined
     );
   });

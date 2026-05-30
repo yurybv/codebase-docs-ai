@@ -40,6 +40,8 @@ program
   .option('--role <role>', 'Filter recent runs by source role')
   .option('--name <name>', 'Filter recent runs by run name')
   .option('--format <format>', 'Filter recent runs by output format')
+  .option('--min-sources <count>', 'Filter recent runs by minimum source count')
+  .option('--max-sources <count>', 'Filter recent runs by maximum source count')
   .option('--updated-after <timestamp>', 'Filter recent runs updated at or after an ISO timestamp')
   .option('--updated-before <timestamp>', 'Filter recent runs updated at or before an ISO timestamp')
   .option('--cursor <cursor>', 'Continue listing runs from a previous nextCursor')
@@ -51,6 +53,8 @@ program
       role?: string;
       name?: string;
       format?: string;
+      minSources?: string;
+      maxSources?: string;
       updatedAfter?: string;
       updatedBefore?: string;
       cursor?: string;

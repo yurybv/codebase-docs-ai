@@ -58,6 +58,7 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const role = parseRunListSourceRole(options.role);
     const name = parseRunListName(options.name);
     const format = parseRunListFormat(options.format);
+    const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -76,6 +77,12 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (format !== undefined) {
       query.set('format', format);
+    }
+    if (sourceCountRange.minSources !== undefined) {
+      query.set('minSources', String(sourceCountRange.minSources));
+    }
+    if (sourceCountRange.maxSources !== undefined) {
+      query.set('maxSources', String(sourceCountRange.maxSources));
     }
     if (updatedAfter !== undefined) {
       query.set('updatedAfter', updatedAfter);
@@ -501,6 +508,46 @@ function invalidRunListFormat(): CodebaseDocsAIClientError {
     'RUN_LIST_FORMAT_INVALID',
     {
       allowedFormats: [...documentationOutputFormatSchema.options]
+    }
+  );
+}
+
+function parseRunListSourceCountRange(
+  minSourcesValue: unknown,
+  maxSourcesValue: unknown
+): { minSources?: number; maxSources?: number } {
+  const minSources = parseRunListSourceCount(minSourcesValue);
+  const maxSources = parseRunListSourceCount(maxSourcesValue);
+
+  if (minSources !== undefined && maxSources !== undefined && minSources > maxSources) {
+    throw invalidRunListSourceCount();
+  }
+
+  return {
+    ...(minSources === undefined ? {} : { minSources }),
+    ...(maxSources === undefined ? {} : { maxSources })
+  };
+}
+
+function parseRunListSourceCount(value: unknown): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw invalidRunListSourceCount();
+  }
+
+  return value;
+}
+
+function invalidRunListSourceCount(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.',
+    0,
+    'RUN_LIST_SOURCE_COUNT_INVALID',
+    {
+      min: 0
     }
   );
 }

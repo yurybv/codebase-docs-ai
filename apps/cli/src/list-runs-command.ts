@@ -21,6 +21,8 @@ export async function runListRunsCommand(
     ...(options.role === undefined ? {} : { role: options.role }),
     ...(options.name === undefined ? {} : { name: options.name }),
     ...(options.format === undefined ? {} : { format: options.format }),
+    ...(options.minSources === undefined ? {} : { minSources: options.minSources }),
+    ...(options.maxSources === undefined ? {} : { maxSources: options.maxSources }),
     ...(options.updatedAfter === undefined ? {} : { updatedAfter: options.updatedAfter }),
     ...(options.updatedBefore === undefined ? {} : { updatedBefore: options.updatedBefore }),
     ...(options.cursor === undefined ? {} : { cursor: options.cursor })

@@ -108,12 +108,14 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --role backend \
   --name backend \
   --format json \
+  --min-sources 1 \
+  --max-sources 2 \
   --updated-after 2026-05-30T00:00:00.000Z \
   --updated-before 2026-05-30T01:00:00.000Z \
   --cursor eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
-When more matching runs are available, list responses include `nextCursor`. Pass that value to `--cursor` to request the next page with the same limit, status, role, name, output-format, and updated-at filters.
+When more matching runs are available, list responses include `nextCursor`. Pass that value to `--cursor` to request the next page with the same limit, status, role, name, output-format, source-count, and updated-at filters.
 
 ## Optional AI Provider
 

@@ -429,6 +429,8 @@ describe('CodebaseDocsAIClient', () => {
       role: 'backend',
       name: 'backend search',
       format: 'json',
+      minSources: 1,
+      maxSources: 2,
       updatedAfter: '2026-05-30T00:00:30.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -452,7 +454,7 @@ describe('CodebaseDocsAIClient', () => {
     expect(payload).not.toContain('.env');
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAwOjMwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ',
       undefined
     );
   });
@@ -485,6 +487,44 @@ describe('CodebaseDocsAIClient', () => {
       expect(payload).not.toContain('/private/tmp');
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid run list source count filters without network requests or raw value exposure', async () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const rawSourceCount = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    for (const options of [
+      { minSources: rawSourceCount as never },
+      { maxSources: rawSourceCount as never },
+      { minSources: 2, maxSources: 1 }
+    ]) {
+      try {
+        await client.documentationRuns.list(options);
+        throw new Error('Expected list to reject invalid source count.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+        expect((error as CodebaseDocsAIClientError).status).toBe(0);
+        expect((error as CodebaseDocsAIClientError).code).toBe('RUN_LIST_SOURCE_COUNT_INVALID');
+        expect((error as CodebaseDocsAIClientError).message).toBe(
+          'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.'
+        );
+        expect((error as CodebaseDocsAIClientError).details).toEqual({
+          min: 0
+        });
+        expect(payload).not.toContain(rawSourceCount);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
     }
     expect(fetchMock).not.toHaveBeenCalled();
   });

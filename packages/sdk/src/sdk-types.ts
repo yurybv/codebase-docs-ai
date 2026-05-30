@@ -66,6 +66,8 @@ export interface DocumentationRunListOptions {
   role?: SourceRole;
   name?: string;
   format?: DocumentationOutputFormat;
+  minSources?: number;
+  maxSources?: number;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;

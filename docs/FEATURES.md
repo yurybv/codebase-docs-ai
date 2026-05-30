@@ -118,6 +118,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Updated-at filtered run listing helper.
 - Name-filtered run listing helper.
 - Output-format filtered run listing helper.
+- Source-count filtered run listing helper.
 - Upload helper.
 - Polling helper.
 - Result retrieval helper.
@@ -134,6 +135,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Filter API-backed run summaries by updated-at range.
 - Filter API-backed run summaries by run name.
 - Filter API-backed run summaries by output format.
+- Filter API-backed run summaries by source count.
 - Paginate API-backed run summaries.
 - Select output format.
 - Write output to local folder.
