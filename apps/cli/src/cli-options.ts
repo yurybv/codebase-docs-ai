@@ -33,6 +33,7 @@ export interface ListRunsCommandOptions {
   limit?: number;
   status?: DocumentationRunStatus;
   role?: SourceRole;
+  cursor?: string;
 }
 
 const cliRunListStatusOptions: DocumentationRunStatus[] = [
@@ -50,6 +51,7 @@ const cliRunListStatusOptions: DocumentationRunStatus[] = [
   'cancelled',
   'expired'
 ];
+const maxRunListCursorLength = 512;
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
   return [...previous, value];
@@ -86,6 +88,7 @@ export function parseListRunsOptions(options: {
   limit?: string;
   status?: string;
   role?: string;
+  cursor?: string;
 }): ListRunsCommandOptions {
   if (!options.apiUrl) {
     throw new CliError(
@@ -98,11 +101,13 @@ export function parseListRunsOptions(options: {
   const limit = parseRunListLimit(options.limit);
   const status = parseRunListStatus(options.status);
   const role = parseRunListSourceRole(options.role);
+  const cursor = parseRunListCursor(options.cursor);
   return {
     apiUrl: options.apiUrl,
     ...(limit === undefined ? {} : { limit }),
     ...(status === undefined ? {} : { status }),
-    ...(role === undefined ? {} : { role })
+    ...(role === undefined ? {} : { role }),
+    ...(cursor === undefined ? {} : { cursor })
   };
 }
 
@@ -212,6 +217,18 @@ function parseRunListSourceRole(value: string | undefined): SourceRole | undefin
   }
 
   return parsed.data;
+}
+
+function parseRunListCursor(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value.length === 0 || value.length > maxRunListCursorLength) {
+    throw new CliError('CLI_RUN_LIST_CURSOR_INVALID', 'Run list cursor is invalid.', 2);
+  }
+
+  return value;
 }
 
 function sourceNameFromPath(inputPath: string): string {

@@ -121,6 +121,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Limit API-backed run summaries.
 - Filter API-backed run summaries by status.
 - Filter API-backed run summaries by source role.
+- Paginate API-backed run summaries.
 - Select output format.
 - Write output to local folder.
 

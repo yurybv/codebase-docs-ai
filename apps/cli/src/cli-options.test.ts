@@ -73,13 +73,15 @@ describe('CLI option parsing', () => {
         apiUrl: 'https://docs.example.test',
         limit: '25',
         status: 'completed',
-        role: 'backend'
+        role: 'backend',
+        cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
       })
     ).toEqual({
       apiUrl: 'https://docs.example.test',
       limit: 25,
       status: 'completed',
-      role: 'backend'
+      role: 'backend',
+      cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
     });
   });
 
@@ -170,6 +172,35 @@ describe('CLI option parsing', () => {
           }
         }
       });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing cursors without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'b'.repeat(24)}`;
+    const rawCursor = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        cursor: rawCursor.repeat(20)
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid cursor.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toMatchObject({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_CURSOR_INVALID',
+          message: 'Run list cursor is invalid.'
+        }
+      });
+      expect(payload).not.toContain(rawCursor);
       expect(payload).not.toContain(rawOpenAiKey);
       expect(payload).not.toContain('/private/tmp');
       expect(payload).not.toContain('.env');

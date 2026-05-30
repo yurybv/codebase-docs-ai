@@ -82,7 +82,6 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the remaining batch:
 
-- Phase 142: CLI Run Listing Pagination Cursor Flag.
 - Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
 
 Required package:
@@ -91,10 +90,11 @@ Required package:
 packages/shared
 apps/cli
 packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose cursor pagination through the CLI, then audit the API/SDK/Web/CLI contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should audit the API/SDK/Web/CLI run listing pagination contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2206,6 +2206,20 @@ Verification:
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
 pnpm --filter @codebase-docs-ai/web typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 142 CLI Run Listing Pagination Cursor Flag
+
+- Added a `list-runs --cursor <cursor>` CLI option that maps to the API run listing cursor through the SDK.
+- Added CLI preflight validation for list cursors, with sanitized stable invalid-cursor failures before network requests.
+- Added CLI regression coverage for cursor-paginated list output, sanitized returned `nextCursor`, and secret-bearing invalid cursor values.
+
+Verification:
+
+```text
+pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

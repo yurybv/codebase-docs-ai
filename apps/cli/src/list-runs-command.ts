@@ -6,6 +6,7 @@ export interface ListRunsCommandResult {
   status: 'completed';
   runCount: number;
   runs: DocumentationRunSummary[];
+  nextCursor?: string;
 }
 
 export async function runListRunsCommand(
@@ -17,7 +18,8 @@ export async function runListRunsCommand(
   const listOptions = {
     ...(options.limit === undefined ? {} : { limit: options.limit }),
     ...(options.status === undefined ? {} : { status: options.status }),
-    ...(options.role === undefined ? {} : { role: options.role })
+    ...(options.role === undefined ? {} : { role: options.role }),
+    ...(options.cursor === undefined ? {} : { cursor: options.cursor })
   };
   const list = await client.documentationRuns.list(
     Object.keys(listOptions).length === 0 ? undefined : listOptions
@@ -26,6 +28,7 @@ export async function runListRunsCommand(
   return {
     status: 'completed',
     runCount: list.runs.length,
-    runs: list.runs
+    runs: list.runs,
+    ...(list.nextCursor ? { nextCursor: list.nextCursor } : {})
   };
 }

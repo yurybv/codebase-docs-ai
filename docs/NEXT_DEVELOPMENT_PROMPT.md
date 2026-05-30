@@ -37,15 +37,8 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 142: CLI Run Listing Pagination Cursor Flag.
-- Then continue without stopping into Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
+- Implement Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 142 goal:
-- Expose the API/SDK run listing `cursor` pagination option through the CLI `list-runs` command.
-- Add `list-runs --cursor <cursor>` with CLI-side validation before network requests where practical.
-- Verify cursor-filtered CLI list requests preserve sanitized list output and invalid-cursor errors do not expose raw values.
-- Keep existing CLI limit/status/role filtering and single-run generation behavior intact.
 
 Phase 143 goal:
 - Audit API, SDK, Web, and CLI run listing pagination behavior as one cross-surface contract.
