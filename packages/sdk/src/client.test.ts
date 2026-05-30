@@ -393,6 +393,97 @@ describe('CodebaseDocsAIClient', () => {
     );
   });
 
+  it('passes run list name filters through the HTTP API while preserving sanitization', async () => {
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_backend_search',
+            name: `Backend Search Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'completed',
+            sources: [
+              {
+                name: `Backend ${rawStoragePath}`,
+                role: 'backend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            renderedFormats: ['json'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          }
+        ]
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const list = await client.documentationRuns.list({
+      limit: 2,
+      status: 'completed',
+      role: 'backend',
+      name: 'backend search'
+    });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs).toHaveLength(1);
+    expect(list.runs[0]).toMatchObject({
+      id: 'run_backend_search',
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['json']
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&name=backend+search',
+      undefined
+    );
+  });
+
+  it('rejects invalid run list name filters without network requests or raw value exposure', async () => {
+    const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const rawName = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    for (const invalidName of ['   ', rawName.repeat(5)]) {
+      try {
+        await client.documentationRuns.list({ name: invalidName });
+        throw new Error('Expected list to reject invalid name.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+        expect((error as CodebaseDocsAIClientError).status).toBe(0);
+        expect((error as CodebaseDocsAIClientError).code).toBe('RUN_LIST_NAME_INVALID');
+        expect((error as CodebaseDocsAIClientError).message).toBe(
+          'Run list name filter must be between 1 and 200 characters.'
+        );
+        expect(payload).not.toContain(rawName);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('rejects invalid run list source role filters without network requests or raw value exposure', async () => {
     const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
     const rawRole = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;

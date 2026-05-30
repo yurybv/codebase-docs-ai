@@ -19,6 +19,7 @@ export async function runListRunsCommand(
     ...(options.limit === undefined ? {} : { limit: options.limit }),
     ...(options.status === undefined ? {} : { status: options.status }),
     ...(options.role === undefined ? {} : { role: options.role }),
+    ...(options.name === undefined ? {} : { name: options.name }),
     ...(options.updatedAfter === undefined ? {} : { updatedAfter: options.updatedAfter }),
     ...(options.updatedBefore === undefined ? {} : { updatedBefore: options.updatedBefore }),
     ...(options.cursor === undefined ? {} : { cursor: options.cursor })

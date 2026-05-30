@@ -38,6 +38,7 @@ program
   .option('--limit <count>', 'Maximum number of recent runs to list, from 1 to 100')
   .option('--status <status>', 'Filter recent runs by documentation run status')
   .option('--role <role>', 'Filter recent runs by source role')
+  .option('--name <name>', 'Filter recent runs by run name')
   .option('--updated-after <timestamp>', 'Filter recent runs updated at or after an ISO timestamp')
   .option('--updated-before <timestamp>', 'Filter recent runs updated at or before an ISO timestamp')
   .option('--cursor <cursor>', 'Continue listing runs from a previous nextCursor')
@@ -47,6 +48,7 @@ program
       limit?: string;
       status?: string;
       role?: string;
+      name?: string;
       updatedAfter?: string;
       updatedBefore?: string;
       cursor?: string;

@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 148: SDK And CLI Run Listing Name Search Filters.
 - Phase 149: Web Run History Name Search Control And Audit.
 - Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
 - Phase 151: API Run Listing Output Format Filter Contract.
+- Phase 152: SDK And CLI Run Listing Output Format Filters.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose sanitized run-name search through SDK, CLI, and Web, audit the cross-surface name-search contract, then continue into output-format filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose sanitized run-name search through Web, audit the cross-surface name-search contract, then continue into output-format filtering for operator workflows across API, SDK, and CLI. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2294,6 +2294,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 148 SDK And CLI Run Listing Name Search Filters
+
+- Added a `name` option to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight name filter validation, with sanitized stable invalid-name failures before network requests.
+- Added SDK and CLI regression coverage for name-filtered list requests and secret-bearing invalid name values.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

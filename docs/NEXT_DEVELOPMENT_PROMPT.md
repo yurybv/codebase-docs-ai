@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 148: SDK And CLI Run Listing Name Search Filters.
-- Then continue without stopping into Phase 149: Web Run History Name Search Control And Audit.
+- Implement Phase 149: Web Run History Name Search Control And Audit.
 - Then continue without stopping into Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 151: API Run Listing Output Format Filter Contract.
+- Then continue without stopping into Phase 152: SDK And CLI Run Listing Output Format Filters.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 148 goal:
-- Expose the API run listing name search filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI name-search inputs before network requests where practical.
-- Verify SDK and CLI name-filtered list requests preserve sanitized list output and invalid-name errors do not expose raw values.
 
 Phase 149 goal:
 - Expose run-name search through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 151 goal:
 - Validate output-format inputs before storage access where practical.
 - Return persisted run summaries whose requested or rendered output formats include the selected format without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid-format filtering and invalid secret-bearing format errors.
+
+Phase 152 goal:
+- Expose the API run listing output-format filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI output-format filter inputs before network requests where practical.
+- Verify SDK and CLI format-filtered list requests preserve sanitized list output and invalid-format errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

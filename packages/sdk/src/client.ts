@@ -54,6 +54,7 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
+    const name = parseRunListName(options.name);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -66,6 +67,9 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (role !== undefined) {
       query.set('role', role);
+    }
+    if (name !== undefined) {
+      query.set('name', name);
     }
     if (updatedAfter !== undefined) {
       query.set('updatedAfter', updatedAfter);
@@ -368,6 +372,7 @@ const runListFilterStatuses: DocumentationRunStatus[] = [
   'expired'
 ];
 const maxRunListCursorLength = 512;
+const maxRunListNameLength = 200;
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 function parseRunListLimit(value: unknown): number | undefined {
@@ -442,6 +447,31 @@ function invalidRunListSourceRole(): CodebaseDocsAIClientError {
     {
       allowedRoles: [...sourceRoles]
     }
+  );
+}
+
+function parseRunListName(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string') {
+    throw invalidRunListName();
+  }
+
+  const name = value.trim();
+  if (name.length === 0 || name.length > maxRunListNameLength) {
+    throw invalidRunListName();
+  }
+
+  return name;
+}
+
+function invalidRunListName(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    `Run list name filter must be between 1 and ${maxRunListNameLength} characters.`,
+    0,
+    'RUN_LIST_NAME_INVALID'
   );
 }
 

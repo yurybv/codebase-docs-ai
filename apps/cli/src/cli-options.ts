@@ -33,6 +33,7 @@ export interface ListRunsCommandOptions {
   limit?: number;
   status?: DocumentationRunStatus;
   role?: SourceRole;
+  name?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -54,6 +55,7 @@ const cliRunListStatusOptions: DocumentationRunStatus[] = [
   'expired'
 ];
 const maxRunListCursorLength = 512;
+const maxRunListNameLength = 200;
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
@@ -91,6 +93,7 @@ export function parseListRunsOptions(options: {
   limit?: string;
   status?: string;
   role?: string;
+  name?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -106,6 +109,7 @@ export function parseListRunsOptions(options: {
   const limit = parseRunListLimit(options.limit);
   const status = parseRunListStatus(options.status);
   const role = parseRunListSourceRole(options.role);
+  const name = parseRunListName(options.name);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
   const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
@@ -114,6 +118,7 @@ export function parseListRunsOptions(options: {
     ...(limit === undefined ? {} : { limit }),
     ...(status === undefined ? {} : { status }),
     ...(role === undefined ? {} : { role }),
+    ...(name === undefined ? {} : { name }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
     ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
@@ -238,6 +243,23 @@ function parseRunListCursor(value: string | undefined): string | undefined {
   }
 
   return value;
+}
+
+function parseRunListName(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const name = value.trim();
+  if (name.length === 0 || name.length > maxRunListNameLength) {
+    throw new CliError(
+      'CLI_RUN_LIST_NAME_INVALID',
+      `Run list name filter must be between 1 and ${maxRunListNameLength} characters.`,
+      2
+    );
+  }
+
+  return name;
 }
 
 function parseRunListUpdatedAfter(value: string | undefined): string | undefined {

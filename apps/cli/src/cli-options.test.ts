@@ -74,6 +74,7 @@ describe('CLI option parsing', () => {
         limit: '25',
         status: 'completed',
         role: 'backend',
+        name: 'backend search',
         updatedAfter: '2026-05-30T00:00:30.000Z',
         updatedBefore: '2026-05-30T00:01:30.000Z',
         cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -83,6 +84,7 @@ describe('CLI option parsing', () => {
       limit: 25,
       status: 'completed',
       role: 'backend',
+      name: 'backend search',
       updatedAfter: '2026-05-30T00:00:30.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -209,6 +211,37 @@ describe('CLI option parsing', () => {
       expect(payload).not.toContain('/private/tmp');
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing name filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
+    const rawName = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    for (const invalidName of ['   ', rawName.repeat(5)]) {
+      try {
+        parseListRunsOptions({
+          apiUrl: 'https://docs.example.test',
+          name: invalidName
+        });
+        throw new Error('Expected parseListRunsOptions to reject invalid name.');
+      } catch (error) {
+        const failure = formatCliError(error);
+        const payload = JSON.stringify(failure);
+        expect(failure).toEqual({
+          status: 'failed',
+          exitCode: 2,
+          error: {
+            code: 'CLI_RUN_LIST_NAME_INVALID',
+            message: 'Run list name filter must be between 1 and 200 characters.'
+          }
+        });
+        expect(payload).not.toContain(rawName);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
     }
   });
 
