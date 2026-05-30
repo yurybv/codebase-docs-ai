@@ -205,12 +205,13 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --status completed \
   --role backend \
   --name backend \
+  --format json \
   --updated-after 2026-05-30T00:00:00.000Z \
   --updated-before 2026-05-30T01:00:00.000Z \
   --cursor eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
-When the API returns `nextCursor`, pass that value to `--cursor` to continue listing the next page with the same limit, status, role, name, and updated-at filters. CLI list output is sanitized and must not expose raw cursor input, provider keys, denied source evidence, upload storage paths, or artifact paths.
+When the API returns `nextCursor`, pass that value to `--cursor` to continue listing the next page with the same limit, status, role, name, output-format, and updated-at filters. CLI list output is sanitized and must not expose raw cursor input, provider keys, denied source evidence, upload storage paths, or artifact paths.
 
 CLI failures are printed as JSON to stderr:
 

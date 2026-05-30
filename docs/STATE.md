@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 152: SDK And CLI Run Listing Output Format Filters.
 - Phase 153: Web Run History Output Format Filter Control And Audit.
 - Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
 - Phase 155: API Run Listing Source Count Filter Contract.
+- Phase 156: SDK And CLI Run Listing Source Count Filters.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose output-format filtering through SDK, CLI, and Web, audit the cross-surface output-format filter contract, then continue into source-count filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose output-format filtering through Web, audit the cross-surface output-format filter contract, then continue into source-count filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2350,6 +2350,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 152 SDK And CLI Run Listing Output Format Filters
+
+- Added a `format` option to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight format validation, with sanitized stable invalid-format failures before network requests.
+- Added SDK and CLI regression coverage for format-filtered list requests and secret-bearing invalid format values.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

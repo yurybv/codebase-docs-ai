@@ -1,12 +1,14 @@
 import {
   type ApiErrorPayload,
   type DocumentationRun,
+  type DocumentationOutputFormat,
   type DocumentationRunListResponse,
   type DocumentationRunStatus,
   type DocumentationRunSummary,
   type SourceRole,
-  maxDocumentationRunListLimit,
+  documentationOutputFormatSchema,
   isSupportedSourceArchiveFileName,
+  maxDocumentationRunListLimit,
   sanitizePublicErrorText,
   sanitizePublicErrorValue,
   sourceRoles,
@@ -55,6 +57,7 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
     const name = parseRunListName(options.name);
+    const format = parseRunListFormat(options.format);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -70,6 +73,9 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (name !== undefined) {
       query.set('name', name);
+    }
+    if (format !== undefined) {
+      query.set('format', format);
     }
     if (updatedAfter !== undefined) {
       query.set('updatedAfter', updatedAfter);
@@ -472,6 +478,30 @@ function invalidRunListName(): CodebaseDocsAIClientError {
     `Run list name filter must be between 1 and ${maxRunListNameLength} characters.`,
     0,
     'RUN_LIST_NAME_INVALID'
+  );
+}
+
+function parseRunListFormat(value: unknown): DocumentationOutputFormat | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = documentationOutputFormatSchema.safeParse(value);
+  if (!parsed.success) {
+    throw invalidRunListFormat();
+  }
+
+  return parsed.data;
+}
+
+function invalidRunListFormat(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    'Run list format must be a supported documentation output format.',
+    0,
+    'RUN_LIST_FORMAT_INVALID',
+    {
+      allowedFormats: [...documentationOutputFormatSchema.options]
+    }
   );
 }
 

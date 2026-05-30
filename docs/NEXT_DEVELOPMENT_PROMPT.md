@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 152: SDK And CLI Run Listing Output Format Filters.
-- Then continue without stopping into Phase 153: Web Run History Output Format Filter Control And Audit.
+- Implement Phase 153: Web Run History Output Format Filter Control And Audit.
 - Then continue without stopping into Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 155: API Run Listing Source Count Filter Contract.
+- Then continue without stopping into Phase 156: SDK And CLI Run Listing Source Count Filters.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 152 goal:
-- Expose the API run listing output-format filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI output-format filter inputs before network requests where practical.
-- Verify SDK and CLI format-filtered list requests preserve sanitized list output and invalid-format errors do not expose raw values.
 
 Phase 153 goal:
 - Expose output-format filtering through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 155 goal:
 - Validate source-count filter inputs before storage access where practical.
 - Return persisted run summaries whose source counts match the selected range without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid source-count filtering and invalid secret-bearing source-count errors.
+
+Phase 156 goal:
+- Expose API run listing source-count filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI source-count filter inputs before network requests where practical.
+- Verify SDK and CLI source-count filtered list requests preserve sanitized list output and invalid source-count errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

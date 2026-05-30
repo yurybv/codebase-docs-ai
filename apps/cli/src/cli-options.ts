@@ -34,6 +34,7 @@ export interface ListRunsCommandOptions {
   status?: DocumentationRunStatus;
   role?: SourceRole;
   name?: string;
+  format?: DocumentationOutputFormat;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -94,6 +95,7 @@ export function parseListRunsOptions(options: {
   status?: string;
   role?: string;
   name?: string;
+  format?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -110,6 +112,7 @@ export function parseListRunsOptions(options: {
   const status = parseRunListStatus(options.status);
   const role = parseRunListSourceRole(options.role);
   const name = parseRunListName(options.name);
+  const format = parseRunListFormat(options.format);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
   const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
@@ -119,6 +122,7 @@ export function parseListRunsOptions(options: {
     ...(status === undefined ? {} : { status }),
     ...(role === undefined ? {} : { role }),
     ...(name === undefined ? {} : { name }),
+    ...(format === undefined ? {} : { format }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
     ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
@@ -260,6 +264,26 @@ function parseRunListName(value: string | undefined): string | undefined {
   }
 
   return name;
+}
+
+function parseRunListFormat(value: string | undefined): DocumentationOutputFormat | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = documentationOutputFormatSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new CliError(
+      'CLI_RUN_LIST_FORMAT_INVALID',
+      'Run list format must be a supported documentation output format.',
+      2,
+      {
+        allowedFormats: [...documentationOutputFormatSchema.options]
+      }
+    );
+  }
+
+  return parsed.data;
 }
 
 function parseRunListUpdatedAfter(value: string | undefined): string | undefined {

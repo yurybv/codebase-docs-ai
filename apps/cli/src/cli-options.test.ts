@@ -75,6 +75,7 @@ describe('CLI option parsing', () => {
         status: 'completed',
         role: 'backend',
         name: 'backend search',
+        format: 'json',
         updatedAfter: '2026-05-30T00:00:30.000Z',
         updatedBefore: '2026-05-30T00:01:30.000Z',
         cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -85,6 +86,7 @@ describe('CLI option parsing', () => {
       status: 'completed',
       role: 'backend',
       name: 'backend search',
+      format: 'json',
       updatedAfter: '2026-05-30T00:00:30.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
@@ -242,6 +244,38 @@ describe('CLI option parsing', () => {
         expect(payload).not.toContain('.env');
         expect(payload).not.toContain('SHOULD_NOT_APPEAR');
       }
+    }
+  });
+
+  it('rejects invalid run listing format filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
+    const rawFormat = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        format: rawFormat
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid format.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toMatchObject({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_FORMAT_INVALID',
+          message: 'Run list format must be a supported documentation output format.',
+          details: {
+            allowedFormats: expect.arrayContaining(['markdown-tree', 'single-markdown', 'json'])
+          }
+        }
+      });
+      expect(payload).not.toContain(rawFormat);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     }
   });
 

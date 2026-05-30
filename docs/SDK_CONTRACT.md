@@ -141,6 +141,7 @@ const runs = await client.documentationRuns.list({
   status: 'completed',
   role: 'backend',
   name: 'backend',
+  format: 'json',
   updatedAfter: '2026-05-30T00:00:00.000Z',
   updatedBefore: '2026-05-30T01:00:00.000Z',
   cursor: previousPage.nextCursor
@@ -153,6 +154,7 @@ Options:
 - `status`: optional `DocumentationRunStatus` filter.
 - `role`: optional source role filter. Runs match when at least one uploaded source has this role.
 - `name`: optional case-insensitive substring filter over sanitized run names.
+- `format`: optional output format filter. Runs match when requested or rendered formats include this value.
 - `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`.
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`.
 - `cursor`: optional opaque pagination cursor returned by a previous list response.

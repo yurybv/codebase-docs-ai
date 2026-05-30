@@ -119,6 +119,15 @@ Run listing name filtering is a cross-surface contract. When changing API run li
 - API, SDK, Web, and CLI surfaces do not expose raw name input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid name filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Output-Format Filter Regression
+
+Run listing output-format filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `format` filters are forwarded as supported documentation output format query parameters;
+- format filtering composes with selected `limit`, `status`, `role`, `name`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw format input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid format filter errors use stable public error codes and sanitized messages.
+
 ## Web Completed-State Regression
 
 Run:
