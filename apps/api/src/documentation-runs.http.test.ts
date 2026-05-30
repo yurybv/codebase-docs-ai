@@ -313,6 +313,68 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies the run list status query parameter', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    await service.createRun({
+      name: `HTTP Created Filter ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await createServiceRun(service, 'HTTP Completed Filter Docs', secretSourceName);
+    const failed = await createServiceRun(service, 'HTTP Failed Filter Docs', secretSourceName, {
+      failBeforeStart: true
+    });
+
+    const filteredResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?status=failed`);
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
+      runs: Array<{ id: string; status: string; sourceCount: number; error?: { message: string } }>;
+    };
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([failed.runId]);
+    expect(filtered.runs[0]).toMatchObject({
+      status: 'failed',
+      sourceCount: 1,
+      error: {
+        message: 'Documentation generation failed.'
+      }
+    });
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
+    expect(filteredPayload).not.toContain('archivePath');
+    expect(filteredPayload).not.toContain('tempPath');
+    expect(filteredPayload).not.toContain('documentationTreePath');
+    expect(filteredPayload).not.toContain('renderedPaths');
+
+    const invalidOpenAiKey = `sk-${'t'.repeat(24)}`;
+    const invalidStatus = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?status=${invalidStatus}`
+    );
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_STATUS_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('keeps multi-source artifacts consistent across results and downloads', async () => {
     const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
     const created = await fetchJson<{ runId: string; status: string }>(

@@ -69,6 +69,7 @@ interface CleanupExpiredRunsResult {
 
 interface ListRunsOptions {
   limit?: unknown;
+  status?: unknown;
 }
 
 const uploadSourcesMetadataSchema = z.object({
@@ -91,6 +92,21 @@ const generationSteps = [
 
 const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready'];
 const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
+const runListFilterStatuses: DocumentationRunStatus[] = [
+  'created',
+  'uploading_sources',
+  'ready',
+  'running',
+  'extracting_sources',
+  'analyzing_sources',
+  'building_system_map',
+  'generating_documentation',
+  'rendering_output',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+];
 const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
 
@@ -168,10 +184,14 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
   async listRuns(options: ListRunsOptions = {}): Promise<DocumentationRunListResponse> {
     const runs: DocumentationRunSummary[] = [];
     const limit = parseRunListLimit(options.limit);
+    const status = parseRunListStatus(options.status);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
         const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
+        if (status && storedRun.run.status !== status) {
+          continue;
+        }
         runs.push(toRunSummary(storedRun.run));
       } catch {
         continue;
@@ -744,6 +764,33 @@ function invalidRunListLimit(): BadRequestException {
     details: {
       min: 1,
       max: maxDocumentationRunListLimit
+    }
+  });
+}
+
+function parseRunListStatus(value: unknown): DocumentationRunStatus | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListStatus();
+  }
+
+  const status = String(value);
+  if (!runListFilterStatuses.includes(status as DocumentationRunStatus)) {
+    throw invalidRunListStatus();
+  }
+
+  return status as DocumentationRunStatus;
+}
+
+function invalidRunListStatus(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_STATUS_INVALID',
+    message: 'Run list status must be a supported documentation run status.',
+    details: {
+      allowedStatuses: [...runListFilterStatuses]
     }
   });
 }

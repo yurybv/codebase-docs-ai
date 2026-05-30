@@ -311,6 +311,71 @@ describe('DocumentationRunsService', () => {
     }
   });
 
+  it('filters listed run summaries by status without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const secretSourceName = `Backend .env SHOULD_NOT_APPEAR ${rawOpenAiKey}`;
+    await service.createRun({
+      name: `Created ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await createCompletedRun('Completed Filter Docs', secretSourceName);
+    const failed = await createFailedRun('Failed Filter Docs', secretSourceName);
+
+    const list = await service.listRuns({ status: 'failed' });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([failed.runId]);
+    expect(list.runs[0]).toMatchObject({
+      status: 'failed',
+      sourceCount: 1,
+      error: {
+        message: 'Documentation generation failed.'
+      }
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+    expect(payload).not.toContain('archivePath');
+    expect(payload).not.toContain('tempPath');
+    expect(payload).not.toContain('documentationTreePath');
+    expect(payload).not.toContain('renderedPaths');
+  });
+
+  it('rejects invalid run listing statuses without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
+    const rawStatus = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ status: rawStatus })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_STATUS_INVALID',
+        message: 'Run list status must be a supported documentation run status.',
+        details: {
+          allowedStatuses: expect.arrayContaining(['created', 'completed', 'failed'])
+        }
+      }
+    });
+
+    try {
+      await service.listRuns({ status: rawStatus });
+      throw new Error('Expected listRuns to reject invalid status.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawStatus);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('rejects source uploads and restarts after completion', async () => {
     const created = await service.createRun({
       name: 'Completed Fixture Docs',

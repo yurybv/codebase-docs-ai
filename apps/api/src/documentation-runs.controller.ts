@@ -31,8 +31,11 @@ export class DocumentationRunsController {
   }
 
   @Get()
-  listRuns(@Query('limit') limit: string | undefined): Promise<object> {
-    return this.documentationRunsService.listRuns({ limit });
+  listRuns(
+    @Query('limit') limit: string | undefined,
+    @Query('status') status: string | undefined
+  ): Promise<object> {
+    return this.documentationRunsService.listRuns({ limit, status });
   }
 
   @Post('/:runId/sources')
