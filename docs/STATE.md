@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 146: Web Run History Updated-At Range Controls And Audit.
 - Phase 147: API Run Listing Name Search Filter Contract.
 - Phase 148: SDK And CLI Run Listing Name Search Filters.
 - Phase 149: Web Run History Name Search Control And Audit.
+- Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose safe updated-at range filtering through the Web surface, audit the cross-surface date-filter contract, then continue into a sanitized run-name search filter for operator workflows across API, SDK, CLI, and Web. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should continue into a sanitized run-name search filter for operator workflows across API, SDK, CLI, and Web, then audit the cross-surface name-search contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2266,6 +2266,20 @@ Verification:
 ```text
 pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 146 Web Run History Updated-At Range Controls And Audit
+
+- Added Web run history `updatedAfter` and `updatedBefore` controls that forward API updated-at range filters.
+- Preserved selected limit, status, source role, updated-at range, and cursor values across Web run history pagination.
+- Added Web regression coverage for sanitized updated-at filtered list output and sanitized updated-at API errors.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

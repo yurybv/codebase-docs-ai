@@ -30,6 +30,8 @@ export function App(): JSX.Element {
   const [runHistoryLimit, setRunHistoryLimit] = useState(defaultDocumentationRunListLimit);
   const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
   const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
+  const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
+  const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
   const [runHistoryNextCursor, setRunHistoryNextCursor] = useState<string | undefined>();
   const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
@@ -118,7 +120,14 @@ export function App(): JSX.Element {
       setRunHistoryState({
         status: 'loading'
       });
-      const list = await listRuns(runHistoryLimit, runHistoryStatus, runHistoryRole, cursor);
+      const list = await listRuns(
+        runHistoryLimit,
+        runHistoryStatus,
+        runHistoryRole,
+        runHistoryUpdatedAfter,
+        runHistoryUpdatedBefore,
+        cursor
+      );
       const sanitizedRuns = sanitizeRunSummaries(list.runs);
       setRunHistory((currentRuns) => (cursor ? [...currentRuns, ...sanitizedRuns] : sanitizedRuns));
       setRunHistoryNextCursor(
@@ -359,6 +368,30 @@ export function App(): JSX.Element {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label className="history-limit">
+                  <span>Updated after</span>
+                  <input
+                    value={runHistoryUpdatedAfter}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run updated after"
+                    onChange={(event) => {
+                      setRunHistoryUpdatedAfter(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
+                  <span>Updated before</span>
+                  <input
+                    value={runHistoryUpdatedBefore}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run updated before"
+                    onChange={(event) => {
+                      setRunHistoryUpdatedBefore(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
                 </label>
                 <button
                   className="secondary-action history-refresh"
@@ -631,6 +664,8 @@ async function listRuns(
   limit: number,
   status: RunHistoryStatusFilter,
   role: RunHistoryRoleFilter,
+  updatedAfter: string,
+  updatedBefore: string,
   cursor?: string
 ): Promise<RunListResponse> {
   const query = new URLSearchParams({
@@ -641,6 +676,14 @@ async function listRuns(
   }
   if (role !== 'all') {
     query.set('role', role);
+  }
+  const updatedAfterFilter = updatedAfter.trim();
+  const updatedBeforeFilter = updatedBefore.trim();
+  if (updatedAfterFilter) {
+    query.set('updatedAfter', updatedAfterFilter);
+  }
+  if (updatedBeforeFilter) {
+    query.set('updatedBefore', updatedBeforeFilter);
   }
   if (cursor) {
     query.set('cursor', cursor);

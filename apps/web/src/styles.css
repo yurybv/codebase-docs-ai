@@ -184,6 +184,7 @@ p {
 .run-history-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -196,13 +197,18 @@ p {
   font-weight: 600;
 }
 
-.history-limit select {
+.history-limit select,
+.history-limit input {
   min-width: 72px;
   padding: 7px 8px;
   border: 1px solid #c8d2da;
   border-radius: 6px;
   background: #ffffff;
   color: #172026;
+}
+
+.history-limit input {
+  width: 182px;
 }
 
 .history-refresh {

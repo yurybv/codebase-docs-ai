@@ -37,18 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 146: Web Run History Updated-At Range Controls And Audit.
-- Then continue without stopping into Phase 147: API Run Listing Name Search Filter Contract.
+- Implement Phase 147: API Run Listing Name Search Filter Contract.
 - Then continue without stopping into Phase 148: SDK And CLI Run Listing Name Search Filters.
 - Then continue without stopping into Phase 149: Web Run History Name Search Control And Audit.
+- Then continue without stopping into Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 146 goal:
-- Expose updated-at range filters through the Web run history operator surface.
-- Preserve Web run history limit/status/role/cursor behavior when date filters are applied.
-- Audit API, SDK, CLI, and Web updated-at filtering as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, and State docs where the filtering behavior is now public.
-- Confirm `docs/NEXT_DEVELOPMENT_PROMPT.md` is advanced to the next larger implementation batch before stopping.
 
 Phase 147 goal:
 - Add a safe API run listing name search filter for operator surfaces, such as `name`.
@@ -66,6 +59,12 @@ Phase 149 goal:
 - Preserve Web run history limit/status/role/updated-at/cursor behavior when name search is applied.
 - Audit API, SDK, CLI, and Web name-search filtering as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
+
+Phase 150 goal:
+- Audit API, SDK, CLI, and Web run-name search filtering as one public operator contract.
+- Add or tighten regression coverage proving name search composes with `limit`, `status`, `role`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
+- Verify raw name-search input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
+- Update docs only if the audit changes public behavior or testing expectations.
 
 Verification expectations:
 - Run focused tests for every touched surface.
