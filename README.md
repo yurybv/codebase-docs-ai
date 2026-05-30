@@ -31,7 +31,7 @@ This repository now contains the first executable product slice:
 Web UI upload -> API run -> source extraction -> analysis -> documentation tree -> Markdown/JSON download
 ```
 
-It also includes a typed SDK, a local CLI generation command, and operator run-history filtering across status, source role, run name, output format, updated-at range, and pagination cursor.
+It also includes a typed SDK, a local CLI generation command, and operator run-history filtering across status, source role, run name, output format, source count, updated-at range, and pagination cursor.
 
 Start with:
 

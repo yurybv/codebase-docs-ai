@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 157: Web Run History Source Count Filter Control And Audit.
-- Then continue without stopping into Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
+- Implement Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 159: API Run Listing Created-At Range Filter Contract.
 - Then continue without stopping into Phase 160: SDK And CLI Run Listing Created-At Range Filters.
+- Then continue without stopping into Phase 161: Web Run History Created-At Range Controls And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 157 goal:
-- Expose source-count filtering through the Web run history operator surface.
-- Preserve Web run history limit/status/role/name/format/updated-at/cursor behavior when source-count filtering is applied.
-- Audit API, SDK, CLI, and Web source-count filtering as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 158 goal:
 - Audit API, SDK, CLI, and Web source-count filtering as one public operator contract.
@@ -65,6 +59,12 @@ Phase 160 goal:
 - Expose API run listing created-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI created-at filter inputs before network requests where practical.
 - Verify SDK and CLI created-at filtered list requests preserve sanitized list output and invalid created-at errors do not expose raw values.
+
+Phase 161 goal:
+- Expose created-at range filtering through the Web run history operator surface.
+- Preserve Web run history limit/status/role/name/format/source-count/updated-at/cursor behavior when created-at filtering is applied.
+- Audit API, SDK, CLI, and Web created-at filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.

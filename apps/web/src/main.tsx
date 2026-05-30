@@ -32,6 +32,8 @@ export function App(): JSX.Element {
   const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
   const [runHistoryName, setRunHistoryName] = useState('');
   const [runHistoryFormat, setRunHistoryFormat] = useState<RunHistoryFormatFilter>('all');
+  const [runHistoryMinSources, setRunHistoryMinSources] = useState('');
+  const [runHistoryMaxSources, setRunHistoryMaxSources] = useState('');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
   const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
@@ -128,6 +130,8 @@ export function App(): JSX.Element {
         runHistoryRole,
         runHistoryName,
         runHistoryFormat,
+        runHistoryMinSources,
+        runHistoryMaxSources,
         runHistoryUpdatedAfter,
         runHistoryUpdatedBefore,
         cursor
@@ -403,6 +407,30 @@ export function App(): JSX.Element {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label className="history-limit">
+                  <span>Min sources</span>
+                  <input
+                    value={runHistoryMinSources}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run minimum sources"
+                    onChange={(event) => {
+                      setRunHistoryMinSources(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
+                  <span>Max sources</span>
+                  <input
+                    value={runHistoryMaxSources}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run maximum sources"
+                    onChange={(event) => {
+                      setRunHistoryMaxSources(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
                 </label>
                 <label className="history-limit">
                   <span>Updated after</span>
@@ -702,6 +730,8 @@ async function listRuns(
   role: RunHistoryRoleFilter,
   name: string,
   format: RunHistoryFormatFilter,
+  minSources: string,
+  maxSources: string,
   updatedAfter: string,
   updatedBefore: string,
   cursor?: string
@@ -716,6 +746,8 @@ async function listRuns(
     query.set('role', role);
   }
   const nameFilter = name.trim();
+  const minSourcesFilter = minSources.trim();
+  const maxSourcesFilter = maxSources.trim();
   const updatedAfterFilter = updatedAfter.trim();
   const updatedBeforeFilter = updatedBefore.trim();
   if (nameFilter) {
@@ -723,6 +755,12 @@ async function listRuns(
   }
   if (format !== 'all') {
     query.set('format', format);
+  }
+  if (minSourcesFilter) {
+    query.set('minSources', minSourcesFilter);
+  }
+  if (maxSourcesFilter) {
+    query.set('maxSources', maxSourcesFilter);
   }
   if (updatedAfterFilter) {
     query.set('updatedAfter', updatedAfterFilter);
