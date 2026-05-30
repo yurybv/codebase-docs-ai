@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 103: Documentation Generator Script And Dependency Sanitization Regression Coverage.
+- Implement Phase 104: Public Sanitizer Embedded Secret Regression Coverage.
 
-Phase 103 goal:
-- Add documentation-generator regression coverage proving scripts, dependencies, framework names, route paths, and integration labels rendered into documentation do not expose raw secret-bearing source content.
-- Sanitize deterministic documentation analyzer text fields if needed so raw denied files and raw secret values are absent from generated documentation.
-- Keep documentation-generator source metadata/AI output/error and AI orchestrator/core/source-loader/API/CLI/SDK/Web/renderer sanitization coverage intact.
+Phase 104 goal:
+- Add regression coverage proving public error/output sanitizers redact embedded provider keys inside underscore-delimited or otherwise adjacent analyzer text, not only standalone tokens.
+- Tighten duplicated public sanitizers or consolidate sanitizer behavior if needed so raw denied files and raw secret values are absent from public errors and artifacts.
+- Keep documentation-generator source metadata/analyzer text coverage and AI orchestrator/core/source-loader/API/CLI/SDK/Web/renderer sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

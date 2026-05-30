@@ -36,7 +36,7 @@ export async function generateDocumentationTreeWithAi(
     title: input.title,
     summary: `Generated documentation for ${input.systemMap.sources.length} source input(s).`,
     pages,
-    warnings: plan.warnings,
+    warnings: sanitizeDocumentationWarnings(plan.warnings),
     sourceReferences: collectSystemReferences(input.systemMap),
     generatedAt: new Date().toISOString()
   };
@@ -53,7 +53,7 @@ function generateDeterministicDocumentationTree(input: GenerateDocumentationTree
       order: pagePlan.order,
       markdown,
       sourceReferences: collectPageReferences(pagePlan.key, input.systemMap),
-      warnings: pagePlan.warnings
+      warnings: sanitizeDocumentationWarnings(pagePlan.warnings)
     };
   });
 
@@ -61,7 +61,7 @@ function generateDeterministicDocumentationTree(input: GenerateDocumentationTree
     title: input.title,
     summary: `Generated documentation for ${input.systemMap.sources.length} source input(s).`,
     pages,
-    warnings: plan.warnings,
+    warnings: sanitizeDocumentationWarnings(plan.warnings),
     sourceReferences: collectSystemReferences(input.systemMap),
     generatedAt: new Date().toISOString()
   };
@@ -185,8 +185,9 @@ function renderSystemArchitecture(title: string, systemMap: SystemMap): string {
     .join('\n');
   const sourceRows = systemMap.sources
     .map((repository) => {
-      const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
-      return `| ${formatText(repository.source.name)} | ${repository.source.role} | ${frameworks} | ${repository.packageManager.name} |`;
+      const frameworks =
+        repository.frameworks.map((framework) => formatText(framework.name)).join(', ') || 'None detected';
+      return `| ${formatText(repository.source.name)} | ${repository.source.role} | ${frameworks} | ${formatText(repository.packageManager.name)} |`;
     })
     .join('\n');
 
@@ -208,13 +209,14 @@ ${relationshipRows || '| None detected | N/A | N/A | N/A | N/A |'}
 
 function renderSourceInventory(title: string, systemMap: SystemMap): string {
   const sections = systemMap.sources.map((repository) => {
-    const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
-    const scripts = repository.scripts.map((script) => `\`${script.name}\``).join(', ') || 'None detected';
+    const frameworks =
+      repository.frameworks.map((framework) => formatText(framework.name)).join(', ') || 'None detected';
+    const scripts = repository.scripts.map((script) => `\`${formatText(script.name)}\``).join(', ') || 'None detected';
 
     return `## ${formatText(repository.source.name)}
 
 - Role: ${repository.source.role}
-- Package manager: ${repository.packageManager.name}
+- Package manager: ${formatText(repository.packageManager.name)}
 - Frameworks: ${frameworks}
 - Scripts: ${scripts}`;
   });
@@ -229,22 +231,27 @@ function renderRolePage(title: string, systemMap: SystemMap, role: 'frontend' | 
   const repositories = systemMap.sources.filter((repository) => repository.source.role === role);
   const sections = repositories.map((repository) => {
     const frameworkRows = repository.frameworks
-      .map((framework) => `| ${framework.name} | ${framework.category} | ${formatReferences(framework.evidence)} |`)
+      .map(
+        (framework) => `| ${formatText(framework.name)} | ${framework.category} | ${formatReferences(framework.evidence)} |`
+      )
       .join('\n');
     const scriptRows = repository.scripts
-      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .map(
+        (script) =>
+          `| ${formatText(script.name)} | \`${formatText(script.command)}\` | ${formatReference(script.sourceReference)} |`
+      )
       .join('\n');
     const routeRows = repository.routes
-      .map((route) => `| ${route.kind} | ${route.path} | ${formatReference(route.sourceReference)} |`)
+      .map((route) => `| ${route.kind} | ${formatText(route.path)} | ${formatReference(route.sourceReference)} |`)
       .join('\n');
     const endpointRows = repository.apiEndpoints
       .map(
         (endpoint) =>
-          `| ${endpoint.method} | ${endpoint.path} | ${endpoint.controller ?? 'N/A'} | ${formatReference(endpoint.sourceReference)} |`
+          `| ${formatText(endpoint.method)} | ${formatText(endpoint.path)} | ${endpoint.controller ? formatText(endpoint.controller) : 'N/A'} | ${formatReference(endpoint.sourceReference)} |`
       )
       .join('\n');
     const apiCallRows = repository.apiClientCalls
-      .map((call) => `| ${call.method} | ${call.path} | ${formatReference(call.sourceReference)} |`)
+      .map((call) => `| ${formatText(call.method)} | ${formatText(call.path)} | ${formatReference(call.sourceReference)} |`)
       .join('\n');
 
     return `## ${formatText(repository.source.name)}
@@ -298,7 +305,7 @@ function renderApiContracts(title: string, systemMap: SystemMap): string {
     .map((contract) => {
       const consumer = contract.consumer ? formatReference(contract.consumer) : 'None';
       const provider = contract.provider ? formatReference(contract.provider) : 'None';
-      return `| ${contract.method} | ${contract.path} | ${contract.status} | ${consumer} | ${provider} |`;
+      return `| ${formatText(contract.method)} | ${formatText(contract.path)} | ${contract.status} | ${consumer} | ${provider} |`;
     })
     .join('\n');
 
@@ -366,12 +373,15 @@ function renderLocalDevelopment(title: string, systemMap: SystemMap): string {
     const installCommand = installCommandForPackageManager(repository.packageManager.name);
     const startScripts = scriptsMatching(repository, ['dev', 'start', 'serve']);
     const setupRows = startScripts
-      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .map(
+        (script) =>
+          `| ${formatText(script.name)} | \`${formatText(script.command)}\` | ${formatReference(script.sourceReference)} |`
+      )
       .join('\n');
 
     return `## ${formatText(repository.source.name)}
 
-- Package manager: ${repository.packageManager.name}
+- Package manager: ${formatText(repository.packageManager.name)}
 - Suggested install command: \`${installCommand}\`
 
 | Start script | Command | Evidence |
@@ -389,7 +399,10 @@ function renderTesting(title: string, systemMap: SystemMap): string {
   const sections = systemMap.sources.map((repository) => {
     const testScripts = scriptsMatching(repository, ['test', 'unit', 'integration', 'e2e', 'spec']);
     const rows = testScripts
-      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .map(
+        (script) =>
+          `| ${formatText(script.name)} | \`${formatText(script.command)}\` | ${formatReference(script.sourceReference)} |`
+      )
       .join('\n');
 
     return `## ${formatText(repository.source.name)}
@@ -413,10 +426,13 @@ function renderBuildDeployment(title: string, systemMap: SystemMap): string {
   const sections = systemMap.sources.map((repository) => {
     const buildScripts = scriptsMatching(repository, ['build', 'compile', 'deploy', 'docker']);
     const scriptRows = buildScripts
-      .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
+      .map(
+        (script) =>
+          `| ${formatText(script.name)} | \`${formatText(script.command)}\` | ${formatReference(script.sourceReference)} |`
+      )
       .join('\n');
     const configRows = repository.configFiles
-      .map((configFile) => `| ${configFile.kind} | ${formatReference(configFile.sourceReference)} |`)
+      .map((configFile) => `| ${formatText(configFile.kind)} | ${formatReference(configFile.sourceReference)} |`)
       .join('\n');
 
     return `## ${formatText(repository.source.name)}
@@ -475,8 +491,8 @@ ${dependencyRows || '| None detected | N/A | N/A | N/A |'}
 }
 
 function renderRisks(title: string, systemMap: SystemMap): string {
-  const risks = systemMap.risks.map((risk) => `- ${risk.level.toUpperCase()}: ${risk.message}`);
-  const unknowns = systemMap.unknowns.map((unknown) => `- ${unknown.message}`);
+  const risks = systemMap.risks.map((risk) => `- ${risk.level.toUpperCase()}: ${formatText(risk.message)}`);
+  const unknowns = systemMap.unknowns.map((unknown) => `- ${formatText(unknown.message)}`);
 
   return `${heading(title)}
 
@@ -713,7 +729,13 @@ function mergeWarnings(
   planWarnings: DocumentationWarning[],
   aiWarnings: ParsedDocumentationWarning[]
 ): DocumentationWarning[] {
-  return [...planWarnings, ...aiWarnings].map((warning) => ({
+  return sanitizeDocumentationWarnings([...planWarnings, ...aiWarnings]);
+}
+
+function sanitizeDocumentationWarnings(
+  warnings: Array<DocumentationWarning | ParsedDocumentationWarning>
+): DocumentationWarning[] {
+  return warnings.map((warning) => ({
     level: warning.level,
     message: sanitizeGeneratedText(warning.message),
     ...(warning.sourceReferences ? { sourceReferences: normalizeSourceReferences(warning.sourceReferences) } : {})

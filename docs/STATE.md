@@ -80,17 +80,23 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 103: Documentation Generator Script And Dependency Sanitization Regression Coverage.
+Implement Phase 104: Public Sanitizer Embedded Secret Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 packages/documentation-generator
+packages/source-loader
+packages/core
+packages/ai-orchestrator
+packages/sdk
+apps/api
+apps/cli
 docs
 ```
 
-The next step should add documentation-generator regression coverage proving scripts, dependencies, framework names, route paths, and integration labels rendered into documentation do not expose raw secret-bearing source content.
+The next step should add regression coverage proving public error/output sanitizers redact embedded provider keys inside underscore-delimited or otherwise adjacent analyzer text, not only standalone tokens.
 
 ## Completed Implementation
 
@@ -1627,6 +1633,7 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/documentation-generator typecheck
 pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm verify
 ```
 
 ### 2026-05-30: Phase 101 Documentation Generator AI Output Sanitization Regression Coverage
@@ -1646,6 +1653,20 @@ pnpm test -- packages/documentation-generator/src/generate-documentation-tree.te
 
 - Added deterministic documentation sanitization for source names, source references, relationships, auth sources, environment links, and integration sources.
 - Added documentation-generator regression coverage for source metadata and references containing a fake provider key and denied `.env` evidence.
+- Verified deterministic documentation output preserves redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/documentation-generator typecheck
+pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 103 Documentation Generator Script And Dependency Sanitization Regression Coverage
+
+- Added deterministic documentation sanitization for framework names, script names and commands, route/API paths, endpoint controllers, config kinds, API contract paths, dependency labels, risks, unknowns, and plan warnings.
+- Added documentation-generator regression coverage for analyzer text fields containing a fake provider key and denied `.env` evidence.
 - Verified deterministic documentation output preserves redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
 
 Verification:

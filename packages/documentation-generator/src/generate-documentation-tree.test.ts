@@ -233,6 +233,105 @@ describe('generateDocumentationTree', () => {
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(payload).not.toContain('.env');
   });
+
+  it('sanitizes analyzer text fields in deterministic documentation output', () => {
+    const rawOpenAiKey = `sk-${'d'.repeat(25)}`;
+    const unsafeText = `${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const systemMap = systemMapFixture();
+
+    systemMap.sources[0] = {
+      ...systemMap.sources[0],
+      frameworks: [
+        {
+          ...systemMap.sources[0].frameworks[0],
+          name: `Next ${unsafeText}`
+        }
+      ],
+      scripts: [
+        {
+          ...systemMap.sources[0].scripts[0],
+          name: `dev ${unsafeText}`,
+          command: `next dev --token ${unsafeText}`
+        },
+        ...systemMap.sources[0].scripts.slice(1)
+      ],
+      routes: [
+        {
+          ...systemMap.sources[0].routes[0],
+          path: `/users/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+        }
+      ],
+      apiClientCalls: [
+        {
+          ...systemMap.sources[0].apiClientCalls[0],
+          method: `GET ${unsafeText}`,
+          path: `/api/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+        }
+      ],
+      configFiles: [
+        {
+          ...systemMap.sources[0].configFiles[0],
+          kind: `next ${unsafeText}`
+        }
+      ]
+    };
+    systemMap.sources[1] = {
+      ...systemMap.sources[1],
+      dependencies: [
+        {
+          ...systemMap.sources[1].dependencies[0],
+          name: `stripe ${unsafeText}`
+        }
+      ],
+      apiEndpoints: [
+        {
+          ...systemMap.sources[1].apiEndpoints[0],
+          method: `POST ${unsafeText}`,
+          path: `/api/backend/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`,
+          controller: `users ${unsafeText}`
+        }
+      ],
+      configFiles: [
+        {
+          ...systemMap.sources[1].configFiles[0],
+          kind: `docker ${unsafeText}`
+        }
+      ]
+    };
+    systemMap.apiContracts[0] = {
+      ...systemMap.apiContracts[0],
+      method: `PATCH ${unsafeText}`,
+      path: `/api/contracts/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    };
+    systemMap.integrations[0] = {
+      ...systemMap.integrations[0],
+      name: `Stripe ${unsafeText}`
+    };
+    systemMap.risks = [
+      {
+        level: 'high',
+        message: `Risk includes ${unsafeText}`
+      }
+    ];
+    systemMap.unknowns = [
+      {
+        message: `Unknown includes ${unsafeText}`
+      }
+    ];
+
+    const documentationTree = generateDocumentationTree({
+      title: 'Customer Portal Documentation',
+      systemMap
+    });
+    const payload = JSON.stringify(documentationTree);
+
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+  });
 });
 
 function systemMapFixture(): SystemMap {
