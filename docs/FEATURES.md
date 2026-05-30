@@ -81,6 +81,7 @@ This document tracks the product capabilities that must exist in the generated p
 ## API Features
 
 - Create documentation run.
+- List documentation run summaries.
 - Upload sources.
 - Start run.
 - Get run status.

@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 123: API Run Listing Contract.
+- Implement Phase 124: SDK Run Listing Contract.
 
-Phase 123 goal:
-- Add a safe API run listing contract for operator surfaces.
-- Return persisted run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover listing behavior for created, completed, failed, and expired-cleaned runs as applicable.
+Phase 124 goal:
+- Expose the safe run listing contract through the TypeScript SDK.
+- Add SDK regression coverage for sanitized list responses, including created, completed, failed, and expired-cleaned run summaries as applicable.
+- Verify SDK list results do not expose upload archive storage paths, artifact paths, raw source content, or secret-bearing evidence.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

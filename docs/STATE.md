@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 123: API Run Listing Contract.
+Implement Phase 124: SDK Run Listing Contract.
 
 Required package:
 
 ```text
-apps/api
 packages/shared
+packages/sdk
 docs
 ```
 
-The next step should add a safe API run listing contract for operator surfaces, returning persisted run summaries without exposing artifact paths or source archive storage locations.
+The next step should expose the safe run listing contract through the TypeScript SDK and add SDK regression coverage for sanitized list responses.
 
 ## Completed Implementation
 
@@ -1933,6 +1933,21 @@ Verification:
 
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 123 API Run Listing Contract
+
+- Added shared run list response and run summary contracts for operator surfaces.
+- Added `GET /v1/documentation-runs` to return sanitized persisted run summaries sorted by latest update.
+- Added service and HTTP regression coverage for created, completed, failed, and expired-cleaned runs without exposing upload paths, artifact paths, raw source content, or secret-bearing evidence.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm --filter @codebase-docs-ai/shared build
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```

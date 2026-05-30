@@ -187,6 +187,66 @@ describe('DocumentationRunsService', () => {
     expect(failurePayload).not.toContain('.env');
   });
 
+  it('lists safe run summaries without private storage or secret-bearing evidence', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
+    service = new DocumentationRunsService();
+    const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
+    const secretSourceName = `Frontend prefix_${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const created = await service.createRun({
+      name: `Created ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const completed = await createCompletedRun('Completed Summary Docs', secretSourceName);
+    const failed = await createFailedRun('Failed Summary Docs', secretSourceName);
+    const expired = await createCompletedRun('Expired Summary Docs', secretSourceName);
+    await setRunUpdatedAt(expired.runId, '2026-05-29T00:00:00.000Z');
+    await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:02.000Z'));
+
+    const list = await service.listRuns();
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id).sort()).toEqual(
+      [created.runId, completed.runId, failed.runId].sort()
+    );
+    expect(list.runs.find((run) => run.id === created.runId)).toMatchObject({
+      status: 'created',
+      sourceCount: 0,
+      outputFormats: ['json']
+    });
+    expect(list.runs.find((run) => run.id === completed.runId)).toMatchObject({
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['single-markdown']
+    });
+    expect(list.runs.find((run) => run.id === failed.runId)).toMatchObject({
+      status: 'failed',
+      sourceCount: 1,
+      error: {
+        message: 'Documentation generation failed.'
+      }
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(expired.runId);
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+    expect(payload).not.toContain('archivePath');
+    expect(payload).not.toContain('tempPath');
+    expect(payload).not.toContain('documentationTreePath');
+    expect(payload).not.toContain('renderedPaths');
+    expect(payload).not.toContain('uploads');
+    expect(payload).not.toContain('extracted');
+    expect(payload).not.toContain('results');
+  });
+
   it('rejects source uploads and restarts after completion', async () => {
     const created = await service.createRun({
       name: 'Completed Fixture Docs',
@@ -643,19 +703,22 @@ function frontendArchive(): AdmZip {
   return archive;
 }
 
-function sourceMetadata(): string {
+function sourceMetadata(name = 'Frontend'): string {
   return JSON.stringify({
     sources: [
       {
         fileField: 'frontend',
-        name: 'Frontend',
+        name,
         role: 'frontend'
       }
     ]
   });
 }
 
-async function createCompletedRun(name: string): Promise<{ runId: string }> {
+async function createCompletedRun(
+  name: string,
+  sourceName = 'Frontend'
+): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
     options: {
@@ -674,7 +737,7 @@ async function createCompletedRun(name: string): Promise<{ runId: string }> {
         buffer: frontendArchive().toBuffer()
       }
     ],
-    sourceMetadata()
+    sourceMetadata(sourceName)
   );
   await service.startRun(created.runId);
   return {
@@ -682,7 +745,7 @@ async function createCompletedRun(name: string): Promise<{ runId: string }> {
   };
 }
 
-async function createFailedRun(name: string): Promise<{ runId: string }> {
+async function createFailedRun(name: string, sourceName = 'Frontend'): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
     options: {
@@ -701,7 +764,7 @@ async function createFailedRun(name: string): Promise<{ runId: string }> {
         buffer: frontendArchive().toBuffer()
       }
     ],
-    sourceMetadata()
+    sourceMetadata(sourceName)
   );
   await rm(path.join(tempRoot, created.runId, 'uploads'), {
     recursive: true,

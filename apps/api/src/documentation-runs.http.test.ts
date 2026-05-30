@@ -188,6 +188,76 @@ describe('Documentation runs HTTP API', () => {
     });
   });
 
+  it('lists safe run summaries without persisted artifact or upload storage paths', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'q'.repeat(24)}`;
+    const secretSourceName = `Frontend prefix_${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const created = await service.createRun({
+      name: `HTTP Created ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const completed = await createServiceRun(service, 'HTTP Listed Completed Docs', secretSourceName);
+    const failed = await createServiceRun(service, 'HTTP Listed Failed Docs', secretSourceName, {
+      failBeforeStart: true
+    });
+    const expired = await createServiceRun(service, 'HTTP Listed Expired Docs', secretSourceName);
+    await setRunUpdatedAt(expired.runId, '2026-05-01T00:00:00.000Z');
+    await service.cleanupExpiredRuns(new Date('2026-05-30T00:00:00.000Z'));
+
+    const response = await fetch(`${apiBaseUrl}/v1/documentation-runs`);
+    const payload = await response.text();
+    const list = JSON.parse(payload) as {
+      runs: Array<{
+        id: string;
+        status: string;
+        sourceCount: number;
+        renderedFormats?: string[];
+        error?: { message: string };
+      }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(list.runs.map((run) => run.id).sort()).toEqual(
+      [created.runId, completed.runId, failed.runId].sort()
+    );
+    expect(list.runs.find((run) => run.id === created.runId)).toMatchObject({
+      status: 'created',
+      sourceCount: 0
+    });
+    expect(list.runs.find((run) => run.id === completed.runId)).toMatchObject({
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['single-markdown']
+    });
+    expect(list.runs.find((run) => run.id === failed.runId)).toMatchObject({
+      status: 'failed',
+      sourceCount: 1,
+      error: {
+        message: 'Documentation generation failed.'
+      }
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(expired.runId);
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+    expect(payload).not.toContain('archivePath');
+    expect(payload).not.toContain('tempPath');
+    expect(payload).not.toContain('documentationTreePath');
+    expect(payload).not.toContain('renderedPaths');
+    expect(payload).not.toContain('uploads');
+    expect(payload).not.toContain('extracted');
+    expect(payload).not.toContain('results');
+  });
+
   it('keeps multi-source artifacts consistent across results and downloads', async () => {
     const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
     const created = await fetchJson<{ runId: string; status: string }>(
@@ -569,6 +639,77 @@ async function createCompletedHttpRun(
   return {
     runId: created.runId
   };
+}
+
+async function createServiceRun(
+  service: DocumentationRunsService,
+  name: string,
+  sourceName: string,
+  options: { failBeforeStart?: boolean } = {}
+): Promise<{ runId: string }> {
+  const created = await service.createRun({
+    name,
+    options: {
+      outputFormats: ['single-markdown'],
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    }
+  });
+  await service.uploadSources(
+    created.runId,
+    [
+      {
+        fieldname: 'frontend',
+        originalname: 'frontend.zip',
+        buffer: serviceArchiveBuffer()
+      }
+    ],
+    JSON.stringify({
+      sources: [
+        {
+          fileField: 'frontend',
+          name: sourceName,
+          role: 'frontend'
+        }
+      ]
+    })
+  );
+
+  if (options.failBeforeStart) {
+    await rm(path.join(tempRoot, created.runId, 'uploads'), {
+      recursive: true,
+      force: true
+    });
+    await expect(service.startRun(created.runId)).rejects.toThrow();
+  } else {
+    await service.startRun(created.runId);
+  }
+
+  return {
+    runId: created.runId
+  };
+}
+
+function serviceArchiveBuffer(): Buffer {
+  const archive = new AdmZip();
+  archive.addFile(
+    'package.json',
+    Buffer.from(
+      JSON.stringify({
+        dependencies: {
+          next: 'latest',
+          react: 'latest'
+        },
+        scripts: {
+          dev: 'next dev',
+          test: 'vitest run'
+        }
+      })
+    )
+  );
+  archive.addFile('app/page.tsx', Buffer.from('export default function Page() { return null; }\n'));
+  return archive.toBuffer();
 }
 
 async function sanitizationArchiveBlob(rawOpenAiKey: string): Promise<Blob> {

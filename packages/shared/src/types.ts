@@ -291,3 +291,27 @@ export interface DocumentationRun {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DocumentationRunSourceSummary {
+  id?: string;
+  name: string;
+  role: SourceRole;
+}
+
+export interface DocumentationRunSummary {
+  id: string;
+  name: string;
+  status: DocumentationRunStatus;
+  sources: DocumentationRunSourceSummary[];
+  sourceCount: number;
+  outputFormats: DocumentationOutputFormat[];
+  renderedFormats?: DocumentationOutputFormat[];
+  progress?: DocumentationRunProgress;
+  error?: DocumentationRunError;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentationRunListResponse {
+  runs: DocumentationRunSummary[];
+}

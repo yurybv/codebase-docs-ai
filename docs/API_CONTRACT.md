@@ -60,6 +60,46 @@ Response:
 }
 ```
 
+## List Runs
+
+```http
+GET /v1/documentation-runs
+```
+
+Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
+
+Response:
+
+```json
+{
+  "runs": [
+    {
+      "id": "run_123",
+      "name": "Customer Portal Documentation",
+      "status": "completed",
+      "sources": [
+        {
+          "name": "Frontend",
+          "role": "frontend"
+        }
+      ],
+      "sourceCount": 1,
+      "outputFormats": ["single-markdown", "json"],
+      "renderedFormats": ["single-markdown", "json"],
+      "progress": {
+        "currentStep": "Documentation run completed",
+        "completedSteps": 7,
+        "totalSteps": 7
+      },
+      "createdAt": "2026-05-30T00:00:00.000Z",
+      "updatedAt": "2026-05-30T00:01:00.000Z"
+    }
+  ]
+}
+```
+
+Run summaries must not expose upload archive storage paths, extracted source paths, result artifact paths, raw source content, or secret-bearing evidence.
+
 ## Upload Sources
 
 ```http

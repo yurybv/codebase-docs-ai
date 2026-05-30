@@ -21,10 +21,12 @@ import {
   supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
 import type {
+  DocumentationRunListResponse,
   DocumentationOutputFormat,
   DocumentationRun,
   DocumentationRunError,
   DocumentationRunProgress,
+  DocumentationRunSummary,
   DocumentationRunStatus,
   DocumentationTree,
   RenderedDocumentation,
@@ -154,6 +156,23 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     return {
       runId,
       status: run.status
+    };
+  }
+
+  async listRuns(): Promise<DocumentationRunListResponse> {
+    const runs: DocumentationRunSummary[] = [];
+
+    for (const entry of await this.listRunDirectoryNames()) {
+      try {
+        const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
+        runs.push(toRunSummary(storedRun.run));
+      } catch {
+        continue;
+      }
+    }
+
+    return {
+      runs: runs.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
     };
   }
 
@@ -618,6 +637,39 @@ function availableRenderedFormats(storedRun: StoredRun): DocumentationOutputForm
   }
 
   return Object.keys(storedRun.renderedPaths ?? {}) as DocumentationOutputFormat[];
+}
+
+function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
+  return {
+    id: sanitizePublicErrorText(run.id, { fallback: '[REDACTED]' }),
+    name: sanitizePublicErrorText(run.name, { fallback: '[REDACTED]' }),
+    status: run.status,
+    sources: run.sources.map((source) => ({
+      ...(source.id
+        ? {
+            id: sanitizePublicErrorText(source.id, { fallback: '[REDACTED]' })
+          }
+        : {}),
+      name: sanitizePublicErrorText(source.name, { fallback: '[REDACTED]' }),
+      role: source.role
+    })),
+    sourceCount: run.sources.length,
+    outputFormats: [...run.options.outputFormats],
+    ...(run.renderedFormats ? { renderedFormats: [...run.renderedFormats] } : {}),
+    ...(run.progress ? { progress: run.progress } : {}),
+    ...(run.error
+      ? {
+          error: {
+            ...run.error,
+            message: sanitizePublicErrorText(run.error.message, {
+              fallback: 'Documentation generation failed.'
+            })
+          }
+        }
+      : {}),
+    createdAt: run.createdAt,
+    updatedAt: run.updatedAt
+  };
 }
 
 function assertSupportedArchiveFile(fileName: string): void {

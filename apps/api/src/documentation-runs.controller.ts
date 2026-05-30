@@ -30,6 +30,11 @@ export class DocumentationRunsController {
     return this.documentationRunsService.createRun(body);
   }
 
+  @Get()
+  listRuns(): Promise<object> {
+    return this.documentationRunsService.listRuns();
+  }
+
   @Post('/:runId/sources')
   @UseFilters(MulterExceptionFilter)
   @UseInterceptors(AnyFilesInterceptor(getDocumentationUploadMulterOptions()))
