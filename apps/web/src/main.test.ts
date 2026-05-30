@@ -603,6 +603,66 @@ describe('App API error handling', () => {
     );
   });
 
+  it('sanitizes returned run history cursors before reuse', async () => {
+    const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+    const rawCursor = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runs: [
+            {
+              id: 'run_page_one',
+              name: 'Page One',
+              status: 'completed',
+              sources: [],
+              sourceCount: 0,
+              outputFormats: ['json'],
+              createdAt: '2026-05-30T00:00:00.000Z',
+              updatedAt: '2026-05-30T00:01:00.000Z'
+            }
+          ],
+          nextCursor: rawCursor
+        })
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runs: []
+        })
+      );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Page One');
+    await act(async () => {
+      getButtonByText('Load more').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const renderedText = document.body.textContent ?? '';
+    const secondUrl = String(fetchMock.mock.calls[1]?.[0] ?? '');
+    expect(renderedText).not.toContain(rawCursor);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondUrl).toContain('cursor=%5BREDACTED_STORAGE_PATH%5D');
+    expect(secondUrl).not.toContain(rawCursor);
+    expect(secondUrl).not.toContain(rawOpenAiKey);
+    expect(secondUrl).not.toContain('/private/tmp');
+    expect(secondUrl).not.toContain('.env');
+    expect(secondUrl).not.toContain('SHOULD_NOT_APPEAR');
+  });
+
   it('shows a client-side error for unsupported archive file selections', async () => {
     const rootElement = document.createElement('div');
     document.body.append(rootElement);

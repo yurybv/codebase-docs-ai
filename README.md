@@ -109,6 +109,8 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --cursor eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
+When more matching runs are available, list responses include `nextCursor`. Pass that value to `--cursor` to request the next page with the same limit and filters.
+
 ## Optional AI Provider
 
 The product runs deterministically without AI credentials.

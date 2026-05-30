@@ -47,6 +47,7 @@ Cover:
 - secret file upload -> denied or redacted;
 - API run lifecycle;
 - result download.
+- API/SDK/Web/CLI run listing pagination with sanitized `nextCursor` handling.
 
 The API package includes HTTP-level lifecycle coverage:
 
@@ -90,6 +91,15 @@ pnpm smoke:e2e
 The smoke harness starts local API and Web dev servers, creates frontend/backend fixture archives, uploads them through the HTTP API, starts generation, verifies the result, verifies JSON/single-Markdown/markdown-tree download content, verifies CLI API-mode generation for all CLI output formats, and checks that the Web root is reachable.
 
 This harness is intentionally lightweight. It does not replace full browser automation, but it protects server startup, multipart upload, API lifecycle, artifact download, and Web/API environment wiring.
+
+## Run Listing Pagination Regression
+
+Run listing pagination is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- first-page and cursor-page requests preserve selected `limit`, `status`, and `role` filters;
+- `nextCursor` is omitted when no more matching runs are available;
+- API, SDK, Web, and CLI surfaces do not expose raw cursor input, raw `nextCursor` values, upload storage paths, artifact paths, denied `.env` evidence, or secret-bearing values;
+- invalid cursor errors use stable public error codes and sanitized messages.
 
 ## Web Completed-State Regression
 

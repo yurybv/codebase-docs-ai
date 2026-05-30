@@ -472,6 +472,7 @@ describe('CodebaseDocsAIClient', () => {
       sourceCount: 1,
       renderedFormats: ['json']
     });
+    expect(list.nextCursor).toContain('[REDACTED_STORAGE_PATH]');
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_STORAGE_PATH]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');

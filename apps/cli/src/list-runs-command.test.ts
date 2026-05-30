@@ -351,6 +351,7 @@ describe('runListRunsCommand', () => {
       sourceCount: 1,
       renderedFormats: ['json']
     });
+    expect(result.nextCursor).toContain('[REDACTED_STORAGE_PATH]');
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_STORAGE_PATH]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');

@@ -80,21 +80,24 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement the remaining batch:
+Implement the next larger implementation batch:
 
-- Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
+- Phase 144: API Run Listing Updated-At Range Filter Contract.
+- Phase 145: SDK And CLI Run Listing Updated-At Range Filters.
+- Phase 146: Web Run History Updated-At Range Controls And Audit.
 
 Required package:
 
 ```text
 packages/shared
+apps/api
 apps/cli
 packages/sdk
 apps/web
 docs
 ```
 
-The next step should audit the API/SDK/Web/CLI run listing pagination contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should add safe updated-at range filtering across the API, SDK, CLI, and Web run listing surfaces, then audit the cross-surface contract as one sanitized behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2220,6 +2223,20 @@ Verification:
 ```text
 pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 143 Run Listing Pagination Cross-Surface Regression Audit
+
+- Audited API, SDK, Web, and CLI run listing pagination behavior as one public contract.
+- Tightened Web regression coverage so raw secret-bearing `nextCursor` values are sanitized before reuse.
+- Tightened SDK and CLI assertions for sanitized returned `nextCursor` values and documented cross-surface pagination testing expectations.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/web/src/main.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

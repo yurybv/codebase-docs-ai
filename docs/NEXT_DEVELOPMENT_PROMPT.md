@@ -37,13 +37,27 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
+- Implement Phase 144: API Run Listing Updated-At Range Filter Contract.
+- Then continue without stopping into Phase 145: SDK And CLI Run Listing Updated-At Range Filters.
+- Then continue without stopping into Phase 146: Web Run History Updated-At Range Controls And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
-Phase 143 goal:
-- Audit API, SDK, Web, and CLI run listing pagination behavior as one cross-surface contract.
-- Add or tighten regression coverage where a surface can expose raw `nextCursor`, raw cursor input, artifact paths, upload paths, denied `.env` evidence, or secret-bearing values.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, and State docs where the pagination behavior is now public.
+Phase 144 goal:
+- Add safe API run listing updated-at range filters, such as `updatedAfter` and `updatedBefore`, for operator surfaces.
+- Validate timestamp inputs before storage access where practical.
+- Preserve existing API `limit`, `status`, `role`, and `cursor` behavior while applying date-range filters deterministically.
+- Verify date-filtered list responses remain sanitized and invalid secret-bearing timestamp inputs do not expose raw values.
+
+Phase 145 goal:
+- Expose API run listing updated-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI timestamp inputs before network requests where practical.
+- Verify SDK and CLI date-filtered list requests preserve sanitized list output and invalid-date errors do not expose raw values.
+
+Phase 146 goal:
+- Expose updated-at range filters through the Web run history operator surface.
+- Preserve Web run history limit/status/role/cursor behavior when date filters are applied.
+- Audit API, SDK, CLI, and Web updated-at filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, and State docs where the filtering behavior is now public.
 - Confirm `docs/NEXT_DEVELOPMENT_PROMPT.md` is advanced to the next larger implementation batch before stopping.
 
 Verification expectations:
