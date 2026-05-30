@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
 - Phase 155: API Run Listing Source Count Filter Contract.
 - Phase 156: SDK And CLI Run Listing Source Count Filters.
 - Phase 157: Web Run History Source Count Filter Control And Audit.
+- Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should audit the cross-surface output-format filter contract, then continue into source-count filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should add source-count filtering for operator workflows across API, SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2378,6 +2378,20 @@ Verification:
 
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 154 Run Listing Output Format Cross-Surface Regression Audit
+
+- Audited API, SDK, CLI, and Web output-format filtering as one public operator contract.
+- Tightened API service and HTTP coverage so format filtering composes with limit, status, role, name, updated-at range, and cursor pagination.
+- Kept SDK, CLI, and Web format-filtered list coverage aligned with sanitized output and sanitized invalid-format errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```

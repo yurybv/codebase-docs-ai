@@ -557,57 +557,73 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
-  it('validates and applies the run list format query parameter', async () => {
+  it('validates and applies the run list format query parameter with other list filters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
-    const jsonRun = await service.createRun({
-      name: `HTTP JSON Format ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      options: {
-        outputFormats: ['json'],
-        language: 'en',
-        includeSourceReferences: true,
-        includeWarnings: true
-      }
-    });
-    const markdownRun = await createServiceRun(
+    const older = await createServiceRun(
       service,
-      `HTTP Markdown Format ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `HTTP Older Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    const newer = await createServiceRun(
+      service,
+      `HTTP Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    await createServiceRun(
+      service,
+      `HTTP Markdown Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       { role: 'backend' }
     );
-    await setRunUpdatedAt(jsonRun.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(markdownRun.runId, '2026-05-30T00:01:00.000Z');
-
-    const jsonResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?format=json`);
-    const jsonPayload = await jsonResponse.text();
-    const jsonList = JSON.parse(jsonPayload) as {
-      runs: Array<{ id: string }>;
-    };
-    const markdownResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?format=single-markdown`
+    await createServiceRun(
+      service,
+      `HTTP Frontend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'frontend', outputFormats: ['json'] }
     );
-    const markdownPayload = await markdownResponse.text();
-    const markdownList = JSON.parse(markdownPayload) as {
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
+
+    const filteredResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend format search')}&format=json&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
+    );
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
       runs: Array<{ id: string }>;
+      nextCursor?: string;
     };
 
-    expect(jsonResponse.status).toBe(200);
-    expect(jsonList.runs.map((run) => run.id)).toEqual([jsonRun.runId]);
-    expect(jsonPayload).toContain('[REDACTED_OPENAI_API_KEY]');
-    expect(jsonPayload).toContain('[REDACTED_DENIED_FILE]');
-    expect(jsonPayload).toContain('[REDACTED_DENIED_VALUE]');
-    expect(jsonPayload).not.toContain(rawOpenAiKey);
-    expect(jsonPayload).not.toContain('.env');
-    expect(jsonPayload).not.toContain('SHOULD_NOT_APPEAR');
-    expect(jsonPayload).not.toContain(tempRoot);
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(filtered.nextCursor).toBeTruthy();
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
 
-    expect(markdownResponse.status).toBe(200);
-    expect(markdownList.runs.map((run) => run.id)).toEqual([markdownRun.runId]);
-    expect(markdownPayload).toContain('[REDACTED_OPENAI_API_KEY]');
-    expect(markdownPayload).not.toContain(rawOpenAiKey);
-    expect(markdownPayload).not.toContain('.env');
-    expect(markdownPayload).not.toContain('SHOULD_NOT_APPEAR');
-    expect(markdownPayload).not.toContain(tempRoot);
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend format search')}&format=json&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const second = JSON.parse(secondPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(second.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(second.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
 
     const invalidOpenAiKey = `sk-${'q'.repeat(24)}`;
     const invalidFormat = encodeURIComponent(
@@ -1138,12 +1154,16 @@ async function createServiceRun(
   service: DocumentationRunsService,
   name: string,
   sourceName: string,
-  options: { failBeforeStart?: boolean; role?: string } = {}
+  options: {
+    failBeforeStart?: boolean;
+    role?: string;
+    outputFormats?: Array<'markdown-tree' | 'single-markdown' | 'json'>;
+  } = {}
 ): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
     options: {
-      outputFormats: ['single-markdown'],
+      outputFormats: options.outputFormats ?? ['single-markdown'],
       language: 'en',
       includeSourceReferences: true,
       includeWarnings: true

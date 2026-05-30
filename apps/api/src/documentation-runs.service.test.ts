@@ -401,32 +401,60 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
-  it('filters listed run summaries by output format without exposing raw values', async () => {
+  it('filters listed run summaries by output format with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
-    const jsonRun = await service.createRun({
-      name: `JSON Format Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      options: {
-        outputFormats: ['json'],
-        language: 'en',
-        includeSourceReferences: true,
-        includeWarnings: true
-      }
-    });
-    const markdownRun = await createCompletedRun(
-      `Markdown Format Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+    const older = await createCompletedRun(
+      `Older Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'backend',
+      ['json']
+    );
+    const newer = await createCompletedRun(
+      `Completed Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'backend',
+      ['json']
+    );
+    await createCompletedRun(
+      `Markdown Backend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       secretSourceName,
       'backend'
     );
-    await setRunUpdatedAt(jsonRun.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(markdownRun.runId, '2026-05-30T00:01:00.000Z');
+    await createCompletedRun(
+      `Completed Frontend Format Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'frontend',
+      ['json']
+    );
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
-    const jsonList = await service.listRuns({ format: 'json' });
-    const markdownList = await service.listRuns({ format: 'single-markdown' });
-    const payload = JSON.stringify({ jsonList, markdownList });
+    const firstPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend format search',
+      format: 'json',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const secondPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend format search',
+      format: 'json',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
 
-    expect(jsonList.runs.map((run) => run.id)).toEqual([jsonRun.runId]);
-    expect(markdownList.runs.map((run) => run.id)).toEqual([markdownRun.runId]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
     expect(payload).toContain('[REDACTED_DENIED_VALUE]');
@@ -1169,12 +1197,13 @@ function sourceMetadata(name = 'Frontend', role = 'frontend'): string {
 async function createCompletedRun(
   name: string,
   sourceName = 'Frontend',
-  role = 'frontend'
+  role = 'frontend',
+  outputFormats: Array<'markdown-tree' | 'single-markdown' | 'json'> = ['single-markdown']
 ): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
     options: {
-      outputFormats: ['single-markdown'],
+      outputFormats,
       language: 'en',
       includeSourceReferences: true,
       includeWarnings: true
