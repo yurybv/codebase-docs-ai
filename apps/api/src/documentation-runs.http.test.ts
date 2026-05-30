@@ -564,6 +564,86 @@ describe('Documentation runs HTTP API', () => {
     expect(secondPayload).not.toContain(tempRoot);
   });
 
+  it('applies run list completed-at sort query parameters with safe cursor paging', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
+    const oldestCompleted = await createServiceRun(
+      service,
+      `HTTP Oldest Completed Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { outputFormats: ['json'] }
+    );
+    const newestCompleted = await createServiceRun(
+      service,
+      `HTTP Newest Completed Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { outputFormats: ['json'] }
+    );
+    const middleCompleted = await createServiceRun(
+      service,
+      `HTTP Middle Completed Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { outputFormats: ['json'] }
+    );
+    const pending = await service.createRun({
+      name: `HTTP Pending Completed Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunCompletedAt(oldestCompleted.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCompletedAt(middleCompleted.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newestCompleted.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+
+    const firstResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=completedAt:asc`
+    );
+    const firstPayload = await firstResponse.text();
+    const firstPage = JSON.parse(firstPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([
+      oldestCompleted.runId,
+      middleCompleted.runId
+    ]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=completedAt:asc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const secondPage = JSON.parse(secondPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.runs.map((run) => run.id)).toEqual([
+      newestCompleted.runId,
+      pending.runId
+    ]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+  });
+
   it('validates and applies run list updated-at range query parameters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'y'.repeat(24)}`;

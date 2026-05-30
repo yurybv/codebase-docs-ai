@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 175: API Run Listing Completed-At Sort Contract.
-- Then continue without stopping into Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
+- Implement Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 - Then continue without stopping into Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Then continue without stopping into Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 179: Run Listing Terminal Duration Contract Exploration.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 175 goal:
-- Add API run listing `sort` support for `completedAt:desc` and `completedAt:asc`.
-- Preserve deterministic cursor pagination when sorting by completion time, including runs that do not have completion timestamps.
-- Validate completed-at sort inputs through the existing safe sort contract and cover sanitized sorted listing and invalid sort errors.
 
 Phase 176 goal:
 - Expose completed-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -63,6 +58,11 @@ Phase 178 goal:
 - Add or tighten regression coverage proving completed-at sort composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 179 goal:
+- Explore whether public run summaries should expose safe terminal duration metadata derived from `createdAt`, `completedAt`, and terminal failure timestamps.
+- If the contract is safe and useful, add an API-first duration contract with sanitized tests; otherwise document why it should be deferred.
+- Do not introduce raw artifact paths, upload storage paths, source content, or secret-bearing evidence into duration-related output or errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.

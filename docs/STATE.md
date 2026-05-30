@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 175: API Run Listing Completed-At Sort Contract.
 - Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 - Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
+- Phase 179: Run Listing Terminal Duration Contract Exploration.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should add completed-at sort support for operator workflows across API, SDK, CLI, and Web. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose completed-at sort support through SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2678,6 +2678,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 175 API Run Listing Completed-At Sort Contract
+
+- Extended the API `sort` query parameter to support `completedAt:desc` and `completedAt:asc`.
+- Included completed-at data in newly issued cursors when available and used `updatedAt` as the deterministic fallback for runs without completion timestamps.
+- Added service and HTTP regression coverage for completed-at sorted list pages without exposing secret-bearing run names or storage paths.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

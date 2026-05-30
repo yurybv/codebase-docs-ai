@@ -383,6 +383,53 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('sorts listed run summaries by completed time with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'c'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldestCompleted = await createCompletedRun('Oldest Completed Sort Docs', secretSourceName);
+    const newestCompleted = await createCompletedRun('Newest Completed Sort Docs', secretSourceName);
+    const middleCompleted = await createCompletedRun('Middle Completed Sort Docs', secretSourceName);
+    const pending = await service.createRun({
+      name: `Pending Completed Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunCompletedAt(oldestCompleted.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCompletedAt(middleCompleted.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newestCompleted.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2', sort: 'completedAt:asc' });
+    const secondPage = await service.listRuns({
+      limit: '2',
+      sort: 'completedAt:asc',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([
+      oldestCompleted.runId,
+      middleCompleted.runId
+    ]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([
+      newestCompleted.runId,
+      pending.runId
+    ]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('filters listed run summaries by updated-at range without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
