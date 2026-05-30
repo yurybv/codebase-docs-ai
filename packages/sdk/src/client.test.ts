@@ -246,6 +246,94 @@ describe('CodebaseDocsAIClient', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('passes run list status filters through the HTTP API while preserving sanitization', async () => {
+    const rawOpenAiKey = `sk-${'o'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_failed',
+            name: `Failed Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'failed',
+            sources: [
+              {
+                name: `Backend ${rawStoragePath}`,
+                role: 'backend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            error: {
+              message: `Documentation generation failed at ${rawStoragePath}.`
+            },
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          }
+        ]
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const list = await client.documentationRuns.list({ limit: 2, status: 'failed' });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs).toHaveLength(1);
+    expect(list.runs[0]).toMatchObject({
+      id: 'run_failed',
+      status: 'failed',
+      sourceCount: 1
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=failed',
+      undefined
+    );
+  });
+
+  it('rejects invalid run list status filters without network requests or raw value exposure', async () => {
+    const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
+    const rawStatus = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    try {
+      await client.documentationRuns.list({ status: rawStatus as never });
+      throw new Error('Expected list to reject invalid status.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+      expect((error as CodebaseDocsAIClientError).status).toBe(0);
+      expect((error as CodebaseDocsAIClientError).code).toBe('RUN_LIST_STATUS_INVALID');
+      expect((error as CodebaseDocsAIClientError).message).toBe(
+        'Run list status must be a supported documentation run status.'
+      );
+      expect((error as CodebaseDocsAIClientError).details).toMatchObject({
+        allowedStatuses: expect.arrayContaining(['created', 'completed', 'failed'])
+      });
+      expect(payload).not.toContain(rawStatus);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('uploads sources as multipart form data', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(

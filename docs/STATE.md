@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 132: SDK Run Listing Status Filter Option.
+Implement Phase 133: Web Run Listing Status Filter Control.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose the API run listing `status` filter through the TypeScript SDK and keep list result sanitization intact.
+The next step should expose the API run listing `status` filter through the Web operator run history view and keep rendered list sanitization intact.
 
 ## Completed Implementation
 
@@ -2062,6 +2062,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 132 SDK Run Listing Status Filter Option
+
+- Added a `documentationRuns.list({ status })` SDK option that maps to the API run listing status query.
+- Added SDK-side validation for list status filters before network requests, with sanitized stable invalid-status errors.
+- Added SDK regression coverage proving status-filtered list responses remain sanitized and invalid secret-bearing status values are not exposed.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

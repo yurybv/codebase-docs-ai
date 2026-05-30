@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 132: SDK Run Listing Status Filter Option.
+- Implement Phase 133: Web Run Listing Status Filter Control.
 
-Phase 132 goal:
-- Expose the API run listing `status` filter through the TypeScript SDK.
-- Validate SDK list status inputs before network requests where practical.
-- Verify SDK status-filtered list requests preserve sanitized list results and invalid-status errors do not expose raw values.
+Phase 133 goal:
+- Expose the API run listing `status` filter through the Web operator run history view.
+- Keep the Web UI as a thin API-backed surface with no core analysis, rendering, or cleanup logic.
+- Verify Web status-filtered list requests preserve sanitized list results and invalid-status errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

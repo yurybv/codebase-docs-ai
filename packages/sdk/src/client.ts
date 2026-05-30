@@ -2,6 +2,7 @@ import {
   type ApiErrorPayload,
   type DocumentationRun,
   type DocumentationRunListResponse,
+  type DocumentationRunStatus,
   type DocumentationRunSummary,
   maxDocumentationRunListLimit,
   isSupportedSourceArchiveFileName,
@@ -49,8 +50,17 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
 
   async list(options: DocumentationRunListOptions = {}): Promise<DocumentationRunListResponse> {
     const limit = parseRunListLimit(options.limit);
-    const query = limit === undefined ? '' : `?limit=${limit}`;
-    return sanitizeRunListResponse(await this.http.json(`/v1/documentation-runs${query}`));
+    const status = parseRunListStatus(options.status);
+    const query = new URLSearchParams();
+    if (limit !== undefined) {
+      query.set('limit', String(limit));
+    }
+    if (status !== undefined) {
+      query.set('status', status);
+    }
+    const queryString = query.toString();
+    const path = queryString ? `/v1/documentation-runs?${queryString}` : '/v1/documentation-runs';
+    return sanitizeRunListResponse(await this.http.json(path));
   }
 
   async uploadSources(
@@ -321,6 +331,22 @@ function sanitizeSdkErrorString(value: string, fallback: string): string {
   return sanitizePublicErrorText(value, { fallback });
 }
 
+const runListFilterStatuses: DocumentationRunStatus[] = [
+  'created',
+  'uploading_sources',
+  'ready',
+  'running',
+  'extracting_sources',
+  'analyzing_sources',
+  'building_system_map',
+  'generating_documentation',
+  'rendering_output',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+];
+
 function parseRunListLimit(value: unknown): number | undefined {
   if (value === undefined) {
     return undefined;
@@ -346,6 +372,29 @@ function invalidRunListLimit(): CodebaseDocsAIClientError {
     {
       min: 1,
       max: maxDocumentationRunListLimit
+    }
+  );
+}
+
+function parseRunListStatus(value: unknown): DocumentationRunStatus | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string' || !runListFilterStatuses.includes(value as DocumentationRunStatus)) {
+    throw invalidRunListStatus();
+  }
+
+  return value as DocumentationRunStatus;
+}
+
+function invalidRunListStatus(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    'Run list status must be a supported documentation run status.',
+    0,
+    'RUN_LIST_STATUS_INVALID',
+    {
+      allowedStatuses: [...runListFilterStatuses]
     }
   );
 }
