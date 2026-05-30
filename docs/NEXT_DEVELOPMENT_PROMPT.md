@@ -37,19 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 173: Web Run History Completed-At Filter Controls And Audit.
-- Then continue without stopping into Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
+- Implement Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 175: API Run Listing Completed-At Sort Contract.
 - Then continue without stopping into Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 - Then continue without stopping into Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Then continue without stopping into Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 173 goal:
-- Expose completed-at range filtering through the Web run history operator surface.
-- Preserve Web run history limit/status/role/name/format/source-count/sort/created-at/updated-at/cursor behavior when completed-at filtering is applied.
-- Audit API, SDK, CLI, and Web completed-at filtering as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 174 goal:
 - Audit API, SDK, CLI, and Web completed-at filtering as one public operator contract.

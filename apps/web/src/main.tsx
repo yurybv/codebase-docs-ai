@@ -37,6 +37,8 @@ export function App(): JSX.Element {
   const [runHistorySort, setRunHistorySort] = useState<RunHistorySort>('updatedAt:desc');
   const [runHistoryCreatedAfter, setRunHistoryCreatedAfter] = useState('');
   const [runHistoryCreatedBefore, setRunHistoryCreatedBefore] = useState('');
+  const [runHistoryCompletedAfter, setRunHistoryCompletedAfter] = useState('');
+  const [runHistoryCompletedBefore, setRunHistoryCompletedBefore] = useState('');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
   const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
@@ -138,6 +140,8 @@ export function App(): JSX.Element {
         runHistorySort,
         runHistoryCreatedAfter,
         runHistoryCreatedBefore,
+        runHistoryCompletedAfter,
+        runHistoryCompletedBefore,
         runHistoryUpdatedAfter,
         runHistoryUpdatedBefore,
         cursor
@@ -481,6 +485,30 @@ export function App(): JSX.Element {
                   />
                 </label>
                 <label className="history-limit">
+                  <span>Completed after</span>
+                  <input
+                    value={runHistoryCompletedAfter}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run completed after"
+                    onChange={(event) => {
+                      setRunHistoryCompletedAfter(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
+                  <span>Completed before</span>
+                  <input
+                    value={runHistoryCompletedBefore}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run completed before"
+                    onChange={(event) => {
+                      setRunHistoryCompletedBefore(event.currentTarget.value);
+                      resetRunHistoryPagination();
+                    }}
+                  />
+                </label>
+                <label className="history-limit">
                   <span>Updated after</span>
                   <input
                     value={runHistoryUpdatedAfter}
@@ -790,6 +818,8 @@ async function listRuns(
   sort: RunHistorySort,
   createdAfter: string,
   createdBefore: string,
+  completedAfter: string,
+  completedBefore: string,
   updatedAfter: string,
   updatedBefore: string,
   cursor?: string
@@ -808,6 +838,8 @@ async function listRuns(
   const maxSourcesFilter = maxSources.trim();
   const createdAfterFilter = createdAfter.trim();
   const createdBeforeFilter = createdBefore.trim();
+  const completedAfterFilter = completedAfter.trim();
+  const completedBeforeFilter = completedBefore.trim();
   const updatedAfterFilter = updatedAfter.trim();
   const updatedBeforeFilter = updatedBefore.trim();
   if (nameFilter) {
@@ -830,6 +862,12 @@ async function listRuns(
   }
   if (createdBeforeFilter) {
     query.set('createdBefore', createdBeforeFilter);
+  }
+  if (completedAfterFilter) {
+    query.set('completedAfter', completedAfterFilter);
+  }
+  if (completedBeforeFilter) {
+    query.set('completedBefore', completedBeforeFilter);
   }
   if (updatedAfterFilter) {
     query.set('updatedAfter', updatedAfterFilter);

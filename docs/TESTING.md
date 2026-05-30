@@ -96,7 +96,7 @@ This harness is intentionally lightweight. It does not replace full browser auto
 
 Run listing pagination is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
-- first-page and cursor-page requests preserve selected `limit`, `status`, `role`, `name`, `format`, source-count, created-at, and updated-at filters;
+- first-page and cursor-page requests preserve selected `limit`, `status`, `role`, `name`, `format`, source-count, created-at, completed-at, and updated-at filters;
 - `nextCursor` is omitted when no more matching runs are available;
 - API, SDK, Web, and CLI surfaces do not expose raw cursor input, raw `nextCursor` values, upload storage paths, artifact paths, denied `.env` evidence, or secret-bearing values;
 - invalid cursor errors use stable public error codes and sanitized messages.
@@ -106,7 +106,7 @@ Run listing pagination is a cross-surface contract. When changing API run listin
 Run listing updated-at filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `updatedAfter` and `updatedBefore` filters are forwarded as ISO timestamp query parameters;
-- updated-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, and `cursor` options;
+- updated-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid updated-at filter errors use stable public error codes and sanitized messages.
 
@@ -115,7 +115,7 @@ Run listing updated-at filtering is a cross-surface contract. When changing API 
 Run listing created-at filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `createdAfter` and `createdBefore` filters are forwarded as ISO timestamp query parameters;
-- created-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- created-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid created-at filter errors use stable public error codes and sanitized messages.
 
@@ -136,7 +136,7 @@ Run listing sort direction is a cross-surface contract. When changing API run li
 - `sort` is forwarded as a supported run-list sort query parameter for update-time and create-time ordering;
 - default listing remains `updatedAt:desc`;
 - sorted pagination uses deterministic cursors in the selected sort direction;
-- sort direction composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- sort direction composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw sort input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid sort errors use stable public error codes and sanitized messages.
 
@@ -145,7 +145,7 @@ Run listing sort direction is a cross-surface contract. When changing API run li
 Run listing name filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `name` filters are forwarded as sanitized run-name substring query parameters;
-- name filtering composes with selected `limit`, `status`, `role`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- name filtering composes with selected `limit`, `status`, `role`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw name input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid name filter errors use stable public error codes and sanitized messages.
 
@@ -154,7 +154,7 @@ Run listing name filtering is a cross-surface contract. When changing API run li
 Run listing output-format filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `format` filters are forwarded as supported documentation output format query parameters;
-- format filtering composes with selected `limit`, `status`, `role`, `name`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- format filtering composes with selected `limit`, `status`, `role`, `name`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw format input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid format filter errors use stable public error codes and sanitized messages.
 
@@ -163,7 +163,7 @@ Run listing output-format filtering is a cross-surface contract. When changing A
 Run listing source-count filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `minSources` and `maxSources` filters are forwarded as non-negative integer query parameters;
-- source-count filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- source-count filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `createdAfter`, `createdBefore`, `completedAfter`, `completedBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw source-count input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid source-count filter errors use stable public error codes and sanitized messages.
 

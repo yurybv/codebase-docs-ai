@@ -44,7 +44,7 @@ Run the Web UI only:
 pnpm --filter @codebase-docs-ai/web dev
 ```
 
-The Web run history panel can filter recent API runs by limit, status, source role, run name, output format, source count, sort direction, created-at range, updated-at range, and pagination cursor without exposing storage paths or secret-bearing evidence.
+The Web run history panel can filter recent API runs by limit, status, source role, run name, output format, source count, sort direction, created-at range, completed-at range, updated-at range, and pagination cursor without exposing storage paths or secret-bearing evidence.
 
 Run API and Web through Docker Compose:
 

@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 173: Web Run History Completed-At Filter Controls And Audit.
 - Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
 - Phase 175: API Run Listing Completed-At Sort Contract.
 - Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
+- Phase 177: Web Run History Completed-At Sort Control And Audit.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose completed-at range filtering through Web, audit it as one cross-surface contract, then continue into completed-at sort support for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should audit completed-at range filtering as one cross-surface contract, then continue into completed-at sort support for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2650,6 +2650,20 @@ Verification:
 pnpm --filter @codebase-docs-ai/sdk build
 pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 173 Web Run History Completed-At Filter Controls And Audit
+
+- Added Web run history `completedAfter` and `completedBefore` controls that forward API completed-at range filters.
+- Preserved selected limit, status, source role, name, output format, source-count range, sort direction, created-at range, completed-at range, updated-at range, and cursor values across Web run history pagination.
+- Added Web regression coverage for sanitized completed-at filtered list output and sanitized completed-at API errors.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 
