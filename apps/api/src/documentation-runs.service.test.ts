@@ -376,6 +376,66 @@ describe('DocumentationRunsService', () => {
     }
   });
 
+  it('filters listed run summaries by source role without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    const frontendName = `Frontend .env SHOULD_NOT_APPEAR ${rawOpenAiKey}`;
+    const backendName = `Backend .env SHOULD_NOT_APPEAR ${rawOpenAiKey}`;
+    await createCompletedRun('Frontend Role Filter Docs', frontendName, 'frontend');
+    const backend = await createCompletedRun('Backend Role Filter Docs', backendName, 'backend');
+
+    const list = await service.listRuns({ role: 'backend' });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([backend.runId]);
+    expect(list.runs[0]).toMatchObject({
+      status: 'completed',
+      sourceCount: 1,
+      sources: [
+        {
+          role: 'backend'
+        }
+      ],
+      renderedFormats: ['single-markdown']
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+    expect(payload).not.toContain('archivePath');
+    expect(payload).not.toContain('tempPath');
+    expect(payload).not.toContain('documentationTreePath');
+    expect(payload).not.toContain('renderedPaths');
+  });
+
+  it('rejects invalid run listing source roles without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const rawRole = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ role: rawRole })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_SOURCE_ROLE_INVALID',
+        message: 'Run list source role must be a supported source role.',
+        details: {
+          allowedRoles: expect.arrayContaining(['frontend', 'backend', 'unknown'])
+        }
+      }
+    });
+
+    try {
+      await service.listRuns({ role: rawRole });
+      throw new Error('Expected listRuns to reject invalid source role.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawRole);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('rejects source uploads and restarts after completion', async () => {
     const created = await service.createRun({
       name: 'Completed Fixture Docs',
@@ -832,13 +892,13 @@ function frontendArchive(): AdmZip {
   return archive;
 }
 
-function sourceMetadata(name = 'Frontend'): string {
+function sourceMetadata(name = 'Frontend', role = 'frontend'): string {
   return JSON.stringify({
     sources: [
       {
         fileField: 'frontend',
         name,
-        role: 'frontend'
+        role
       }
     ]
   });
@@ -846,7 +906,8 @@ function sourceMetadata(name = 'Frontend'): string {
 
 async function createCompletedRun(
   name: string,
-  sourceName = 'Frontend'
+  sourceName = 'Frontend',
+  role = 'frontend'
 ): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
@@ -866,7 +927,7 @@ async function createCompletedRun(
         buffer: frontendArchive().toBuffer()
       }
     ],
-    sourceMetadata(sourceName)
+    sourceMetadata(sourceName, role)
   );
   await service.startRun(created.runId);
   return {

@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 135: API Run Listing Source Role Filter Contract.
+Implement Phase 136: SDK Run Listing Source Role Filter Option.
 
 Required package:
 
 ```text
 packages/shared
-apps/api
+packages/sdk
 docs
 ```
 
-The next step should add a safe API run listing source role filter for operator surfaces and keep run summary sanitization intact.
+The next step should expose the API run listing `role` filter through the TypeScript SDK and keep list result sanitization intact.
 
 ## Completed Implementation
 
@@ -2104,6 +2104,20 @@ Verification:
 ```text
 pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 135 API Run Listing Source Role Filter Contract
+
+- Added an optional API `role` query filter for `GET /v1/documentation-runs`.
+- Added sanitized `RUN_LIST_SOURCE_ROLE_INVALID` validation for unsupported source role filters.
+- Added service and HTTP regression coverage for role-filtered safe summaries and invalid secret-bearing role values.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

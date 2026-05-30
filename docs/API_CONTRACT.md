@@ -63,7 +63,7 @@ Response:
 ## List Runs
 
 ```http
-GET /v1/documentation-runs?limit=50&status=completed
+GET /v1/documentation-runs?limit=50&status=completed&role=backend
 ```
 
 Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
@@ -74,7 +74,9 @@ Query:
 - default: `50`;
 - invalid limit values return `RUN_LIST_LIMIT_INVALID`;
 - `status`: optional `DocumentationRunStatus` filter;
-- invalid status values return `RUN_LIST_STATUS_INVALID`.
+- invalid status values return `RUN_LIST_STATUS_INVALID`;
+- `role`: optional source role filter. Runs match when at least one uploaded source has this role;
+- invalid role values return `RUN_LIST_SOURCE_ROLE_INVALID`.
 
 Response:
 

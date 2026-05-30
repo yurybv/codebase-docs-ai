@@ -375,6 +375,69 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies the run list source role query parameter', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    const frontendName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const backendName = `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    await createServiceRun(service, 'HTTP Frontend Role Filter Docs', frontendName, {
+      role: 'frontend'
+    });
+    const backend = await createServiceRun(service, 'HTTP Backend Role Filter Docs', backendName, {
+      role: 'backend'
+    });
+
+    const filteredResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?role=backend`);
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
+      runs: Array<{
+        id: string;
+        status: string;
+        sourceCount: number;
+        sources: Array<{ role: string }>;
+        renderedFormats?: string[];
+      }>;
+    };
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([backend.runId]);
+    expect(filtered.runs[0]).toMatchObject({
+      status: 'completed',
+      sourceCount: 1,
+      sources: [
+        {
+          role: 'backend'
+        }
+      ],
+      renderedFormats: ['single-markdown']
+    });
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
+    expect(filteredPayload).not.toContain('archivePath');
+    expect(filteredPayload).not.toContain('tempPath');
+    expect(filteredPayload).not.toContain('documentationTreePath');
+    expect(filteredPayload).not.toContain('renderedPaths');
+
+    const invalidOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const invalidRole = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?role=${invalidRole}`);
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_SOURCE_ROLE_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('keeps multi-source artifacts consistent across results and downloads', async () => {
     const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
     const created = await fetchJson<{ runId: string; status: string }>(
@@ -762,7 +825,7 @@ async function createServiceRun(
   service: DocumentationRunsService,
   name: string,
   sourceName: string,
-  options: { failBeforeStart?: boolean } = {}
+  options: { failBeforeStart?: boolean; role?: string } = {}
 ): Promise<{ runId: string }> {
   const created = await service.createRun({
     name,
@@ -787,7 +850,7 @@ async function createServiceRun(
         {
           fileField: 'frontend',
           name: sourceName,
-          role: 'frontend'
+          role: options.role ?? 'frontend'
         }
       ]
     })

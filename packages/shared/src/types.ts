@@ -1,11 +1,14 @@
-export type SourceRole =
-  | 'frontend'
-  | 'backend'
-  | 'shared'
-  | 'infra'
-  | 'mobile'
-  | 'docs'
-  | 'unknown';
+export const sourceRoles = [
+  'frontend',
+  'backend',
+  'shared',
+  'infra',
+  'mobile',
+  'docs',
+  'unknown'
+] as const;
+
+export type SourceRole = (typeof sourceRoles)[number];
 
 export type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 

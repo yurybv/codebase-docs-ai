@@ -20,6 +20,7 @@ import {
   maxDocumentationRunListLimit,
   sanitizePublicErrorText,
   sourceInputMetadataSchema,
+  sourceRoleSchema,
   supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
 import type {
@@ -32,7 +33,8 @@ import type {
   DocumentationRunStatus,
   DocumentationTree,
   RenderedDocumentation,
-  SourceInputMetadata
+  SourceInputMetadata,
+  SourceRole
 } from '@codebase-docs-ai/shared';
 import { loadArchiveSource } from '@codebase-docs-ai/source-loader';
 import { z } from 'zod';
@@ -70,6 +72,7 @@ interface CleanupExpiredRunsResult {
 interface ListRunsOptions {
   limit?: unknown;
   status?: unknown;
+  role?: unknown;
 }
 
 const uploadSourcesMetadataSchema = z.object({
@@ -185,11 +188,15 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const runs: DocumentationRunSummary[] = [];
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
+    const role = parseRunListSourceRole(options.role);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
         const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
         if (status && storedRun.run.status !== status) {
+          continue;
+        }
+        if (role && !storedRun.run.sources.some((source) => source.role === role)) {
           continue;
         }
         runs.push(toRunSummary(storedRun.run));
@@ -791,6 +798,33 @@ function invalidRunListStatus(): BadRequestException {
     message: 'Run list status must be a supported documentation run status.',
     details: {
       allowedStatuses: [...runListFilterStatuses]
+    }
+  });
+}
+
+function parseRunListSourceRole(value: unknown): SourceRole | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListSourceRole();
+  }
+
+  const parsed = sourceRoleSchema.safeParse(String(value));
+  if (!parsed.success) {
+    throw invalidRunListSourceRole();
+  }
+
+  return parsed.data;
+}
+
+function invalidRunListSourceRole(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_SOURCE_ROLE_INVALID',
+    message: 'Run list source role must be a supported source role.',
+    details: {
+      allowedRoles: [...sourceRoleSchema.options]
     }
   });
 }

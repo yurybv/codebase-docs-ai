@@ -1,14 +1,7 @@
 import { z } from 'zod';
+import { sourceRoles } from './types.js';
 
-export const sourceRoleSchema = z.enum([
-  'frontend',
-  'backend',
-  'shared',
-  'infra',
-  'mobile',
-  'docs',
-  'unknown'
-]);
+export const sourceRoleSchema = z.enum(sourceRoles);
 
 export const documentationOutputFormatSchema = z.enum([
   'markdown-tree',
