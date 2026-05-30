@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 121: API Cleanup Scheduler Resilience Regression Coverage.
+- Implement Phase 122: Run Retention Configuration Boundary Regression Coverage.
 
-Phase 121 goal:
-- Add API regression coverage proving startup and interval cleanup scheduling continue after cleanup failures.
-- Verify cleanup warning logs remain sanitized when scheduler-triggered cleanup failures include raw storage paths, provider keys, denied `.env` evidence, or denied-source values.
-- Keep cleanup resilience behavior from Phase 120 intact.
+Phase 122 goal:
+- Add API regression coverage for run retention and cleanup interval configuration boundaries, including invalid, zero, and explicit millisecond values.
+- Verify retention cleanup remains predictable and does not accidentally delete fresh runs when configuration values are invalid or disabled.
+- Keep cleanup resilience and scheduler sanitization behavior from Phases 120 and 121 intact.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

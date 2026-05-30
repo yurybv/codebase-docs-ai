@@ -514,6 +514,43 @@ describe('DocumentationRunsService', () => {
     expect(message).not.toContain('SHOULD_NOT_APPEAR');
   });
 
+  it('continues scheduled cleanup after startup and interval cleanup failures', async () => {
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '1000';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    const cleanupExpiredRuns = vi
+      .spyOn(service, 'cleanupExpiredRuns')
+      .mockRejectedValueOnce(new Error(`Startup cleanup failed at ${rawStoragePath}.`))
+      .mockRejectedValueOnce(new Error(`Interval cleanup failed at ${rawStoragePath}.`))
+      .mockResolvedValue({
+        deletedRunIds: []
+      });
+    const warn = vi
+      .spyOn(
+        (service as unknown as { logger: { warn: (message: string) => void } }).logger,
+        'warn'
+      )
+      .mockImplementation(() => undefined);
+
+    await service.onModuleInit();
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(cleanupExpiredRuns).toHaveBeenCalledTimes(3);
+    expect(warn).toHaveBeenCalledTimes(2);
+    for (const [message] of warn.mock.calls) {
+      const payload = String(message);
+      expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+      expect(payload).not.toContain(rawStoragePath);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('does not schedule expired run cleanup when the interval is disabled', async () => {
     process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '0';
     service = new DocumentationRunsService();

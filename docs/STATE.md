@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 121: API Cleanup Scheduler Resilience Regression Coverage.
+Implement Phase 122: Run Retention Configuration Boundary Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/api
 docs
 ```
 
-The next step should add API regression coverage proving startup and interval cleanup scheduling continue after cleanup failures, while warning logs remain sanitized.
+The next step should add API regression coverage for run retention and cleanup interval configuration boundaries, including invalid, zero, and explicit millisecond values.
 
 ## Completed Implementation
 
@@ -1900,6 +1900,20 @@ pnpm verify
 - Made expired run cleanup continue across independent run directories when one expired run cannot be removed.
 - Added service regression coverage proving successful expired deletions are still reported while the failed run remains for a later cleanup attempt.
 - Verified per-run cleanup failure warnings redact raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 121 API Cleanup Scheduler Resilience Regression Coverage
+
+- Added API service regression coverage proving scheduled cleanup continues after startup and interval cleanup failures.
+- Verified scheduler-triggered cleanup warning logs redact raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
+- Kept cleanup interval scheduling behavior intact after failure recovery.
 
 Verification:
 
