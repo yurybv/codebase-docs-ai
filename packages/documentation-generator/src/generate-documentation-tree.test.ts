@@ -161,6 +161,78 @@ describe('generateDocumentationTree', () => {
       path: 'src/api.ts'
     });
   });
+
+  it('sanitizes source metadata and references in deterministic documentation output', () => {
+    const rawOpenAiKey = `sk-${'c'.repeat(25)}`;
+    const systemMap = systemMapFixture();
+    const unsafeSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const unsafeReferencePath = `.env/${rawOpenAiKey}/SHOULD_NOT_APPEAR.ts`;
+    systemMap.sources[0] = {
+      ...systemMap.sources[0],
+      source: {
+        name: unsafeSourceName,
+        role: 'frontend'
+      },
+      packageManager: {
+        ...systemMap.sources[0].packageManager,
+        evidence: [
+          {
+            sourceName: unsafeSourceName,
+            path: unsafeReferencePath
+          }
+        ]
+      }
+    };
+    systemMap.relationships[0] = {
+      ...systemMap.relationships[0],
+      fromSource: unsafeSourceName,
+      evidence: [
+        {
+          sourceName: unsafeSourceName,
+          path: unsafeReferencePath
+        }
+      ]
+    };
+    systemMap.authFlows[0] = {
+      ...systemMap.authFlows[0],
+      sources: [unsafeSourceName],
+      evidence: [
+        {
+          sourceName: unsafeSourceName,
+          path: unsafeReferencePath
+        }
+      ]
+    };
+    systemMap.environmentLinks = [
+      {
+        name: `API_${rawOpenAiKey}_SHOULD_NOT_APPEAR`,
+        sources: [unsafeSourceName]
+      }
+    ];
+    systemMap.integrations[0] = {
+      ...systemMap.integrations[0],
+      sources: [unsafeSourceName],
+      evidence: [
+        {
+          sourceName: unsafeSourceName,
+          path: unsafeReferencePath
+        }
+      ]
+    };
+
+    const documentationTree = generateDocumentationTree({
+      title: 'Customer Portal Documentation',
+      systemMap
+    });
+    const payload = JSON.stringify(documentationTree);
+
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+  });
 });
 
 function systemMapFixture(): SystemMap {

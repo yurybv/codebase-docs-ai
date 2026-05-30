@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 102: Documentation Generator Source Metadata Sanitization Regression Coverage.
+Implement Phase 103: Documentation Generator Script And Dependency Sanitization Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ packages/documentation-generator
 docs
 ```
 
-The next step should add documentation-generator regression coverage proving source metadata and references rendered into documentation do not expose raw secret-bearing source content.
+The next step should add documentation-generator regression coverage proving scripts, dependencies, framework names, route paths, and integration labels rendered into documentation do not expose raw secret-bearing source content.
 
 ## Completed Implementation
 
@@ -1640,6 +1640,20 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/documentation-generator typecheck
 pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+```
+
+### 2026-05-30: Phase 102 Documentation Generator Source Metadata Sanitization Regression Coverage
+
+- Added deterministic documentation sanitization for source names, source references, relationships, auth sources, environment links, and integration sources.
+- Added documentation-generator regression coverage for source metadata and references containing a fake provider key and denied `.env` evidence.
+- Verified deterministic documentation output preserves redaction markers while excluding raw provider keys, denied `.env` evidence, and denied-source variable names.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/documentation-generator typecheck
+pnpm test -- packages/documentation-generator/src/generate-documentation-tree.test.ts
+pnpm verify
 ```
 
 ## Open Questions

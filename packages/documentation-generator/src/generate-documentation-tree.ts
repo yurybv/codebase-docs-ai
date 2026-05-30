@@ -159,7 +159,7 @@ function renderPageMarkdown(key: string, title: string, systemMap: SystemMap): s
 
 function renderOverview(title: string, systemMap: SystemMap): string {
   const sourceRows = systemMap.sources
-    .map((repository) => `| ${repository.source.name} | ${repository.source.role} |`)
+    .map((repository) => `| ${formatText(repository.source.name)} | ${repository.source.role} |`)
     .join('\n');
 
   return `${heading(title)}
@@ -180,13 +180,13 @@ function renderSystemArchitecture(title: string, systemMap: SystemMap): string {
   const relationshipRows = systemMap.relationships
     .map(
       (relationship) =>
-        `| ${relationship.kind} | ${relationship.fromSource} | ${relationship.toSource} | ${relationship.confidence} | ${formatReferences(relationship.evidence)} |`
+        `| ${relationship.kind} | ${formatText(relationship.fromSource)} | ${formatText(relationship.toSource)} | ${relationship.confidence} | ${formatReferences(relationship.evidence)} |`
     )
     .join('\n');
   const sourceRows = systemMap.sources
     .map((repository) => {
       const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
-      return `| ${repository.source.name} | ${repository.source.role} | ${frameworks} | ${repository.packageManager.name} |`;
+      return `| ${formatText(repository.source.name)} | ${repository.source.role} | ${frameworks} | ${repository.packageManager.name} |`;
     })
     .join('\n');
 
@@ -211,7 +211,7 @@ function renderSourceInventory(title: string, systemMap: SystemMap): string {
     const frameworks = repository.frameworks.map((framework) => framework.name).join(', ') || 'None detected';
     const scripts = repository.scripts.map((script) => `\`${script.name}\``).join(', ') || 'None detected';
 
-    return `## ${repository.source.name}
+    return `## ${formatText(repository.source.name)}
 
 - Role: ${repository.source.role}
 - Package manager: ${repository.packageManager.name}
@@ -247,7 +247,7 @@ function renderRolePage(title: string, systemMap: SystemMap, role: 'frontend' | 
       .map((call) => `| ${call.method} | ${call.path} | ${formatReference(call.sourceReference)} |`)
       .join('\n');
 
-    return `## ${repository.source.name}
+    return `## ${formatText(repository.source.name)}
 
 ### Framework Evidence
 
@@ -296,12 +296,8 @@ ${endpointRows || '| None detected | N/A | N/A | N/A |'}`;
 function renderApiContracts(title: string, systemMap: SystemMap): string {
   const rows = systemMap.apiContracts
     .map((contract) => {
-      const consumer = contract.consumer
-        ? `${contract.consumer.sourceName}:${contract.consumer.path}`
-        : 'None';
-      const provider = contract.provider
-        ? `${contract.provider.sourceName}:${contract.provider.path}`
-        : 'None';
+      const consumer = contract.consumer ? formatReference(contract.consumer) : 'None';
+      const provider = contract.provider ? formatReference(contract.provider) : 'None';
       return `| ${contract.method} | ${contract.path} | ${contract.status} | ${consumer} | ${provider} |`;
     })
     .join('\n');
@@ -318,7 +314,7 @@ function renderAuth(title: string, systemMap: SystemMap): string {
   const rows = systemMap.authFlows
     .map(
       (flow) =>
-        `| ${flow.kind} | ${flow.sources.join(', ')} | ${flow.confidence} | ${formatReferences(flow.evidence)} |`
+        `| ${flow.kind} | ${flow.sources.map(formatText).join(', ')} | ${flow.confidence} | ${formatReferences(flow.evidence)} |`
     )
     .join('\n');
 
@@ -340,13 +336,13 @@ function renderEnvironment(title: string, systemMap: SystemMap): string {
   const envRows = systemMap.sources
     .flatMap((repository) =>
       repository.environmentVariables.map(
-        (envVar) => `| ${envVar.name} | ${repository.source.name} | ${repository.source.role} |`
+        (envVar) => `| ${formatText(envVar.name)} | ${formatText(repository.source.name)} | ${repository.source.role} |`
       )
     )
     .join('\n');
 
   const linkRows = systemMap.environmentLinks
-    .map((link) => `| ${link.name} | ${link.sources.join(', ')} |`)
+    .map((link) => `| ${formatText(link.name)} | ${link.sources.map(formatText).join(', ')} |`)
     .join('\n');
 
   return `${heading(title)}
@@ -373,7 +369,7 @@ function renderLocalDevelopment(title: string, systemMap: SystemMap): string {
       .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
       .join('\n');
 
-    return `## ${repository.source.name}
+    return `## ${formatText(repository.source.name)}
 
 - Package manager: ${repository.packageManager.name}
 - Suggested install command: \`${installCommand}\`
@@ -396,7 +392,7 @@ function renderTesting(title: string, systemMap: SystemMap): string {
       .map((script) => `| ${script.name} | \`${script.command}\` | ${formatReference(script.sourceReference)} |`)
       .join('\n');
 
-    return `## ${repository.source.name}
+    return `## ${formatText(repository.source.name)}
 
 | Test script | Command | Evidence |
 | --- | --- | --- |
@@ -423,7 +419,7 @@ function renderBuildDeployment(title: string, systemMap: SystemMap): string {
       .map((configFile) => `| ${configFile.kind} | ${formatReference(configFile.sourceReference)} |`)
       .join('\n');
 
-    return `## ${repository.source.name}
+    return `## ${formatText(repository.source.name)}
 
 ### Build And Deployment Scripts
 
@@ -448,7 +444,7 @@ function renderExternalIntegrations(title: string, systemMap: SystemMap): string
   const integrationRows = systemMap.integrations
     .map(
       (integration) =>
-        `| ${integration.name} | ${integration.sources.join(', ')} | ${formatReferences(integration.evidence)} |`
+        `| ${formatText(integration.name)} | ${integration.sources.map(formatText).join(', ')} | ${formatReferences(integration.evidence)} |`
     )
     .join('\n');
   const dependencyRows = systemMap.sources
@@ -457,7 +453,7 @@ function renderExternalIntegrations(title: string, systemMap: SystemMap): string
         .filter((dependency) => likelyIntegrationDependency(dependency.name))
         .map(
           (dependency) =>
-            `| ${dependency.name} | ${repository.source.name} | ${dependency.scope} | ${formatReference(dependency.sourceReference)} |`
+            `| ${formatText(dependency.name)} | ${formatText(repository.source.name)} | ${dependency.scope} | ${formatReference(dependency.sourceReference)} |`
         )
     )
     .join('\n');
@@ -496,7 +492,7 @@ ${unknowns.join('\n') || 'No system unknowns were detected from the provided evi
 
 function renderSourceReferences(title: string, systemMap: SystemMap): string {
   const references = collectSystemReferences(systemMap)
-    .map((reference) => `- ${reference.sourceName}: ${reference.path}`)
+    .map((reference) => `- ${formatReference(reference)}`)
     .join('\n');
 
   return `${heading(title)}
@@ -559,7 +555,7 @@ function likelyIntegrationDependency(dependencyName: string): boolean {
 }
 
 function formatReference(sourceReference: SourceReference): string {
-  return `${sourceReference.sourceName}:${sourceReference.path}`;
+  return `${formatText(sourceReference.sourceName)}:${formatText(sourceReference.path)}`;
 }
 
 function formatReferences(sourceReferences: SourceReference[]): string {
@@ -653,13 +649,18 @@ function dedupeReferences(sourceReferences: SourceReference[]): SourceReference[
   const deduped: SourceReference[] = [];
 
   for (const sourceReference of sourceReferences) {
-    const key = `${sourceReference.sourceName}:${sourceReference.path}`;
+    const sanitizedReference = {
+      ...sourceReference,
+      sourceName: formatText(sourceReference.sourceName),
+      path: formatText(sourceReference.path)
+    };
+    const key = `${sanitizedReference.sourceName}:${sanitizedReference.path}`;
     if (keys.has(key)) {
       continue;
     }
 
     keys.add(key);
-    deduped.push(sourceReference);
+    deduped.push(sanitizedReference);
   }
 
   return deduped;
@@ -671,6 +672,10 @@ function isSourceReference(value: SourceReference | undefined): value is SourceR
 
 function heading(title: string): string {
   return `# ${title}`;
+}
+
+function formatText(value: string): string {
+  return sanitizeGeneratedText(value);
 }
 
 const sourceReferenceSchema = z.object({
@@ -717,7 +722,7 @@ function mergeWarnings(
 
 function sanitizeGeneratedText(value: string): string {
   return value
-    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/sk-[A-Za-z0-9_-]{20,}/g, '[REDACTED_OPENAI_API_KEY]')
     .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
     .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
 }
