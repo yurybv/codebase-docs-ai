@@ -55,6 +55,8 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
     const cursor = parseRunListCursor(options.cursor);
+    const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
+    const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
     const query = new URLSearchParams();
     if (limit !== undefined) {
       query.set('limit', String(limit));
@@ -64,6 +66,12 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (role !== undefined) {
       query.set('role', role);
+    }
+    if (updatedAfter !== undefined) {
+      query.set('updatedAfter', updatedAfter);
+    }
+    if (updatedBefore !== undefined) {
+      query.set('updatedBefore', updatedBefore);
     }
     if (cursor !== undefined) {
       query.set('cursor', cursor);
@@ -360,6 +368,7 @@ const runListFilterStatuses: DocumentationRunStatus[] = [
   'expired'
 ];
 const maxRunListCursorLength = 512;
+const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 function parseRunListLimit(value: unknown): number | undefined {
   if (value === undefined) {
@@ -450,4 +459,44 @@ function parseRunListCursor(value: unknown): string | undefined {
 
 function invalidRunListCursor(): CodebaseDocsAIClientError {
   return new CodebaseDocsAIClientError('Run list cursor is invalid.', 0, 'RUN_LIST_CURSOR_INVALID');
+}
+
+function parseRunListUpdatedAfter(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_UPDATED_AFTER_INVALID',
+    'Run list updatedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListUpdatedBefore(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_UPDATED_BEFORE_INVALID',
+    'Run list updatedBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListTimestamp(
+  value: unknown,
+  code: string,
+  message: string
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    typeof value !== 'string' ||
+    !runListIsoTimestampPattern.test(value) ||
+    !Number.isFinite(Date.parse(value))
+  ) {
+    throw invalidRunListTimestamp(code, message);
+  }
+
+  return value;
+}
+
+function invalidRunListTimestamp(code: string, message: string): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(message, 0, code);
 }

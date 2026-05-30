@@ -38,11 +38,23 @@ program
   .option('--limit <count>', 'Maximum number of recent runs to list, from 1 to 100')
   .option('--status <status>', 'Filter recent runs by documentation run status')
   .option('--role <role>', 'Filter recent runs by source role')
+  .option('--updated-after <timestamp>', 'Filter recent runs updated at or after an ISO timestamp')
+  .option('--updated-before <timestamp>', 'Filter recent runs updated at or before an ISO timestamp')
   .option('--cursor <cursor>', 'Continue listing runs from a previous nextCursor')
-  .action(async (options: { apiUrl?: string; limit?: string; status?: string; role?: string; cursor?: string }) => {
-    const result = await runListRunsCommand(parseListRunsOptions(options));
-    console.log(JSON.stringify(result, null, 2));
-  });
+  .action(
+    async (options: {
+      apiUrl?: string;
+      limit?: string;
+      status?: string;
+      role?: string;
+      updatedAfter?: string;
+      updatedBefore?: string;
+      cursor?: string;
+    }) => {
+      const result = await runListRunsCommand(parseListRunsOptions(options));
+      console.log(JSON.stringify(result, null, 2));
+    }
+  );
 
 try {
   await program.parseAsync();

@@ -33,6 +33,8 @@ export interface ListRunsCommandOptions {
   limit?: number;
   status?: DocumentationRunStatus;
   role?: SourceRole;
+  updatedAfter?: string;
+  updatedBefore?: string;
   cursor?: string;
 }
 
@@ -52,6 +54,7 @@ const cliRunListStatusOptions: DocumentationRunStatus[] = [
   'expired'
 ];
 const maxRunListCursorLength = 512;
+const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
   return [...previous, value];
@@ -88,6 +91,8 @@ export function parseListRunsOptions(options: {
   limit?: string;
   status?: string;
   role?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
   cursor?: string;
 }): ListRunsCommandOptions {
   if (!options.apiUrl) {
@@ -101,12 +106,16 @@ export function parseListRunsOptions(options: {
   const limit = parseRunListLimit(options.limit);
   const status = parseRunListStatus(options.status);
   const role = parseRunListSourceRole(options.role);
+  const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
+  const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
   return {
     apiUrl: options.apiUrl,
     ...(limit === undefined ? {} : { limit }),
     ...(status === undefined ? {} : { status }),
     ...(role === undefined ? {} : { role }),
+    ...(updatedAfter === undefined ? {} : { updatedAfter }),
+    ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
   };
 }
@@ -226,6 +235,38 @@ function parseRunListCursor(value: string | undefined): string | undefined {
 
   if (value.length === 0 || value.length > maxRunListCursorLength) {
     throw new CliError('CLI_RUN_LIST_CURSOR_INVALID', 'Run list cursor is invalid.', 2);
+  }
+
+  return value;
+}
+
+function parseRunListUpdatedAfter(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_UPDATED_AFTER_INVALID',
+    'Run list updatedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListUpdatedBefore(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_UPDATED_BEFORE_INVALID',
+    'Run list updatedBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListTimestamp(
+  value: string | undefined,
+  code: string,
+  message: string
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!runListIsoTimestampPattern.test(value) || !Number.isFinite(Date.parse(value))) {
+    throw new CliError(code, message, 2);
   }
 
   return value;

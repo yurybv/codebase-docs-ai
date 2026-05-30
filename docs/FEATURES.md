@@ -109,6 +109,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Typed requests/responses.
 - Run listing helper.
 - Paginated run listing helper.
+- Updated-at filtered run listing helper.
 - Upload helper.
 - Polling helper.
 - Result retrieval helper.
@@ -122,6 +123,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Limit API-backed run summaries.
 - Filter API-backed run summaries by status.
 - Filter API-backed run summaries by source role.
+- Filter API-backed run summaries by updated-at range.
 - Paginate API-backed run summaries.
 - Select output format.
 - Write output to local folder.

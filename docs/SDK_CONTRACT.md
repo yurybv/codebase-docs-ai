@@ -140,6 +140,8 @@ const runs = await client.documentationRuns.list({
   limit: 25,
   status: 'completed',
   role: 'backend',
+  updatedAfter: '2026-05-30T00:00:00.000Z',
+  updatedBefore: '2026-05-30T01:00:00.000Z',
   cursor: previousPage.nextCursor
 });
 ```
@@ -149,6 +151,8 @@ Options:
 - `limit`: optional integer from `1` to `100`. When omitted, the API default is used.
 - `status`: optional `DocumentationRunStatus` filter.
 - `role`: optional source role filter. Runs match when at least one uploaded source has this role.
+- `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`.
+- `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`.
 - `cursor`: optional opaque pagination cursor returned by a previous list response.
 
 Returns:

@@ -488,6 +488,107 @@ describe('CodebaseDocsAIClient', () => {
     );
   });
 
+  it('passes run list updated-at filters through the HTTP API while preserving sanitization', async () => {
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_updated_range',
+            name: `Updated Range Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'completed',
+            sources: [
+              {
+                name: `Backend ${rawStoragePath}`,
+                role: 'backend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            renderedFormats: ['json'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          }
+        ]
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const list = await client.documentationRuns.list({
+      limit: 2,
+      status: 'completed',
+      role: 'backend',
+      updatedAfter: '2026-05-30T00:00:30.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs).toHaveLength(1);
+    expect(list.runs[0]).toMatchObject({
+      id: 'run_updated_range',
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['json']
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=completed&role=backend&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z',
+      undefined
+    );
+  });
+
+  it('rejects invalid run list updated-at filters without network requests or raw value exposure', async () => {
+    const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const rawTimestamp = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    for (const [field, code, message] of [
+      [
+        'updatedAfter',
+        'RUN_LIST_UPDATED_AFTER_INVALID',
+        'Run list updatedAfter must be a valid ISO timestamp.'
+      ],
+      [
+        'updatedBefore',
+        'RUN_LIST_UPDATED_BEFORE_INVALID',
+        'Run list updatedBefore must be a valid ISO timestamp.'
+      ]
+    ] as const) {
+      try {
+        await client.documentationRuns.list({ [field]: rawTimestamp } as never);
+        throw new Error(`Expected list to reject invalid ${field}.`);
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+        expect((error as CodebaseDocsAIClientError).status).toBe(0);
+        expect((error as CodebaseDocsAIClientError).code).toBe(code);
+        expect((error as CodebaseDocsAIClientError).message).toBe(message);
+        expect(payload).not.toContain(rawTimestamp);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('rejects invalid run list cursors without network requests or raw value exposure', async () => {
     const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
     const rawCursor = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;

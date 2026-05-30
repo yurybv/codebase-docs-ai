@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 145: SDK And CLI Run Listing Updated-At Range Filters.
-- Then continue without stopping into Phase 146: Web Run History Updated-At Range Controls And Audit.
+- Implement Phase 146: Web Run History Updated-At Range Controls And Audit.
 - Then continue without stopping into Phase 147: API Run Listing Name Search Filter Contract.
 - Then continue without stopping into Phase 148: SDK And CLI Run Listing Name Search Filters.
+- Then continue without stopping into Phase 149: Web Run History Name Search Control And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 145 goal:
-- Expose API run listing updated-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI timestamp inputs before network requests where practical.
-- Verify SDK and CLI date-filtered list requests preserve sanitized list output and invalid-date errors do not expose raw values.
 
 Phase 146 goal:
 - Expose updated-at range filters through the Web run history operator surface.
@@ -65,6 +60,12 @@ Phase 148 goal:
 - Expose the API run listing name search filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI name-search inputs before network requests where practical.
 - Verify SDK and CLI name-filtered list requests preserve sanitized list output and invalid-name errors do not expose raw values.
+
+Phase 149 goal:
+- Expose run-name search through the Web run history operator surface.
+- Preserve Web run history limit/status/role/updated-at/cursor behavior when name search is applied.
+- Audit API, SDK, CLI, and Web name-search filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.

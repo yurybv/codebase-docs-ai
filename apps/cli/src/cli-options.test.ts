@@ -74,6 +74,8 @@ describe('CLI option parsing', () => {
         limit: '25',
         status: 'completed',
         role: 'backend',
+        updatedAfter: '2026-05-30T00:00:30.000Z',
+        updatedBefore: '2026-05-30T00:01:30.000Z',
         cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
       })
     ).toEqual({
@@ -81,6 +83,8 @@ describe('CLI option parsing', () => {
       limit: 25,
       status: 'completed',
       role: 'backend',
+      updatedAfter: '2026-05-30T00:00:30.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: 'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ'
     });
   });
@@ -205,6 +209,48 @@ describe('CLI option parsing', () => {
       expect(payload).not.toContain('/private/tmp');
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing updated-at filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'c'.repeat(24)}`;
+    const rawTimestamp = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    for (const [field, code, message] of [
+      [
+        'updatedAfter',
+        'CLI_RUN_LIST_UPDATED_AFTER_INVALID',
+        'Run list updatedAfter must be a valid ISO timestamp.'
+      ],
+      [
+        'updatedBefore',
+        'CLI_RUN_LIST_UPDATED_BEFORE_INVALID',
+        'Run list updatedBefore must be a valid ISO timestamp.'
+      ]
+    ] as const) {
+      try {
+        parseListRunsOptions({
+          apiUrl: 'https://docs.example.test',
+          [field]: rawTimestamp
+        });
+        throw new Error(`Expected parseListRunsOptions to reject invalid ${field}.`);
+      } catch (error) {
+        const failure = formatCliError(error);
+        const payload = JSON.stringify(failure);
+        expect(failure).toEqual({
+          status: 'failed',
+          exitCode: 2,
+          error: {
+            code,
+            message
+          }
+        });
+        expect(payload).not.toContain(rawTimestamp);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
     }
   });
 
