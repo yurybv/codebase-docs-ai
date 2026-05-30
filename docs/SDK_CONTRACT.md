@@ -138,7 +138,8 @@ Lists persisted run summaries for operator surfaces.
 ```ts
 const runs = await client.documentationRuns.list({
   limit: 25,
-  status: 'completed'
+  status: 'completed',
+  role: 'backend'
 });
 ```
 
@@ -146,6 +147,7 @@ Options:
 
 - `limit`: optional integer from `1` to `100`. When omitted, the API default is used.
 - `status`: optional `DocumentationRunStatus` filter.
+- `role`: optional source role filter. Runs match when at least one uploaded source has this role.
 
 Returns:
 

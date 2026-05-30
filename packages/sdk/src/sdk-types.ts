@@ -63,6 +63,7 @@ export interface PollDocumentationRunOptions {
 export interface DocumentationRunListOptions {
   limit?: number;
   status?: DocumentationRunStatus;
+  role?: SourceRole;
 }
 
 export interface GenerateFromArchivesInput {

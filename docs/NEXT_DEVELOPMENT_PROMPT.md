@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 136: SDK Run Listing Source Role Filter Option.
+- Implement Phase 137: Web Run Listing Source Role Filter Control.
 
-Phase 136 goal:
-- Expose the API run listing `role` filter through the TypeScript SDK.
-- Validate SDK list role inputs before network requests where practical.
-- Verify SDK role-filtered list requests preserve sanitized list results and invalid-role errors do not expose raw values.
+Phase 137 goal:
+- Expose the API run listing `role` filter through the Web operator run history view.
+- Keep the Web UI as a thin API-backed surface with no core analysis, rendering, or cleanup logic.
+- Verify Web role-filtered list requests preserve sanitized list results and invalid-role errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

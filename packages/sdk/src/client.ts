@@ -4,10 +4,12 @@ import {
   type DocumentationRunListResponse,
   type DocumentationRunStatus,
   type DocumentationRunSummary,
+  type SourceRole,
   maxDocumentationRunListLimit,
   isSupportedSourceArchiveFileName,
   sanitizePublicErrorText,
   sanitizePublicErrorValue,
+  sourceRoles,
   supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
 import type {
@@ -51,12 +53,16 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
   async list(options: DocumentationRunListOptions = {}): Promise<DocumentationRunListResponse> {
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
+    const role = parseRunListSourceRole(options.role);
     const query = new URLSearchParams();
     if (limit !== undefined) {
       query.set('limit', String(limit));
     }
     if (status !== undefined) {
       query.set('status', status);
+    }
+    if (role !== undefined) {
+      query.set('role', role);
     }
     const queryString = query.toString();
     const path = queryString ? `/v1/documentation-runs?${queryString}` : '/v1/documentation-runs';
@@ -395,6 +401,29 @@ function invalidRunListStatus(): CodebaseDocsAIClientError {
     'RUN_LIST_STATUS_INVALID',
     {
       allowedStatuses: [...runListFilterStatuses]
+    }
+  );
+}
+
+function parseRunListSourceRole(value: unknown): SourceRole | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string' || !sourceRoles.includes(value as SourceRole)) {
+    throw invalidRunListSourceRole();
+  }
+
+  return value as SourceRole;
+}
+
+function invalidRunListSourceRole(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    'Run list source role must be a supported source role.',
+    0,
+    'RUN_LIST_SOURCE_ROLE_INVALID',
+    {
+      allowedRoles: [...sourceRoles]
     }
   );
 }
