@@ -37,13 +37,8 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 181: Web Terminal Duration Display Follow-Up.
-- Then continue without stopping into Phase 182: Terminal Duration Cross-Surface Regression Audit.
+- Implement Phase 182: Terminal Duration Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 181 goal:
-- Display safe API terminal `durationMs` metadata in Web run history without adding core logic to the Web surface.
-- Add Web regression coverage proving duration display remains sanitized and composes with existing run-history filters.
 
 Phase 182 goal:
 - Audit API, SDK, CLI, and Web duration behavior as one public operator contract.

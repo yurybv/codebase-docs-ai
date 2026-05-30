@@ -112,6 +112,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Run history name search.
 - Run history output-format filtering.
 - Run history source-count filtering.
+- Run history terminal duration display.
 - Run progress display.
 - Warnings display.
 - Page preview.

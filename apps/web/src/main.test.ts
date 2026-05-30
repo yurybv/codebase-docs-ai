@@ -182,7 +182,9 @@ describe('App API error handling', () => {
             outputFormats: ['single-markdown'],
             renderedFormats: ['single-markdown'],
             createdAt: '2026-05-30T00:00:00.000Z',
-            updatedAt: '2026-05-30T00:01:00.000Z'
+            updatedAt: '2026-05-30T00:01:00.000Z',
+            completedAt: '2026-05-30T00:01:00.000Z',
+            durationMs: 60000
           },
           {
             id: 'run_failed',
@@ -200,7 +202,8 @@ describe('App API error handling', () => {
               message: `Documentation generation failed at ${rawStoragePath}.`
             },
             createdAt: '2026-05-30T00:00:00.000Z',
-            updatedAt: '2026-05-30T00:02:00.000Z'
+            updatedAt: '2026-05-30T00:02:00.000Z',
+            durationMs: 120000
           }
         ]
       })
@@ -223,8 +226,8 @@ describe('App API error handling', () => {
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('Recent runs');
     expect(renderedText).toContain('created · 0 sources');
-    expect(renderedText).toContain('completed · 1 source');
-    expect(renderedText).toContain('failed · 1 source');
+    expect(renderedText).toContain('completed · 1 source · duration 1m 0s');
+    expect(renderedText).toContain('failed · 1 source · duration 2m 0s');
     expect(renderedText).toContain('single-markdown');
     expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
@@ -257,7 +260,8 @@ describe('App API error handling', () => {
             outputFormats: ['json'],
             renderedFormats: ['json'],
             createdAt: '2026-05-30T00:00:00.000Z',
-            updatedAt: '2026-05-30T00:01:00.000Z'
+            updatedAt: '2026-05-30T00:01:00.000Z',
+            durationMs: 45000
           }
         ]
       })
@@ -365,7 +369,7 @@ describe('App API error handling', () => {
     await act(async () => {
       getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    await waitForText('failed · 1 source');
+    await waitForText('failed · 1 source · duration 45s');
 
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('json');

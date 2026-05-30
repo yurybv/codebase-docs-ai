@@ -557,6 +557,9 @@ export function App(): JSX.Element {
                       <span className="run-name">{run.name}</span>
                       <span className="run-meta">
                         {run.status} · {run.sourceCount} source{run.sourceCount === 1 ? '' : 's'}
+                        {formatRunDuration(run.durationMs)
+                          ? ` · duration ${formatRunDuration(run.durationMs)}`
+                          : ''}
                       </span>
                     </div>
                     {run.renderedFormats && run.renderedFormats.length > 0 ? (
@@ -753,6 +756,7 @@ interface RunSummary {
   error?: DocumentationRunError;
   createdAt: string;
   updatedAt: string;
+  durationMs?: number;
 }
 
 interface RunListResponse {
@@ -991,6 +995,24 @@ function sanitizeRunSummaries(runs: RunSummary[]): RunSummary[] {
         }
       : {})
   }));
+}
+
+function formatRunDuration(durationMs: number | undefined): string | undefined {
+  if (durationMs === undefined || !Number.isFinite(durationMs) || durationMs < 0) {
+    return undefined;
+  }
+
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
 }
 
 const rootElement = document.getElementById('root');
