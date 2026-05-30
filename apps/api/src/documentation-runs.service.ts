@@ -74,6 +74,7 @@ interface ListRunsOptions {
   status?: unknown;
   role?: unknown;
   name?: unknown;
+  format?: unknown;
   cursor?: unknown;
   updatedAfter?: unknown;
   updatedBefore?: unknown;
@@ -207,6 +208,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
     const name = parseRunListName(options.name);
+    const format = parseRunListFormat(options.format);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -229,6 +231,9 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         }
         const summary = toRunSummary(storedRun.run);
         if (name && !summary.name.toLowerCase().includes(name)) {
+          continue;
+        }
+        if (format && !runSummaryIncludesFormat(summary, format)) {
           continue;
         }
         runs.push(summary);
@@ -931,6 +936,42 @@ function invalidRunListName(): BadRequestException {
     code: 'RUN_LIST_NAME_INVALID',
     message: `Run list name filter must be between 1 and ${maxRunListNameLength} characters.`
   });
+}
+
+function parseRunListFormat(value: unknown): DocumentationOutputFormat | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListFormat();
+  }
+
+  const parsed = documentationOutputFormatSchema.safeParse(String(value));
+  if (!parsed.success) {
+    throw invalidRunListFormat();
+  }
+
+  return parsed.data;
+}
+
+function invalidRunListFormat(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_FORMAT_INVALID',
+    message: 'Run list format must be a supported documentation output format.',
+    details: {
+      allowedFormats: [...documentationOutputFormatSchema.options]
+    }
+  });
+}
+
+function runSummaryIncludesFormat(
+  summary: DocumentationRunSummary,
+  format: DocumentationOutputFormat
+): boolean {
+  return (
+    summary.outputFormats.includes(format) || (summary.renderedFormats?.includes(format) ?? false)
+  );
 }
 
 function parseRunListCursor(value: unknown): RunListCursor | undefined {

@@ -36,6 +36,7 @@ export class DocumentationRunsController {
     @Query('status') status: string | undefined,
     @Query('role') role: string | undefined,
     @Query('name') name: string | undefined,
+    @Query('format') format: string | undefined,
     @Query('cursor') cursor: string | undefined,
     @Query('updatedAfter') updatedAfter: string | undefined,
     @Query('updatedBefore') updatedBefore: string | undefined
@@ -45,6 +46,7 @@ export class DocumentationRunsController {
       status,
       role,
       name,
+      format,
       cursor,
       updatedAfter,
       updatedBefore

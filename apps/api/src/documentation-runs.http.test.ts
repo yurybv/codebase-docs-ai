@@ -557,6 +557,75 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies the run list format query parameter', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'p'.repeat(24)}`;
+    const jsonRun = await service.createRun({
+      name: `HTTP JSON Format ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const markdownRun = await createServiceRun(
+      service,
+      `HTTP Markdown Format ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend' }
+    );
+    await setRunUpdatedAt(jsonRun.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(markdownRun.runId, '2026-05-30T00:01:00.000Z');
+
+    const jsonResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?format=json`);
+    const jsonPayload = await jsonResponse.text();
+    const jsonList = JSON.parse(jsonPayload) as {
+      runs: Array<{ id: string }>;
+    };
+    const markdownResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?format=single-markdown`
+    );
+    const markdownPayload = await markdownResponse.text();
+    const markdownList = JSON.parse(markdownPayload) as {
+      runs: Array<{ id: string }>;
+    };
+
+    expect(jsonResponse.status).toBe(200);
+    expect(jsonList.runs.map((run) => run.id)).toEqual([jsonRun.runId]);
+    expect(jsonPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(jsonPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(jsonPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(jsonPayload).not.toContain(rawOpenAiKey);
+    expect(jsonPayload).not.toContain('.env');
+    expect(jsonPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(jsonPayload).not.toContain(tempRoot);
+
+    expect(markdownResponse.status).toBe(200);
+    expect(markdownList.runs.map((run) => run.id)).toEqual([markdownRun.runId]);
+    expect(markdownPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(markdownPayload).not.toContain(rawOpenAiKey);
+    expect(markdownPayload).not.toContain('.env');
+    expect(markdownPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(markdownPayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'q'.repeat(24)}`;
+    const invalidFormat = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?format=${invalidFormat}`
+    );
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_FORMAT_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list status query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;

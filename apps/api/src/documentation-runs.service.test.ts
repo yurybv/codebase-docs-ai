@@ -401,6 +401,41 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by output format without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const jsonRun = await service.createRun({
+      name: `JSON Format Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const markdownRun = await createCompletedRun(
+      `Markdown Format Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'backend'
+    );
+    await setRunUpdatedAt(jsonRun.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(markdownRun.runId, '2026-05-30T00:01:00.000Z');
+
+    const jsonList = await service.listRuns({ format: 'json' });
+    const markdownList = await service.listRuns({ format: 'single-markdown' });
+    const payload = JSON.stringify({ jsonList, markdownList });
+
+    expect(jsonList.runs.map((run) => run.id)).toEqual([jsonRun.runId]);
+    expect(markdownList.runs.map((run) => run.id)).toEqual([markdownRun.runId]);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('rejects invalid run listing limits without echoing raw values', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -631,6 +666,32 @@ describe('DocumentationRunsService', () => {
     } catch (error) {
       const payload = JSON.stringify(error);
       expect(payload).not.toContain(longRawName);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing format filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'i'.repeat(24)}`;
+    const rawFormat = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ format: rawFormat })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_FORMAT_INVALID',
+        message: 'Run list format must be a supported documentation output format.',
+        details: {
+          allowedFormats: expect.arrayContaining(['markdown-tree', 'single-markdown', 'json'])
+        }
+      }
+    });
+
+    try {
+      await service.listRuns({ format: rawFormat });
+      throw new Error('Expected listRuns to reject invalid format filter.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawFormat);
       expect(payload).not.toContain(rawOpenAiKey);
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');

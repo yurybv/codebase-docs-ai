@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 151: API Run Listing Output Format Filter Contract.
 - Phase 152: SDK And CLI Run Listing Output Format Filters.
 - Phase 153: Web Run History Output Format Filter Control And Audit.
 - Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
+- Phase 155: API Run Listing Source Count Filter Contract.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should continue into output-format filtering for operator workflows across API, SDK, CLI, and Web, then audit the cross-surface output-format filter contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose output-format filtering through SDK, CLI, and Web, audit the cross-surface output-format filter contract, then continue into source-count filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2336,6 +2336,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 151 API Run Listing Output Format Filter Contract
+
+- Added an API `format` query filter for `GET /v1/documentation-runs` that matches requested or rendered output formats.
+- Validated unsupported format filters with sanitized `RUN_LIST_FORMAT_INVALID` errors.
+- Added service and HTTP regression coverage for format-filtered summaries and invalid secret-bearing format filter inputs.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 
