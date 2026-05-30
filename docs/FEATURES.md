@@ -103,6 +103,7 @@ This document tracks the product capabilities that must exist in the generated p
 
 - HTTP client.
 - Typed requests/responses.
+- Run listing helper.
 - Upload helper.
 - Polling helper.
 - Result retrieval helper.

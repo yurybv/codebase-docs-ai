@@ -1,5 +1,6 @@
 import type {
   DocumentationOutputFormat,
+  DocumentationRunListResponse,
   DocumentationRun,
   DocumentationRunOptions,
   DocumentationRunStatus,
@@ -75,6 +76,7 @@ export interface GenerateFromArchivesResult {
 
 export interface DocumentationRunsClient {
   create(input: CreateDocumentationRunInput): Promise<CreateDocumentationRunResponse>;
+  list(): Promise<DocumentationRunListResponse>;
   uploadSources(
     runId: string,
     sources: UploadDocumentationSourceInput[]

@@ -1,6 +1,8 @@
 import {
   type ApiErrorPayload,
   type DocumentationRun,
+  type DocumentationRunListResponse,
+  type DocumentationRunSummary,
   isSupportedSourceArchiveFileName,
   sanitizePublicErrorText,
   sanitizePublicErrorValue,
@@ -41,6 +43,10 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
         'Content-Type': 'application/json'
       }
     });
+  }
+
+  async list(): Promise<DocumentationRunListResponse> {
+    return sanitizeRunListResponse(await this.http.json('/v1/documentation-runs'));
   }
 
   async uploadSources(
@@ -230,6 +236,42 @@ function assertSupportedArchiveSources(sources: UploadDocumentationSourceInput[]
       supportedExtensions: [...supportedSourceArchiveExtensions]
     }
   );
+}
+
+function sanitizeRunListResponse(response: DocumentationRunListResponse): DocumentationRunListResponse {
+  return {
+    runs: response.runs.map((run) => sanitizeRunSummary(run))
+  };
+}
+
+function sanitizeRunSummary(run: DocumentationRunSummary): DocumentationRunSummary {
+  return {
+    ...run,
+    id: sanitizeSdkErrorString(run.id, '[REDACTED]'),
+    name: sanitizeSdkErrorString(run.name, '[REDACTED]'),
+    sources: run.sources.map((source) => ({
+      ...(source.id ? { id: sanitizeSdkErrorString(source.id, '[REDACTED]') } : {}),
+      name: sanitizeSdkErrorString(source.name, '[REDACTED]'),
+      role: source.role
+    })),
+    ...(run.progress
+      ? {
+          progress: {
+            ...run.progress,
+            currentStep: sanitizeSdkErrorString(run.progress.currentStep, '[REDACTED]')
+          }
+        }
+      : {}),
+    ...(run.error
+      ? {
+          error: {
+            ...run.error,
+            ...(run.error.code ? { code: sanitizeSdkErrorString(run.error.code, '[REDACTED]') } : {}),
+            message: sanitizeSdkErrorString(run.error.message, 'Documentation generation failed.')
+          }
+        }
+      : {})
+  };
 }
 
 async function parseErrorResponse(

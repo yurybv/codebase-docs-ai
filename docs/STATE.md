@@ -80,17 +80,16 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 124: SDK Run Listing Contract.
+Implement Phase 125: Web Run Listing Operator View.
 
 Required package:
 
 ```text
-packages/shared
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose the safe run listing contract through the TypeScript SDK and add SDK regression coverage for sanitized list responses.
+The next step should expose the safe API run listing contract in the Web operator UI as a run history/status surface without adding core logic to the Web app.
 
 ## Completed Implementation
 
@@ -1949,6 +1948,20 @@ Verification:
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm --filter @codebase-docs-ai/shared build
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 124 SDK Run Listing Contract
+
+- Added `documentationRuns.list()` to the TypeScript SDK.
+- Added SDK defensive sanitization for run list response summaries before exposing them to callers.
+- Added SDK regression coverage proving list summaries preserve useful status metadata while omitting storage paths, raw source content, provider keys, denied `.env` evidence, and denied-source values.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

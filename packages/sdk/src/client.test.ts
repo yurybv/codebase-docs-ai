@@ -52,6 +52,108 @@ describe('CodebaseDocsAIClient', () => {
     });
   });
 
+  it('lists sanitized documentation run summaries through the HTTP API', async () => {
+    const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_created',
+            name: `Created ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'created',
+            sources: [],
+            sourceCount: 0,
+            outputFormats: ['json'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:00:00.000Z'
+          },
+          {
+            id: 'run_completed',
+            name: 'Completed Docs',
+            status: 'completed',
+            sources: [
+              {
+                id: `source_${rawOpenAiKey}`,
+                name: `Frontend ${rawStoragePath}`,
+                role: 'frontend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['single-markdown'],
+            renderedFormats: ['single-markdown'],
+            progress: {
+              currentStep: `Documentation run completed from ${rawStoragePath}`,
+              completedSteps: 7,
+              totalSteps: 7
+            },
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          },
+          {
+            id: 'run_failed',
+            name: 'Failed Docs',
+            status: 'failed',
+            sources: [
+              {
+                name: `Backend .env SHOULD_NOT_APPEAR ${rawOpenAiKey}`,
+                role: 'backend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            error: {
+              message: `Documentation generation failed at ${rawStoragePath}.`,
+              code: `FAILED_${rawOpenAiKey}`
+            },
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:02:00.000Z'
+          }
+        ]
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const list = await client.documentationRuns.list();
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([
+      'run_created',
+      'run_completed',
+      'run_failed'
+    ]);
+    expect(list.runs[0]).toMatchObject({
+      status: 'created',
+      sourceCount: 0,
+      outputFormats: ['json']
+    });
+    expect(list.runs[1]).toMatchObject({
+      status: 'completed',
+      sourceCount: 1,
+      renderedFormats: ['single-markdown']
+    });
+    expect(list.runs[2]).toMatchObject({
+      status: 'failed',
+      sourceCount: 1
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs',
+      undefined
+    );
+  });
+
   it('uploads sources as multipart form data', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(

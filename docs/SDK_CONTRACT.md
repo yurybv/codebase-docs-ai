@@ -131,6 +131,24 @@ Returns:
 }
 ```
 
+### `list()`
+
+Lists persisted run summaries for operator surfaces.
+
+```ts
+const runs = await client.documentationRuns.list();
+```
+
+Returns:
+
+```ts
+{
+  runs: DocumentationRunSummary[];
+}
+```
+
+Run summaries include safe public metadata such as run id, name, status, source count, source names/roles, requested output formats, rendered formats, progress, failure summary, and timestamps. The SDK sanitizes list response text before exposing it to callers; list results must not include upload archive storage paths, result artifact paths, raw source content, or secret-bearing evidence.
+
 ### `uploadSources(runId, sources)`
 
 Uploads one or more source archives.
