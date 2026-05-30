@@ -80,19 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 106: Repository Analyzer Embedded Secret Evidence Regression Coverage.
+Implement Phase 107: System Analyzer Embedded Secret Correlation Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 packages/security
-packages/repo-analyzer
-packages/core
+packages/system-analyzer
 docs
 ```
 
-The next step should add repository-analyzer/core regression coverage proving analyzer-derived evidence such as API paths, routes, scripts, dependencies, and framework evidence cannot reintroduce embedded raw provider keys from redacted source content.
+The next step should add system-analyzer regression coverage proving cross-source relationships, API contracts, environment links, integrations, risks, and unknowns do not propagate embedded raw provider keys or denied evidence when repository maps contain sanitized or adversarial analyzer fields.
 
 ## Completed Implementation
 
@@ -1698,6 +1697,20 @@ Verification:
 ```text
 pnpm -r --sort --filter @codebase-docs-ai/security --filter @codebase-docs-ai/source-loader --filter @codebase-docs-ai/ai-orchestrator --filter @codebase-docs-ai/core --filter @codebase-docs-ai/documentation-generator --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli typecheck
 pnpm test -- packages/security/src/public-sanitizer.test.ts packages/security/src/redact-secrets.test.ts packages/source-loader/src/load-source.test.ts packages/ai-orchestrator/src/openai-compatible-provider.test.ts packages/core/src/documentation-engine.test.ts packages/documentation-generator/src/generate-documentation-tree.test.ts apps/api/src/api-exception.filter.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 106 Repository Analyzer Embedded Secret Evidence Regression Coverage
+
+- Sanitized repository-analyzer extracted scripts, dependency names and versions, route paths, API endpoint metadata, API client calls, and environment variable names with the shared public sanitizer.
+- Added repository-analyzer coverage for sanitized embedded evidence provided through injected readers.
+- Expanded core engine coverage proving redacted package metadata and API paths remain sanitized before repository maps, system maps, documentation trees, rendered artifacts, and AI prompts are produced.
+
+Verification:
+
+```text
+pnpm -r --sort --filter @codebase-docs-ai/repo-analyzer --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts packages/core/src/documentation-engine.test.ts
 pnpm verify
 ```
 

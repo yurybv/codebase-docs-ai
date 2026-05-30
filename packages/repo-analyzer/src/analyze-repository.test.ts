@@ -126,28 +126,29 @@ describe('analyzeRepository', () => {
   });
 
   it('uses injected text readers for content-backed analysis', async () => {
+    const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
     await writeFixtureFile(
       'package.json',
       JSON.stringify({
         scripts: {
-          dev: 'next dev'
+          [`raw-${rawOpenAiKey}`]: `next dev --token ${rawOpenAiKey}`
         },
         dependencies: {
-          next: '^15.0.0'
+          [`next-${rawOpenAiKey}`]: '^15.0.0'
         }
       })
     );
     await writeFixtureFile(
       'src/users.controller.ts',
       `
-        import { Controller, Get } from '@nestjs/common';
+          import { Controller, Get } from '@nestjs/common';
 
-        @Controller('raw')
-        export class UsersController {
-          @Get('leak')
-          getUser() {
-            return process.env.RAW_DISK_ENV;
-          }
+          @Controller('raw-${rawOpenAiKey}')
+          export class UsersController {
+            @Get('${rawOpenAiKey}')
+            getUser() {
+              return process.env.RAW_DISK_ENV;
+            }
         }
       `
     );
@@ -166,11 +167,12 @@ describe('analyzeRepository', () => {
         'package.json',
         JSON.stringify({
           scripts: {
-            start: 'node dist/main.js'
+            'start-prefix_[REDACTED_OPENAI_API_KEY]': 'node dist/main.js --token prefix_[REDACTED_OPENAI_API_KEY]'
           },
           dependencies: {
             '@nestjs/core': '^10.0.0',
-            axios: '^1.0.0'
+            axios: '^1.0.0',
+            'axios-prefix_[REDACTED_OPENAI_API_KEY]': '^1.0.0'
           }
         })
       ],
@@ -191,7 +193,7 @@ describe('analyzeRepository', () => {
       [
         'src/client.ts',
         `
-          fetch("/api/[REDACTED_OPENAI_API_KEY]", { method: "POST" });
+          fetch("/api/prefix_[REDACTED_OPENAI_API_KEY]", { method: "POST" });
           axios.patch("/api/profile");
           console.log(import.meta.env.PUBLIC_API_URL);
         `
@@ -218,18 +220,25 @@ describe('analyzeRepository', () => {
     });
 
     expect(repositoryMap.frameworks.map((framework) => framework.name)).toEqual(['NestJS']);
-    expect(repositoryMap.scripts.map((script) => script.name)).toEqual(['start']);
+    expect(repositoryMap.scripts.map((script) => script.name)).toEqual([
+      'start-prefix_[REDACTED_OPENAI_API_KEY]'
+    ]);
     expect(repositoryMap.apiEndpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual([
       'GET /users/:id'
     ]);
     expect(repositoryMap.apiClientCalls.map((call) => `${call.method} ${call.path}`)).toEqual([
-      'POST /api/[REDACTED_OPENAI_API_KEY]',
+      'POST /api/prefix_[REDACTED_OPENAI_API_KEY]',
       'PATCH /api/profile'
     ]);
+    expect(repositoryMap.dependencies.map((dependency) => dependency.name)).toContain(
+      'axios-prefix_[REDACTED_OPENAI_API_KEY]'
+    );
     expect(repositoryMap.environmentVariables.map((envVar) => envVar.name)).toEqual([
       'PUBLIC_API_URL',
       'SAFE_ENV'
     ]);
+    expect(JSON.stringify(repositoryMap)).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(JSON.stringify(repositoryMap)).not.toContain(rawOpenAiKey);
     expect(JSON.stringify(repositoryMap)).not.toContain('RAW_');
     expect(JSON.stringify(repositoryMap)).not.toContain('/raw-disk');
     expect(readTextFile).toHaveBeenCalled();

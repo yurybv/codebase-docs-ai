@@ -219,6 +219,9 @@ importers:
 
   packages/repo-analyzer:
     dependencies:
+      '@codebase-docs-ai/security':
+        specifier: workspace:*
+        version: link:../security
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../shared

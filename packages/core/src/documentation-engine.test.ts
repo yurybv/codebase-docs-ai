@@ -84,6 +84,7 @@ describe('DocumentationEngine', () => {
   it('uses filtered and redacted source content for repository analysis', async () => {
     const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), 'core-engine-sanitized-test-'));
     const rawOpenAiKey = `sk-${'a'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
 
     try {
       await writeSanitizationFixture(fixtureRoot, rawOpenAiKey);
@@ -109,7 +110,7 @@ describe('DocumentationEngine', () => {
       expect(repositoryMap?.apiClientCalls).toEqual([
         {
           method: 'POST',
-          path: '/v1/[REDACTED_OPENAI_API_KEY]',
+          path: '/v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE]',
           sourceReference: {
             sourceName: 'Frontend',
             path: 'api.ts'
@@ -119,7 +120,12 @@ describe('DocumentationEngine', () => {
       expect(repositoryMap?.environmentVariables.map((envVar) => envVar.name)).not.toContain(
         'SHOULD_NOT_APPEAR'
       );
+      expect(JSON.stringify(repositoryMap?.scripts)).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(JSON.stringify(repositoryMap?.dependencies)).toContain(
+        'react-prefix_[REDACTED_OPENAI_API_KEY]'
+      );
       expect(JSON.stringify(result.repositoryMaps)).not.toContain(rawOpenAiKey);
+      expect(JSON.stringify(result.repositoryMaps)).not.toContain(embeddedOpenAiKey);
 
       const generatedOutput = [
         JSON.stringify(result.documentationTree),
@@ -243,17 +249,22 @@ describe('DocumentationEngine', () => {
 });
 
 async function writeSanitizationFixture(rootPath: string, rawOpenAiKey: string): Promise<void> {
+  const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
   await writeFile(
     path.join(rootPath, 'package.json'),
     JSON.stringify({
+      scripts: {
+        [`dev-${embeddedOpenAiKey}`]: `vite --token ${embeddedOpenAiKey}`
+      },
       dependencies: {
-        react: 'latest'
+        react: 'latest',
+        [`react-${embeddedOpenAiKey}`]: 'latest'
       }
     })
   );
   await writeFile(
     path.join(rootPath, 'api.ts'),
-    `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
+    `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR", { method: "POST" });\n`
   );
   await writeFile(path.join(rootPath, '.env'), 'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n');
 }

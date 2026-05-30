@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { sanitizePublicText } from '@codebase-docs-ai/security';
 import type {
   ApiClientCallInfo,
   ApiEndpointInfo,
@@ -130,8 +131,8 @@ function collectDependencies(packageJson: PackageJson): DependencyInfo[] {
 
   return scopes.flatMap((scope) =>
     Object.entries(packageJson[scope] ?? {}).map(([name, version]) => ({
-      name,
-      version,
+      name: sanitizeAnalyzerText(name),
+      version: sanitizeAnalyzerText(version),
       scope,
       sourceReference: sourceReference('unknown', 'package.json')
     }))
@@ -217,8 +218,8 @@ function collectScripts(
   sourceReference: SourceReference
 ): PackageScript[] {
   return Object.entries(scripts).map(([name, command]) => ({
-    name,
-    command,
+    name: sanitizeAnalyzerText(name),
+    command: sanitizeAnalyzerText(command),
     sourceReference
   }));
 }
@@ -270,7 +271,7 @@ async function detectApiEndpoints(
         endpoints.push({
           method,
           path: endpointPath,
-          controller: controllerName,
+          controller: sanitizeAnalyzerText(controllerName),
           sourceReference: sourceReference(sourceName, file.path)
         });
       }
@@ -295,7 +296,7 @@ async function detectApiClientCalls(
 
     for (const match of content.matchAll(fetchPattern)) {
       calls.push({
-        method: extractFetchMethod(match[2]),
+        method: sanitizeAnalyzerText(extractFetchMethod(match[2])),
         path: normalizeApiPath(match[1] ?? ''),
         sourceReference: sourceReference(sourceName, file.path)
       });
@@ -303,7 +304,7 @@ async function detectApiClientCalls(
 
     for (const match of content.matchAll(axiosPattern)) {
       calls.push({
-        method: (match[1] ?? 'UNKNOWN').toUpperCase(),
+        method: sanitizeAnalyzerText((match[1] ?? 'UNKNOWN').toUpperCase()),
         path: normalizeApiPath(match[2] ?? ''),
         sourceReference: sourceReference(sourceName, file.path)
       });
@@ -332,8 +333,12 @@ async function detectEnvironmentVariables(
           continue;
         }
 
-        const existingReferences = referencesByName.get(name) ?? [];
-        referencesByName.set(name, [...existingReferences, sourceReference(sourceName, file.path)]);
+        const sanitizedName = sanitizeAnalyzerText(name);
+        const existingReferences = referencesByName.get(sanitizedName) ?? [];
+        referencesByName.set(sanitizedName, [
+          ...existingReferences,
+          sourceReference(sourceName, file.path)
+        ]);
       }
     }
   }
@@ -445,7 +450,7 @@ function normalizeRoutePath(routePath: string): string {
     return '/';
   }
 
-  return `/${routePath.replace(/\/index$/, '').replace(/\[(.+?)\]/g, ':$1')}`;
+  return sanitizeAnalyzerText(`/${routePath.replace(/\/index$/, '').replace(/\[(.+?)\]/g, ':$1')}`);
 }
 
 function extractDecoratorPath(content: string, decoratorName: string): string | null {
@@ -470,7 +475,8 @@ function normalizeApiPath(apiPath: string): string {
   }
 
   const parsed = apiPath.replace(/^https?:\/\/[^/]+/, '');
-  return parsed.startsWith('/') ? parsed : `/${parsed}`;
+  const normalized = parsed.startsWith('/') ? parsed : `/${parsed}`;
+  return sanitizeAnalyzerText(normalized);
 }
 
 function extractFetchMethod(optionsSource: string | undefined): string {
@@ -501,4 +507,8 @@ function dedupeSourceReferences(sourceReferences: SourceReference[]): SourceRefe
 
 async function defaultReadTextFile(file: SourceFile): Promise<string> {
   return readFile(file.absolutePath, 'utf8');
+}
+
+function sanitizeAnalyzerText(value: string): string {
+  return sanitizePublicText(value);
 }
