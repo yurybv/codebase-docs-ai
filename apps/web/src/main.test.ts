@@ -313,6 +313,120 @@ describe('App API error handling', () => {
     );
   });
 
+  it('loads additional run history pages with the returned cursor and selected filters', async () => {
+    const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const cursor =
+      'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ';
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runs: [
+            {
+              id: 'run_page_one',
+              name: `Page One ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+              status: 'completed',
+              sources: [
+                {
+                  name: `Backend ${rawStoragePath}`,
+                  role: 'backend'
+                }
+              ],
+              sourceCount: 1,
+              outputFormats: ['json'],
+              renderedFormats: ['json'],
+              createdAt: '2026-05-30T00:00:00.000Z',
+              updatedAt: '2026-05-30T00:02:00.000Z'
+            }
+          ],
+          nextCursor: cursor
+        })
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runs: [
+            {
+              id: 'run_page_two',
+              name: `Page Two ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+              status: 'completed',
+              sources: [
+                {
+                  name: `Backend ${rawStoragePath}`,
+                  role: 'backend'
+                }
+              ],
+              sourceCount: 1,
+              outputFormats: ['json'],
+              renderedFormats: ['json'],
+              createdAt: '2026-05-30T00:00:00.000Z',
+              updatedAt: '2026-05-30T00:01:00.000Z'
+            }
+          ]
+        })
+      );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const limitSelect = document.querySelector(
+      'select[aria-label="Recent run limit"]'
+    ) as HTMLSelectElement;
+    limitSelect.value = '10';
+    await act(async () => {
+      limitSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const statusSelect = document.querySelector(
+      'select[aria-label="Recent run status"]'
+    ) as HTMLSelectElement;
+    statusSelect.value = 'completed';
+    await act(async () => {
+      statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const roleSelect = document.querySelector(
+      'select[aria-label="Recent run source role"]'
+    ) as HTMLSelectElement;
+    roleSelect.value = 'backend';
+    await act(async () => {
+      roleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Page One');
+    await act(async () => {
+      getButtonByText('Load more').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Page Two');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('Page One');
+    expect(renderedText).toContain('Page Two');
+    expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
+    expect(renderedText).toContain('[REDACTED_DENIED_VALUE]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend'
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&cursor=${cursor}`
+    );
+  });
+
   it('sanitizes run history limit API errors before rendering', async () => {
     const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
     const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -422,6 +536,71 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
+  });
+
+  it('sanitizes run history cursor API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const cursor =
+      'eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ';
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          runs: [
+            {
+              id: 'run_page_one',
+              name: 'Page One',
+              status: 'completed',
+              sources: [],
+              sourceCount: 0,
+              outputFormats: ['json'],
+              createdAt: '2026-05-30T00:00:00.000Z',
+              updatedAt: '2026-05-30T00:01:00.000Z'
+            }
+          ],
+          nextCursor: cursor
+        })
+      )
+      .mockResolvedValueOnce(
+        jsonErrorResponse(400, 'RUN_LIST_CURSOR_INVALID', {
+          message: `Invalid run list cursor from ${rawStoragePath}.`,
+          details: {
+            cursor: rawStoragePath
+          }
+        })
+      );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('Page One');
+    await act(async () => {
+      getButtonByText('Load more').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_CURSOR_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_CURSOR_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      `http://localhost:3000/v1/documentation-runs?limit=50&cursor=${cursor}`
+    );
   });
 
   it('shows a client-side error for unsupported archive file selections', async () => {

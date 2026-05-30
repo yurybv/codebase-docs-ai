@@ -31,6 +31,7 @@ export function App(): JSX.Element {
   const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
   const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
+  const [runHistoryNextCursor, setRunHistoryNextCursor] = useState<string | undefined>();
   const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
     status: 'idle'
   });
@@ -88,7 +89,27 @@ export function App(): JSX.Element {
     );
   }
 
+  function resetRunHistoryPagination(): void {
+    setRunHistory([]);
+    setRunHistoryNextCursor(undefined);
+    setRunHistoryState({
+      status: 'idle'
+    });
+  }
+
   async function refreshRunHistory(): Promise<void> {
+    await loadRunHistoryPage();
+  }
+
+  async function loadMoreRunHistory(): Promise<void> {
+    if (!runHistoryNextCursor) {
+      return;
+    }
+
+    await loadRunHistoryPage(runHistoryNextCursor);
+  }
+
+  async function loadRunHistoryPage(cursor?: string): Promise<void> {
     if (runHistoryState.status === 'loading') {
       return;
     }
@@ -97,8 +118,12 @@ export function App(): JSX.Element {
       setRunHistoryState({
         status: 'loading'
       });
-      const list = await listRuns(runHistoryLimit, runHistoryStatus, runHistoryRole);
-      setRunHistory(sanitizeRunSummaries(list.runs));
+      const list = await listRuns(runHistoryLimit, runHistoryStatus, runHistoryRole, cursor);
+      const sanitizedRuns = sanitizeRunSummaries(list.runs);
+      setRunHistory((currentRuns) => (cursor ? [...currentRuns, ...sanitizedRuns] : sanitizedRuns));
+      setRunHistoryNextCursor(
+        list.nextCursor ? sanitizeWebErrorText(list.nextCursor, '[REDACTED]') : undefined
+      );
       setRunHistoryState({
         status: 'loaded'
       });
@@ -287,6 +312,7 @@ export function App(): JSX.Element {
                     aria-label="Recent run limit"
                     onChange={(event) => {
                       setRunHistoryLimit(Number(event.currentTarget.value));
+                      resetRunHistoryPagination();
                     }}
                   >
                     {runHistoryLimitOptions.map((limit) => (
@@ -304,6 +330,7 @@ export function App(): JSX.Element {
                     aria-label="Recent run status"
                     onChange={(event) => {
                       setRunHistoryStatus(event.currentTarget.value as RunHistoryStatusFilter);
+                      resetRunHistoryPagination();
                     }}
                   >
                     <option value="all">All</option>
@@ -322,6 +349,7 @@ export function App(): JSX.Element {
                     aria-label="Recent run source role"
                     onChange={(event) => {
                       setRunHistoryRole(event.currentTarget.value as RunHistoryRoleFilter);
+                      resetRunHistoryPagination();
                     }}
                   >
                     <option value="all">All</option>
@@ -370,6 +398,18 @@ export function App(): JSX.Element {
                 {runHistoryState.status === 'loading' ? 'Loading runs.' : 'No runs loaded.'}
               </p>
             )}
+            {runHistoryNextCursor ? (
+              <button
+                className="secondary-action history-load-more"
+                type="button"
+                onClick={loadMoreRunHistory}
+                disabled={runHistoryState.status === 'loading'}
+                aria-label="Load more recent documentation runs"
+              >
+                <RefreshCw size={15} />
+                Load more
+              </button>
+            ) : null}
           </section>
         </aside>
 
@@ -545,6 +585,7 @@ interface RunSummary {
 
 interface RunListResponse {
   runs: RunSummary[];
+  nextCursor?: string;
 }
 
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
@@ -589,7 +630,8 @@ async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ 
 async function listRuns(
   limit: number,
   status: RunHistoryStatusFilter,
-  role: RunHistoryRoleFilter
+  role: RunHistoryRoleFilter,
+  cursor?: string
 ): Promise<RunListResponse> {
   const query = new URLSearchParams({
     limit: String(limit)
@@ -599,6 +641,9 @@ async function listRuns(
   }
   if (role !== 'all') {
     query.set('role', role);
+  }
+  if (cursor) {
+    query.set('cursor', cursor);
   }
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs?${query}`);
   return parseResponse(response);

@@ -37,17 +37,9 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 141: Web Run Listing Pagination Cursor Control.
-- Then continue without stopping into Phase 142: CLI Run Listing Pagination Cursor Flag.
+- Implement Phase 142: CLI Run Listing Pagination Cursor Flag.
 - Then continue without stopping into Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 141 goal:
-- Expose API run listing pagination through the Web run history operator surface.
-- Allow operators to request the next page when the API returns `nextCursor`.
-- Preserve existing Web run history limit/status/role filters when requesting additional pages.
-- Verify Web paginated list requests preserve sanitized list output and cursor-related API errors do not expose raw values.
-- Keep the Web app as a thin API-backed operator surface with no analysis, rendering, cleanup, or storage logic.
 
 Phase 142 goal:
 - Expose the API/SDK run listing `cursor` pagination option through the CLI `list-runs` command.

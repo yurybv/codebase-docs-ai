@@ -209,6 +209,11 @@ p {
   min-width: 104px;
 }
 
+.history-load-more {
+  justify-self: start;
+  min-width: 116px;
+}
+
 .run-history-list {
   display: grid;
   gap: 8px;

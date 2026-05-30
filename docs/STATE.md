@@ -80,9 +80,8 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement the next larger implementation batch:
+Implement the remaining batch:
 
-- Phase 141: Web Run Listing Pagination Cursor Control.
 - Phase 142: CLI Run Listing Pagination Cursor Flag.
 - Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
 
@@ -90,13 +89,12 @@ Required package:
 
 ```text
 packages/shared
-apps/web
 apps/cli
 packages/sdk
 docs
 ```
 
-The next step should complete run listing cursor pagination across Web and CLI surfaces, then audit the API/SDK/Web/CLI contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose cursor pagination through the CLI, then audit the API/SDK/Web/CLI contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2194,6 +2192,20 @@ Verification:
 ```text
 pnpm test -- packages/sdk/src/client.test.ts packages/shared/src/schemas.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 141 Web Run Listing Pagination Cursor Control
+
+- Added Web run history pagination using the API `nextCursor` response and a thin API-backed "Load more" action.
+- Preserved selected run history limit, status, and source role filters when requesting additional pages.
+- Added Web regression coverage for sanitized paginated history output and sanitized cursor API errors.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 

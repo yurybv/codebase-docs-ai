@@ -124,9 +124,11 @@ Expected behavior:
 - operators can choose a recent-run limit before refreshing history;
 - operators can choose a recent-run status filter before refreshing history;
 - operators can choose a recent-run source role filter before refreshing history;
+- operators can request the next page of recent runs when the API returns a pagination cursor;
 - recent runs show status, source count, and rendered formats when available;
 - run history rendering remains a thin API client and does not perform analysis, generation, rendering, or cleanup logic in the Web app;
 - run history text redacts raw provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths.
+- run history cursor errors render as sanitized operator-facing API errors without exposing raw cursor input or storage paths.
 
 ## Output Format Selection
 
