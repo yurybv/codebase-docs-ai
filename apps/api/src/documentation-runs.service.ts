@@ -77,6 +77,7 @@ interface ListRunsOptions {
   format?: unknown;
   minSources?: unknown;
   maxSources?: unknown;
+  sort?: unknown;
   cursor?: unknown;
   createdAfter?: unknown;
   createdBefore?: unknown;
@@ -88,6 +89,8 @@ interface RunListCursor {
   updatedAt: string;
   id: string;
 }
+
+type RunListSort = 'updatedAt:desc' | 'updatedAt:asc';
 
 const uploadSourcesMetadataSchema = z.object({
   sources: z.array(
@@ -128,6 +131,7 @@ const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
 const maxRunListCursorLength = 512;
 const maxRunListNameLength = 200;
+const runListSortOptions: RunListSort[] = ['updatedAt:desc', 'updatedAt:asc'];
 
 const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
@@ -214,6 +218,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const name = parseRunListName(options.name);
     const format = parseRunListFormat(options.format);
     const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
+    const sort = parseRunListSort(options.sort);
     const cursor = parseRunListCursor(options.cursor);
     const createdAfter = parseRunListCreatedAfter(options.createdAfter);
     const createdBefore = parseRunListCreatedBefore(options.createdBefore);
@@ -264,9 +269,9 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const sortedRuns = sortRunSummaries(runs);
+    const sortedRuns = sortRunSummaries(runs, sort);
     const pagedRuns = cursor
-      ? sortedRuns.filter((run) => compareRunSummaryToCursor(run, cursor) > 0)
+      ? sortedRuns.filter((run) => compareRunSummaryToCursor(run, cursor, sort) > 0)
       : sortedRuns;
     const page = pagedRuns.slice(0, limit);
     const hasMore = pagedRuns.length > page.length;
@@ -775,32 +780,30 @@ function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
   };
 }
 
-function sortRunSummaries(runs: DocumentationRunSummary[]): DocumentationRunSummary[] {
-  return [...runs].sort((left, right) => {
-    const updatedAtOrder = right.updatedAt.localeCompare(left.updatedAt);
-    if (updatedAtOrder !== 0) {
-      return updatedAtOrder;
-    }
-
-    return right.id.localeCompare(left.id);
-  });
+function sortRunSummaries(runs: DocumentationRunSummary[], sort: RunListSort): DocumentationRunSummary[] {
+  return [...runs].sort((left, right) => compareRunSummaryOrder(left, right, sort));
 }
 
-function compareRunSummaryToCursor(run: DocumentationRunSummary, cursor: RunListCursor): number {
-  if (run.updatedAt < cursor.updatedAt) {
-    return 1;
-  }
-  if (run.updatedAt > cursor.updatedAt) {
-    return -1;
-  }
-  if (run.id < cursor.id) {
-    return 1;
-  }
-  if (run.id > cursor.id) {
-    return -1;
+function compareRunSummaryToCursor(
+  run: DocumentationRunSummary,
+  cursor: RunListCursor,
+  sort: RunListSort
+): number {
+  return compareRunSummaryOrder(run, cursor, sort);
+}
+
+function compareRunSummaryOrder(
+  left: Pick<DocumentationRunSummary, 'id' | 'updatedAt'>,
+  right: Pick<DocumentationRunSummary, 'id' | 'updatedAt'>,
+  sort: RunListSort
+): number {
+  const updatedAtOrder = left.updatedAt.localeCompare(right.updatedAt);
+  if (updatedAtOrder !== 0) {
+    return sort === 'updatedAt:asc' ? updatedAtOrder : -updatedAtOrder;
   }
 
-  return 0;
+  const idOrder = left.id.localeCompare(right.id);
+  return sort === 'updatedAt:asc' ? idOrder : -idOrder;
 }
 
 function encodeRunListCursor(run: DocumentationRunSummary): string {
@@ -1037,6 +1040,33 @@ function invalidRunListSourceCount(): BadRequestException {
       'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.',
     details: {
       min: 0
+    }
+  });
+}
+
+function parseRunListSort(value: unknown): RunListSort {
+  if (value === undefined) {
+    return 'updatedAt:desc';
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListSort();
+  }
+
+  const sort = String(value);
+  if (!runListSortOptions.includes(sort as RunListSort)) {
+    throw invalidRunListSort();
+  }
+
+  return sort as RunListSort;
+}
+
+function invalidRunListSort(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_SORT_INVALID',
+    message: 'Run list sort must be a supported sort option.',
+    details: {
+      allowedSorts: [...runListSortOptions]
     }
   });
 }

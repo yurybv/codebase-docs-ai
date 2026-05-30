@@ -2510,6 +2510,20 @@ pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk 
 pnpm verify
 ```
 
+### 2026-05-30: Phase 163 API Run Listing Sort Direction Contract
+
+- Added an API `sort` query parameter for `GET /v1/documentation-runs`, supporting `updatedAt:desc` and `updatedAt:asc`.
+- Preserved `updatedAt:desc` as the default and made cursor pagination follow the selected sort direction deterministically.
+- Added service and HTTP regression coverage for sorted list pages and invalid secret-bearing sort values.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
 ## Open Questions
 
 - Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.

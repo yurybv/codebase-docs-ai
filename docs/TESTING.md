@@ -119,6 +119,17 @@ Run listing created-at filtering is a cross-surface contract. When changing API 
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid created-at filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Sort Regression
+
+Run listing sort direction is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `sort` is forwarded as a supported run-list sort query parameter;
+- default listing remains `updatedAt:desc`;
+- sorted pagination uses deterministic cursors in the selected sort direction;
+- sort direction composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw sort input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid sort errors use stable public error codes and sanitized messages.
+
 ## Run Listing Name Filter Regression
 
 Run listing name filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:

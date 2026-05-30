@@ -318,6 +318,37 @@ describe('DocumentationRunsService', () => {
     expect(secondPayload).not.toContain(tempRoot);
   });
 
+  it('sorts listed run summaries ascending with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'a'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldest = await createCompletedRun('Oldest Asc Cursor Docs', secretSourceName);
+    const newest = await createCompletedRun('Newest Asc Cursor Docs', secretSourceName);
+    const middle = await createCompletedRun('Middle Asc Cursor Docs', secretSourceName);
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2', sort: 'updatedAt:asc' });
+    const secondPage = await service.listRuns({
+      limit: '2',
+      sort: 'updatedAt:asc',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([oldest.runId, middle.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([newest.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('filters listed run summaries by updated-at range without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
@@ -938,6 +969,29 @@ describe('DocumentationRunsService', () => {
         expect(payload).not.toContain('.env');
         expect(payload).not.toContain('SHOULD_NOT_APPEAR');
       }
+    }
+  });
+
+  it('rejects invalid run listing sort values without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'k'.repeat(24)}`;
+    const rawSort = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ sort: rawSort })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_SORT_INVALID',
+        message: 'Run list sort must be a supported sort option.'
+      }
+    });
+
+    try {
+      await service.listRuns({ sort: rawSort });
+      throw new Error('Expected listRuns to reject invalid sort filter.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawSort);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     }
   });
 

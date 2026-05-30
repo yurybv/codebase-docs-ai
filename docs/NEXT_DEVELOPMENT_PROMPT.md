@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 163: API Run Listing Sort Direction Contract.
-- Then continue without stopping into Phase 164: SDK And CLI Run Listing Sort Direction Option.
+- Implement Phase 164: SDK And CLI Run Listing Sort Direction Option.
 - Then continue without stopping into Phase 165: Web Run History Sort Direction Control And Audit.
 - Then continue without stopping into Phase 166: Run Listing Sort Direction Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 167: API Run Listing Created-At Sort Contract.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 163 goal:
-- Add a safe API run listing sort direction contract for operator surfaces, such as `sort=updatedAt:desc` and `sort=updatedAt:asc`.
-- Validate sort inputs before storage access where practical.
-- Return deterministic pages of persisted run summaries using the selected sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover sanitized valid sort behavior and invalid secret-bearing sort errors.
 
 Phase 164 goal:
 - Expose the API run listing sort option through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -65,6 +59,12 @@ Phase 166 goal:
 - Add or tighten regression coverage proving sort direction composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 167 goal:
+- Add an API run listing sort-field contract for created-at ordering, such as `sort=createdAt:desc` and `sort=createdAt:asc`.
+- Validate created-at sort inputs before storage access where practical.
+- Return deterministic pages of persisted run summaries using created-at sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover sanitized valid created-at sort behavior and invalid secret-bearing sort errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.
