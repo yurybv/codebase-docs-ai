@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 120: API Cleanup Resilience Regression Coverage.
+- Implement Phase 121: API Cleanup Scheduler Resilience Regression Coverage.
 
-Phase 120 goal:
-- Add API regression coverage proving run storage cleanup continues across independent expired runs when one expired run cannot be removed.
-- Sanitize per-run cleanup failure logs if needed so raw storage paths, provider keys, denied `.env` evidence, and denied-source values are not logged.
-- Verify cleanup reports successfully deleted expired runs without exposing failed run storage details.
+Phase 121 goal:
+- Add API regression coverage proving startup and interval cleanup scheduling continue after cleanup failures.
+- Verify cleanup warning logs remain sanitized when scheduler-triggered cleanup failures include raw storage paths, provider keys, denied `.env` evidence, or denied-source values.
+- Keep cleanup resilience behavior from Phase 120 intact.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

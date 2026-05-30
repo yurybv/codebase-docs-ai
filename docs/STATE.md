@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 120: API Cleanup Resilience Regression Coverage.
+Implement Phase 121: API Cleanup Scheduler Resilience Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/api
 docs
 ```
 
-The next step should add API regression coverage proving run storage cleanup continues across independent expired runs when one expired run cannot be removed, while logging sanitized cleanup failure details.
+The next step should add API regression coverage proving startup and interval cleanup scheduling continue after cleanup failures, while warning logs remain sanitized.
 
 ## Completed Implementation
 
@@ -1886,6 +1886,20 @@ pnpm verify
 - Sanitized run storage cleanup warning logs with the shared public error sanitizer.
 - Added API service regression coverage for cleanup failures containing raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
 - Verified cleanup warning logs retain useful context without exposing raw secret-bearing storage failure details.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 120 API Cleanup Resilience Regression Coverage
+
+- Made expired run cleanup continue across independent run directories when one expired run cannot be removed.
+- Added service regression coverage proving successful expired deletions are still reported while the failed run remains for a later cleanup attempt.
+- Verified per-run cleanup failure warnings redact raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
 
 Verification:
 

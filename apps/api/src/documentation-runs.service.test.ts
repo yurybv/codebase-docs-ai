@@ -389,6 +389,46 @@ describe('DocumentationRunsService', () => {
     });
   });
 
+  it('continues expired run cleanup when one run directory removal fails', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
+    service = new DocumentationRunsService();
+    const blocked = await createCompletedRun('Blocked Cleanup Docs');
+    const removable = await createCompletedRun('Removable Cleanup Docs');
+    await setRunUpdatedAt(blocked.runId, '2026-05-29T00:00:00.000Z');
+    await setRunUpdatedAt(removable.runId, '2026-05-29T00:00:00.000Z');
+    const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const internals = service as unknown as {
+      logger: { warn: (message: string) => void };
+      removeRunDirectory: (storedRun: { run: { id: string }; tempPath: string }) => Promise<void>;
+    };
+    const removeRunDirectory = internals.removeRunDirectory.bind(service);
+    vi.spyOn(internals, 'removeRunDirectory').mockImplementation(async (storedRun) => {
+      if (storedRun.run.id === blocked.runId) {
+        throw new Error(`Cleanup failed while removing ${rawStoragePath}.`);
+      }
+
+      await removeRunDirectory(storedRun);
+    });
+    const warn = vi.spyOn(internals.logger, 'warn').mockImplementation(() => undefined);
+
+    const cleanup = await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:02.000Z'));
+
+    expect(cleanup.deletedRunIds).toEqual([removable.runId]);
+    await expect(readdir(path.join(tempRoot, blocked.runId))).resolves.toEqual(
+      expect.arrayContaining(['run.json'])
+    );
+    await expect(readdir(path.join(tempRoot, removable.runId))).rejects.toThrow();
+    const message = String(warn.mock.calls[0]?.[0] ?? '');
+    expect(message).toContain(blocked.runId);
+    expect(message).toContain('[REDACTED_STORAGE_PATH]');
+    expect(message).not.toContain(rawStoragePath);
+    expect(message).not.toContain('/private/tmp');
+    expect(message).not.toContain(rawOpenAiKey);
+    expect(message).not.toContain('.env');
+    expect(message).not.toContain('SHOULD_NOT_APPEAR');
+  });
+
   it('returns safe errors when persisted result artifacts are missing', async () => {
     const rawOpenAiKey = `sk-${'x'.repeat(24)}`;
     const completed = await createCompletedRun('Missing Artifact Docs');

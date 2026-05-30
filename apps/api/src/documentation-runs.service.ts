@@ -391,10 +391,12 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      await rm(storedRun.tempPath, {
-        recursive: true,
-        force: true
-      });
+      try {
+        await this.removeRunDirectory(storedRun);
+      } catch (error) {
+        this.logCleanupRunFailure(storedRun.run.id, error);
+        continue;
+      }
       deletedRunIds.push(storedRun.run.id);
     }
 
@@ -416,6 +418,21 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
           : 'Unknown cleanup failure.';
       this.logger.warn(`Documentation run cleanup failed: ${message}`);
     }
+  }
+
+  private async removeRunDirectory(storedRun: StoredRun): Promise<void> {
+    await rm(storedRun.tempPath, {
+      recursive: true,
+      force: true
+    });
+  }
+
+  private logCleanupRunFailure(runId: string, error: unknown): void {
+    const message =
+      error instanceof Error
+        ? sanitizePublicErrorText(error.message, { fallback: 'Unknown cleanup failure.' })
+        : 'Unknown cleanup failure.';
+    this.logger.warn(`Documentation run cleanup failed for ${runId}: ${message}`);
   }
 
   private async requireRun(runId: string): Promise<StoredRun> {
