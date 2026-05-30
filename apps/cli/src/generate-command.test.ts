@@ -65,9 +65,9 @@ describe('runGenerateCommand', () => {
       expect(result.files.length).toBeGreaterThan(1);
       expect(result.files.every((filePath) => filePath.startsWith(outputRoot))).toBe(true);
 
-      const markdownTree = (await Promise.all(result.files.map((filePath) => readFile(filePath, 'utf8')))).join(
-        '\n'
-      );
+      const markdownTree = (
+        await Promise.all(result.files.map((filePath) => readFile(filePath, 'utf8')))
+      ).join('\n');
       expect(markdownTree).toContain('[REDACTED_OPENAI_API_KEY]');
       expect(markdownTree).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
       expect(markdownTree).toContain('[REDACTED_DENIED_FILE]');
@@ -155,6 +155,40 @@ describe('runGenerateCommand', () => {
       expect(json).not.toContain(rawOpenAiKey);
       expect(json).not.toContain('SHOULD_NOT_APPEAR');
       expect(json).not.toContain('.env');
+    } finally {
+      await rm(tempRoot, {
+        recursive: true,
+        force: true
+      });
+    }
+  });
+
+  it('writes consistent multi-source local JSON artifacts', async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'codebase-docs-ai-cli-test-'));
+    const frontendRoot = path.join(tempRoot, 'frontend');
+    const backendRoot = path.join(tempRoot, 'backend');
+    const outputRoot = path.join(tempRoot, 'out');
+
+    try {
+      await writeMultiSourceFixtures(frontendRoot, backendRoot);
+
+      const result = await runGenerateCommand({
+        source: [`${frontendRoot}:frontend`, `${backendRoot}:backend`],
+        output: outputRoot,
+        format: 'json',
+        name: 'CLI Multi Source Documentation'
+      });
+
+      const jsonPath = path.join(outputRoot, 'documentation-tree.json');
+      expect(result.status).toBe('completed');
+      expect(result.sourceCount).toBe(2);
+      expect(result.files).toEqual([jsonPath]);
+
+      const json = await readFile(jsonPath, 'utf8');
+      expect(JSON.parse(json)).toMatchObject({
+        title: 'CLI Multi Source Documentation'
+      });
+      expectConsistentMultiSourceArtifact(json);
     } finally {
       await rm(tempRoot, {
         recursive: true,
@@ -322,6 +356,70 @@ async function writeSanitizationArchiveFixture(
   );
   archive.addFile('.env', Buffer.from('IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'));
   await writeFile(archivePath, archive.toBuffer());
+}
+
+async function writeMultiSourceFixtures(frontendRoot: string, backendRoot: string): Promise<void> {
+  await mkdir(path.join(frontendRoot, 'src'), {
+    recursive: true
+  });
+  await mkdir(path.join(backendRoot, 'src'), {
+    recursive: true
+  });
+  await writeFile(
+    path.join(frontendRoot, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        react: 'latest',
+        vite: 'latest'
+      },
+      scripts: {
+        dev: 'vite',
+        test: 'vitest run'
+      }
+    })
+  );
+  await writeFile(
+    path.join(frontendRoot, 'src/api.ts'),
+    'fetch("/api/users", { method: "GET" });\n'
+  );
+  await writeFile(
+    path.join(backendRoot, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        '@nestjs/core': 'latest'
+      },
+      scripts: {
+        start: 'nest start',
+        test: 'vitest run'
+      }
+    })
+  );
+  await writeFile(
+    path.join(backendRoot, 'src/users.controller.ts'),
+    [
+      "import { Controller, Get } from '@nestjs/common';",
+      '',
+      "@Controller('api/users')",
+      'export class UsersController {',
+      '  @Get()',
+      '  listUsers() {',
+      '    return [];',
+      '  }',
+      '}',
+      ''
+    ].join('\n')
+  );
+}
+
+function expectConsistentMultiSourceArtifact(content: string): void {
+  expect(content).toContain('Frontend');
+  expect(content).toContain('frontend');
+  expect(content).toContain('Backend');
+  expect(content).toContain('backend');
+  expect(content).toContain('/api/users');
+  expect(content).toContain('matched');
+  expect(content).not.toContain('No source input was marked as frontend');
+  expect(content).not.toContain('No source input was marked as backend');
 }
 
 function jsonResponse(payload: unknown): Response {

@@ -80,20 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 110: Multi-Source Artifact Consistency Regression Coverage.
+Implement Phase 111: Web Multi-Source Consistency Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/core
-apps/api
-apps/cli
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should add regression coverage proving multi-source frontend/backend runs expose consistent documentation trees, rendered formats, and download behavior across API, CLI, and SDK flows.
+The next step should add Web regression coverage proving multi-source frontend/backend runs preserve source roles, matched API contracts, rendered formats, warnings, and download behavior in the operator UI.
 
 ## Completed Implementation
 
@@ -1755,6 +1752,20 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/main.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 110 Multi-Source Artifact Consistency Regression Coverage
+
+- Added HTTP API multi-source lifecycle coverage for frontend/backend uploads, rendered format persistence, matched API contracts, and JSON, single-Markdown, and markdown-tree downloads.
+- Added CLI local JSON artifact coverage proving multi-source roles and matched contracts are preserved from folder inputs.
+- Added SDK high-level archive flow coverage for multi-source upload metadata, rendered format propagation, result retrieval, and JSON download behavior.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.http.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

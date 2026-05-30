@@ -243,6 +243,158 @@ describe('CodebaseDocsAIClient', () => {
     expect(result.download?.fileName).toBe('PROJECT_DOCUMENTATION.md');
   });
 
+  it('preserves multi-source metadata and rendered formats in the high-level archive flow', async () => {
+    const outputFormats = ['markdown-tree', 'single-markdown', 'json'] as const;
+    const documentation = {
+      title: 'SDK Multi Source Documentation',
+      summary: 'Generated',
+      pages: [
+        {
+          key: 'overview',
+          title: '01. Overview',
+          order: 1,
+          markdown:
+            '| Source | Role |\n| --- | --- |\n| Frontend | frontend |\n| Backend | backend |',
+          sourceReferences: [],
+          warnings: []
+        },
+        {
+          key: 'api-contracts',
+          title: '06. API Contracts',
+          order: 6,
+          markdown:
+            '| GET | /api/users | matched | Frontend:src/api.ts | Backend:src/users.controller.ts |',
+          sourceReferences: [],
+          warnings: []
+        }
+      ],
+      warnings: [],
+      sourceReferences: [],
+      generatedAt: '2026-05-29T00:00:00.000Z'
+    };
+    let createdRunBody:
+      | {
+          options?: {
+            outputFormats?: string[];
+          };
+        }
+      | undefined;
+    let uploadedMetadata:
+      | {
+          sources: Array<{
+            fileField: string;
+            name: string;
+            role: string;
+          }>;
+        }
+      | undefined;
+    let downloadUrl = '';
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        createdRunBody = JSON.parse(String(init.body)) as typeof createdRunBody;
+        return jsonResponse({ runId: 'run_multi_source', status: 'created' });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_multi_source/sources')) {
+        uploadedMetadata = JSON.parse(
+          String((init?.body as FormData).get('metadata'))
+        ) as typeof uploadedMetadata;
+        return jsonResponse({ runId: 'run_multi_source', status: 'ready', sources: [] });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_multi_source/start')) {
+        return jsonResponse({ runId: 'run_multi_source', status: 'running' });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_multi_source')) {
+        return jsonResponse({
+          id: 'run_multi_source',
+          status: 'completed',
+          renderedFormats: [...outputFormats]
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_multi_source/result')) {
+        return jsonResponse({
+          runId: 'run_multi_source',
+          status: 'completed',
+          renderedFormats: [...outputFormats],
+          documentation
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_multi_source/download?format=json')) {
+        downloadUrl = url;
+        return new Response(JSON.stringify(documentation, null, 2), {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="documentation-tree.json"',
+            'content-type': 'application/json'
+          }
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    const result = await client.documentationRuns.generateFromArchives({
+      name: 'SDK Multi Source Documentation',
+      options: {
+        outputFormats: [...outputFormats],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      },
+      sources: [
+        {
+          name: 'Frontend',
+          role: 'frontend',
+          fileName: 'frontend.zip',
+          file: new Blob(['frontend'])
+        },
+        {
+          name: 'Backend',
+          role: 'backend',
+          fileName: 'backend.zip',
+          file: new Blob(['backend'])
+        }
+      ],
+      poll: {
+        intervalMs: 0,
+        timeoutMs: 1000
+      },
+      downloadFormat: 'json'
+    });
+
+    const downloadedJson = await result.download?.content.text();
+    expect(createdRunBody?.options?.outputFormats).toEqual([...outputFormats]);
+    expect(uploadedMetadata?.sources).toEqual([
+      {
+        fileField: 'source_0',
+        name: 'Frontend',
+        role: 'frontend'
+      },
+      {
+        fileField: 'source_1',
+        name: 'Backend',
+        role: 'backend'
+      }
+    ]);
+    expect(result.run.renderedFormats).toEqual([...outputFormats]);
+    expect(result.result.renderedFormats).toEqual([...outputFormats]);
+    expect(result.download?.fileName).toBe('documentation-tree.json');
+    expect(downloadUrl).toBe(
+      'http://localhost:3000/v1/documentation-runs/run_multi_source/download?format=json'
+    );
+    expectConsistentMultiSourceArtifact(JSON.stringify(result.result.documentation));
+    expectConsistentMultiSourceArtifact(downloadedJson ?? '');
+  });
+
   it('preserves sanitized downloaded artifacts in the high-level archive flow', async () => {
     const rawOpenAiKey = `sk-${'g'.repeat(24)}`;
     const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
@@ -654,9 +806,7 @@ describe('CodebaseDocsAIClient', () => {
     } catch (error) {
       const payload = JSON.stringify(error);
       expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
-      expect((error as CodebaseDocsAIClientError).message).toContain(
-        '[REDACTED_OPENAI_API_KEY]'
-      );
+      expect((error as CodebaseDocsAIClientError).message).toContain('[REDACTED_OPENAI_API_KEY]');
       expect((error as CodebaseDocsAIClientError).details).toEqual({
         fieldErrors: {
           sources: [
@@ -710,4 +860,15 @@ function jsonResponse(body: unknown): Response {
       'content-type': 'application/json'
     }
   });
+}
+
+function expectConsistentMultiSourceArtifact(content: string): void {
+  expect(content).toContain('Frontend');
+  expect(content).toContain('frontend');
+  expect(content).toContain('Backend');
+  expect(content).toContain('backend');
+  expect(content).toContain('/api/users');
+  expect(content).toContain('matched');
+  expect(content).not.toContain('No source input was marked as frontend');
+  expect(content).not.toContain('No source input was marked as backend');
 }

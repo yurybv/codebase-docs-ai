@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 110: Multi-Source Artifact Consistency Regression Coverage.
+- Implement Phase 111: Web Multi-Source Consistency Regression Coverage.
 
-Phase 110 goal:
-- Add regression coverage proving multi-source frontend/backend runs expose consistent documentation trees, rendered formats, and download behavior across API, CLI, and SDK flows.
-- Verify generated artifacts preserve source roles, matched API contracts, warnings, and output format selections consistently across local and HTTP flows.
+Phase 111 goal:
+- Add Web regression coverage proving multi-source frontend/backend runs preserve source roles, matched API contracts, rendered formats, warnings, and download behavior in the operator UI.
+- Verify selected output formats and API-returned rendered formats drive the visible download controls without losing multi-source result context.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

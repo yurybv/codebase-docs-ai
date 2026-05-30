@@ -156,9 +156,10 @@ describe('Documentation runs HTTP API', () => {
     );
     expect(completedRun.renderedFormats).toEqual(['single-markdown', 'json']);
 
-    const result = await fetchJson<{ renderedFormats: string[]; documentation: { pages: unknown[] } }>(
-      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`
-    );
+    const result = await fetchJson<{
+      renderedFormats: string[];
+      documentation: { pages: unknown[] };
+    }>(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`);
     expect(result.documentation.pages.length).toBeGreaterThan(0);
     expect(result.renderedFormats).toEqual(['single-markdown', 'json']);
 
@@ -184,6 +185,121 @@ describe('Documentation runs HTTP API', () => {
         code: 'DOCUMENTATION_RUN_NOT_FOUND'
       }
     });
+  });
+
+  it('keeps multi-source artifacts consistent across results and downloads', async () => {
+    const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
+    const created = await fetchJson<{ runId: string; status: string }>(
+      `${apiBaseUrl}/v1/documentation-runs`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'HTTP Multi Source Documentation',
+          options: {
+            outputFormats,
+            language: 'en',
+            includeSourceReferences: true,
+            includeWarnings: true
+          }
+        })
+      }
+    );
+    expect(created.status).toBe('created');
+
+    const formData = new FormData();
+    formData.append(
+      'metadata',
+      JSON.stringify({
+        sources: [
+          {
+            fileField: 'frontend',
+            name: 'Frontend',
+            role: 'frontend'
+          },
+          {
+            fileField: 'backend',
+            name: 'Backend',
+            role: 'backend'
+          }
+        ]
+      })
+    );
+    formData.append('frontend', await multiSourceArchiveBlob('frontend'), 'frontend.zip');
+    formData.append('backend', await multiSourceArchiveBlob('backend'), 'backend.zip');
+
+    const uploaded = await fetchJson<{ status: string; sources: unknown[] }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/sources`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+    expect(uploaded.status).toBe('ready');
+    expect(uploaded.sources).toHaveLength(2);
+
+    const started = await fetchJson<{ status: string }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/start`,
+      {
+        method: 'POST'
+      }
+    );
+    expect(started.status).toBe('completed');
+
+    const completedRun = await fetchJson<{ renderedFormats: string[] }>(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}`
+    );
+    expect(completedRun.renderedFormats).toEqual(outputFormats);
+
+    const result = await fetchJson<{
+      renderedFormats: string[];
+      documentation: { pages: Array<{ markdown: string }> };
+    }>(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`);
+    expect(result.renderedFormats).toEqual(outputFormats);
+
+    const resultPayload = JSON.stringify(result.documentation);
+    expect(resultPayload).toContain('Frontend');
+    expect(resultPayload).toContain('frontend');
+    expect(resultPayload).toContain('Backend');
+    expect(resultPayload).toContain('backend');
+    expect(resultPayload).toContain('/api/users');
+    expect(resultPayload).toContain('matched');
+    expect(resultPayload).not.toContain('No source input was marked as frontend');
+    expect(resultPayload).not.toContain('No source input was marked as backend');
+
+    const singleMarkdownResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
+    );
+    const singleMarkdown = await singleMarkdownResponse.text();
+    expect(singleMarkdownResponse.status).toBe(200);
+    expect(singleMarkdownResponse.headers.get('content-type')).toContain('text/markdown');
+    expectConsistentMultiSourceArtifact(singleMarkdown);
+
+    const jsonResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=json`
+    );
+    const json = await jsonResponse.text();
+    expect(jsonResponse.status).toBe(200);
+    expect(jsonResponse.headers.get('content-type')).toContain('application/json');
+    expect(JSON.parse(json)).toMatchObject({
+      title: 'HTTP Multi Source Documentation'
+    });
+    expectConsistentMultiSourceArtifact(json);
+
+    const markdownTreeResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=markdown-tree`
+    );
+    const zip = new AdmZip(Buffer.from(await markdownTreeResponse.arrayBuffer()));
+    const zipContent = zip
+      .getEntries()
+      .filter((entry) => !entry.isDirectory)
+      .map((entry) => entry.getData().toString('utf8'))
+      .join('\n');
+    expect(markdownTreeResponse.status).toBe(200);
+    expect(markdownTreeResponse.headers.get('content-type')).toContain('application/zip');
+    expectConsistentMultiSourceArtifact(zipContent);
   });
 
   it('sanitizes uploaded source content in results and downloads', async () => {
@@ -354,6 +470,76 @@ async function sanitizationArchiveBlob(rawOpenAiKey: string): Promise<Blob> {
   return new Blob([await readFile(await writeArchive(archive, 'sanitized-frontend.zip'))], {
     type: 'application/zip'
   });
+}
+
+async function multiSourceArchiveBlob(kind: 'frontend' | 'backend'): Promise<Blob> {
+  const archive = new AdmZip();
+
+  if (kind === 'frontend') {
+    archive.addFile(
+      'package.json',
+      Buffer.from(
+        JSON.stringify({
+          dependencies: {
+            react: 'latest',
+            vite: 'latest'
+          },
+          scripts: {
+            dev: 'vite',
+            test: 'vitest run'
+          }
+        })
+      )
+    );
+    archive.addFile('src/api.ts', Buffer.from('fetch("/api/users", { method: "GET" });\n'));
+  } else {
+    archive.addFile(
+      'package.json',
+      Buffer.from(
+        JSON.stringify({
+          dependencies: {
+            '@nestjs/core': 'latest'
+          },
+          scripts: {
+            start: 'nest start',
+            test: 'vitest run'
+          }
+        })
+      )
+    );
+    archive.addFile(
+      'src/users.controller.ts',
+      Buffer.from(
+        [
+          "import { Controller, Get } from '@nestjs/common';",
+          '',
+          "@Controller('api/users')",
+          'export class UsersController {',
+          '  @Get()',
+          '  listUsers() {',
+          '    return [];',
+          '  }',
+          '}',
+          ''
+        ].join('\n')
+      )
+    );
+  }
+
+  return new Blob([await readFile(await writeArchive(archive, `multi-${kind}.zip`))], {
+    type: 'application/zip'
+  });
+}
+
+function expectConsistentMultiSourceArtifact(content: string): void {
+  expect(content).toContain('Frontend');
+  expect(content).toContain('frontend');
+  expect(content).toContain('Backend');
+  expect(content).toContain('backend');
+  expect(content).toContain('/api/users');
+  expect(content).toContain('matched');
+  expect(content).not.toContain('No source input was marked as frontend');
+  expect(content).not.toContain('No source input was marked as backend');
 }
 
 async function writeArchive(archive: AdmZip, fileName = 'frontend.zip'): Promise<string> {
