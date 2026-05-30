@@ -80,24 +80,19 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 105: Shared Public Sanitizer Consolidation.
+Implement Phase 106: Repository Analyzer Embedded Secret Evidence Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/documentation-generator
 packages/security
-packages/source-loader
+packages/repo-analyzer
 packages/core
-packages/ai-orchestrator
-packages/sdk
-apps/api
-apps/cli
 docs
 ```
 
-The next step should consolidate duplicated public text sanitizer behavior into a shared package helper so API, CLI, SDK, core, AI orchestration, source-loader, and documentation-generator redaction behavior stays consistent.
+The next step should add repository-analyzer/core regression coverage proving analyzer-derived evidence such as API paths, routes, scripts, dependencies, and framework evidence cannot reintroduce embedded raw provider keys from redacted source content.
 
 ## Completed Implementation
 
@@ -1689,6 +1684,20 @@ Verification:
 ```text
 pnpm -r --filter @codebase-docs-ai/security --filter @codebase-docs-ai/source-loader --filter @codebase-docs-ai/ai-orchestrator --filter @codebase-docs-ai/core --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli typecheck
 pnpm test -- packages/security/src/redact-secrets.test.ts packages/source-loader/src/load-source.test.ts packages/ai-orchestrator/src/openai-compatible-provider.test.ts packages/core/src/documentation-engine.test.ts apps/api/src/api-exception.filter.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 105 Shared Public Sanitizer Consolidation
+
+- Added `sanitizePublicText` in `packages/security` and exported shared public redaction patterns.
+- Wired source-loader, core, AI orchestration, documentation-generator, API, CLI, and SDK public sanitization through the shared helper.
+- Added direct security coverage for the shared public sanitizer while preserving embedded-key public-surface coverage.
+
+Verification:
+
+```text
+pnpm -r --sort --filter @codebase-docs-ai/security --filter @codebase-docs-ai/source-loader --filter @codebase-docs-ai/ai-orchestrator --filter @codebase-docs-ai/core --filter @codebase-docs-ai/documentation-generator --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli typecheck
+pnpm test -- packages/security/src/public-sanitizer.test.ts packages/security/src/redact-secrets.test.ts packages/source-loader/src/load-source.test.ts packages/ai-orchestrator/src/openai-compatible-provider.test.ts packages/core/src/documentation-engine.test.ts packages/documentation-generator/src/generate-documentation-tree.test.ts apps/api/src/api-exception.filter.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts
 pnpm verify
 ```
 

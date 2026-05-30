@@ -1,5 +1,6 @@
 import { Catch, HttpException, HttpStatus } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
+import { sanitizePublicText } from '@codebase-docs-ai/security';
 import type { ApiErrorPayload, ApiErrorResponse } from '@codebase-docs-ai/shared';
 import type { Response } from 'express';
 
@@ -98,12 +99,7 @@ function sanitizePublicValue(value: unknown): unknown {
 }
 
 function sanitizePublicString(value: string, fallback: string): string {
-  const sanitized = value
-    .replace(/sk-[A-Za-z0-9_-]{20,}/g, '[REDACTED_OPENAI_API_KEY]')
-    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
-    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
-
-  return sanitized.length > 0 ? sanitized : fallback;
+  return sanitizePublicText(value, { fallback });
 }
 
 function defaultErrorCode(statusCode: number): string {

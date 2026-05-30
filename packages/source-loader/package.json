@@ -16,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@codebase-docs-ai/security": "workspace:*",
     "@codebase-docs-ai/shared": "workspace:*",
     "adm-zip": "^0.5.16",
     "tar": "^7.4.3"

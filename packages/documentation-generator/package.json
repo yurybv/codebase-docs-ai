@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@codebase-docs-ai/ai-orchestrator": "workspace:*",
+    "@codebase-docs-ai/security": "workspace:*",
     "zod": "^3.23.8",
     "@codebase-docs-ai/shared": "workspace:*"
   }

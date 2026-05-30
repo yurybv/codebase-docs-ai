@@ -1,4 +1,5 @@
 import { AiProviderError, type AiProvider } from '@codebase-docs-ai/ai-orchestrator';
+import { sanitizePublicText } from '@codebase-docs-ai/security';
 import { z } from 'zod';
 import type {
   DocumentationPagePlan,
@@ -743,8 +744,5 @@ function sanitizeDocumentationWarnings(
 }
 
 function sanitizeGeneratedText(value: string): string {
-  return value
-    .replace(/sk-[A-Za-z0-9_-]{20,}/g, '[REDACTED_OPENAI_API_KEY]')
-    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
-    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
+  return sanitizePublicText(value);
 }

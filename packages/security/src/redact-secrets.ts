@@ -1,4 +1,5 @@
 import type { SecretRedaction, SecretRedactionResult } from './security-types.js';
+import { OPENAI_API_KEY_PATTERN } from './public-sanitizer.js';
 
 interface RedactionPattern {
   kind: string;
@@ -20,7 +21,7 @@ const redactionPatterns: RedactionPattern[] = [
   },
   {
     kind: 'openai_api_key',
-    pattern: /sk-[A-Za-z0-9_-]{20,}/g,
+    pattern: OPENAI_API_KEY_PATTERN,
     replacement: '[REDACTED_OPENAI_API_KEY]'
   },
   {

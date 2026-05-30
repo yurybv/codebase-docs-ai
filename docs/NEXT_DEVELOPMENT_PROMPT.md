@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 105: Shared Public Sanitizer Consolidation.
+- Implement Phase 106: Repository Analyzer Embedded Secret Evidence Regression Coverage.
 
-Phase 105 goal:
-- Consolidate duplicated public text sanitizer behavior into a shared package helper.
-- Wire API, CLI, SDK, core, AI orchestration, source-loader, and documentation-generator sanitization through the shared helper where package boundaries allow it.
-- Keep embedded-secret and existing source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
+Phase 106 goal:
+- Add repository-analyzer/core regression coverage proving analyzer-derived evidence such as API paths, routes, scripts, dependencies, and framework evidence cannot reintroduce embedded raw provider keys from redacted source content.
+- Sanitize analyzer-derived evidence if needed before it reaches system maps and documentation trees.
+- Keep shared sanitizer and existing source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

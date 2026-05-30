@@ -1,3 +1,5 @@
+import { sanitizePublicText } from '@codebase-docs-ai/security';
+
 export interface CliFailureResult {
   status: 'failed';
   exitCode: number;
@@ -95,10 +97,5 @@ function sanitizePublicValue(value: unknown): unknown {
 }
 
 function sanitizePublicString(value: string, fallback: string): string {
-  const sanitized = value
-    .replace(/sk-[A-Za-z0-9_-]{20,}/g, '[REDACTED_OPENAI_API_KEY]')
-    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
-    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
-
-  return sanitized.length > 0 ? sanitized : fallback;
+  return sanitizePublicText(value, { fallback });
 }
