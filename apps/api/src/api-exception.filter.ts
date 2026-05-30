@@ -1,7 +1,11 @@
 import { Catch, HttpException, HttpStatus } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { sanitizePublicText } from '@codebase-docs-ai/security';
-import type { ApiErrorPayload, ApiErrorResponse } from '@codebase-docs-ai/shared';
+import {
+  sanitizePublicErrorText,
+  sanitizePublicErrorValue,
+  type ApiErrorPayload,
+  type ApiErrorResponse
+} from '@codebase-docs-ai/shared';
 import type { Response } from 'express';
 
 interface NormalizedApiErrorResponse {
@@ -55,7 +59,7 @@ function normalizeHttpExceptionResponse(response: string | object, statusCode: n
   };
 
   if ('details' in responseRecord) {
-    payload.details = sanitizePublicValue(responseRecord.details);
+    payload.details = sanitizePublicErrorValue(responseRecord.details);
   }
 
   if (typeof responseRecord.suggestion === 'string') {
@@ -80,26 +84,8 @@ function normalizeMessage(value: unknown, fallback: string): string {
   return fallback;
 }
 
-function sanitizePublicValue(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return sanitizePublicString(value, '[REDACTED]');
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizePublicValue(entry));
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, sanitizePublicValue(entry)])
-    );
-  }
-
-  return value;
-}
-
 function sanitizePublicString(value: string, fallback: string): string {
-  return sanitizePublicText(value, { fallback });
+  return sanitizePublicErrorText(value, { fallback });
 }
 
 function defaultErrorCode(statusCode: number): string {

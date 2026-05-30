@@ -47,9 +47,6 @@ importers:
       '@codebase-docs-ai/renderers':
         specifier: workspace:*
         version: link:../../packages/renderers
-      '@codebase-docs-ai/security':
-        specifier: workspace:*
-        version: link:../../packages/security
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -108,9 +105,6 @@ importers:
       '@codebase-docs-ai/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
-      '@codebase-docs-ai/security':
-        specifier: workspace:*
-        version: link:../../packages/security
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -228,9 +222,6 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@codebase-docs-ai/security':
-        specifier: workspace:*
-        version: link:../security
       '@codebase-docs-ai/shared':
         specifier: workspace:*
         version: link:../shared

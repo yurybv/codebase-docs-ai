@@ -1,4 +1,4 @@
-import { sanitizePublicText } from '@codebase-docs-ai/security';
+import { sanitizePublicErrorText, sanitizePublicErrorValue } from '@codebase-docs-ai/shared';
 
 export interface CliFailureResult {
   status: 'failed';
@@ -30,7 +30,7 @@ export function formatCliError(error: unknown): CliFailureResult {
       error: {
         code: error.code,
         message: sanitizePublicString(error.message, 'CLI request failed.'),
-        ...(error.details ? { details: sanitizePublicValue(error.details) } : {})
+        ...(error.details ? { details: sanitizePublicErrorValue(error.details) } : {})
       }
     };
   }
@@ -44,7 +44,7 @@ export function formatCliError(error: unknown): CliFailureResult {
         message: sanitizePublicString(error.message, 'API request failed.'),
         details: {
           status: error.status,
-          ...(error.details ? { apiDetails: sanitizePublicValue(error.details) } : {})
+          ...(error.details ? { apiDetails: sanitizePublicErrorValue(error.details) } : {})
         }
       }
     };
@@ -78,29 +78,6 @@ function isSdkClientError(
   );
 }
 
-function sanitizePublicValue(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return sanitizePublicString(value, '[REDACTED]');
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizePublicValue(entry));
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, sanitizePublicValue(entry)])
-    );
-  }
-
-  return value;
-}
-
 function sanitizePublicString(value: string, fallback: string): string {
-  return sanitizePublicText(value.replace(storagePathPattern, '[REDACTED_STORAGE_PATH]'), {
-    fallback
-  });
+  return sanitizePublicErrorText(value, { fallback });
 }
-
-const storagePathPattern =
-  /(?:\/(?:Users|home|tmp|private|var|data|mnt)\/[^\s"'<>),;]+|[A-Za-z]:\\[^\s"'<>),;]+)/g;

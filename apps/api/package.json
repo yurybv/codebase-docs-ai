@@ -13,7 +13,6 @@
     "@codebase-docs-ai/ai-orchestrator": "workspace:*",
     "@codebase-docs-ai/core": "workspace:*",
     "@codebase-docs-ai/renderers": "workspace:*",
-    "@codebase-docs-ai/security": "workspace:*",
     "@codebase-docs-ai/shared": "workspace:*",
     "@codebase-docs-ai/source-loader": "workspace:*",
     "@nestjs/common": "^10.4.15",

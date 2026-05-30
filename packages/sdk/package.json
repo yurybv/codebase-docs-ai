@@ -16,7 +16,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@codebase-docs-ai/security": "workspace:*",
     "@codebase-docs-ai/shared": "workspace:*"
   },
   "devDependencies": {

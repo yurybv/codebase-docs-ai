@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 118: Shared Public Error Sanitizer Consolidation.
+- Implement Phase 119: API Cleanup Log Sanitization Regression Coverage.
 
-Phase 118 goal:
-- Consolidate adapter-facing API/CLI/SDK public error sanitization on the shared public error sanitizer.
-- Verify raw storage paths, raw secret-bearing artifact paths, provider keys, and denied-source values are redacted consistently across API, CLI, SDK, and Web error surfaces.
-- Keep existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
+Phase 119 goal:
+- Add API regression coverage proving run storage cleanup warning logs are sanitized when cleanup failures include raw storage paths, provider keys, denied `.env` evidence, or denied-source values.
+- Sanitize cleanup warning logs if needed so raw secret-bearing storage failure details are not logged.
+- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

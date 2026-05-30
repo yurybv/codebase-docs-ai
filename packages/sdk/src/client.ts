@@ -1,9 +1,11 @@
-import type { ApiErrorPayload, DocumentationRun } from '@codebase-docs-ai/shared';
 import {
+  type ApiErrorPayload,
+  type DocumentationRun,
   isSupportedSourceArchiveFileName,
+  sanitizePublicErrorText,
+  sanitizePublicErrorValue,
   supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
-import { sanitizePublicText } from '@codebase-docs-ai/security';
 import type {
   CodebaseDocsAIClientConfig,
   CreateDocumentationRunInput,
@@ -250,7 +252,7 @@ async function parseErrorResponse(
           ? sanitizeSdkErrorString(source.message, 'Request failed.')
           : sanitizeSdkErrorString(text, 'Request failed.'),
       ...(typeof source.code === 'string' ? { code: source.code } : {}),
-      ...('details' in source ? { details: sanitizePublicValue(source.details) } : {})
+      ...('details' in source ? { details: sanitizePublicErrorValue(source.details) } : {})
     };
   } catch {
     return {
@@ -269,34 +271,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function sanitizePublicValue(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return sanitizeSdkErrorString(value, '[REDACTED]');
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizePublicValue(entry));
-  }
-
-  if (isRecord(value)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, sanitizePublicValue(entry)])
-    );
-  }
-
-  return value;
-}
-
-function sanitizePublicString(value: string, fallback: string): string {
-  return sanitizePublicText(value, { fallback });
-}
-
-const storagePathPattern =
-  /(?:\/(?:Users|home|tmp|private|var|data|mnt)\/[^\s"'<>),;]+|[A-Za-z]:\\[^\s"'<>),;]+)/g;
-
 function sanitizeSdkErrorString(value: string, fallback: string): string {
-  return sanitizePublicString(
-    value.replace(storagePathPattern, '[REDACTED_STORAGE_PATH]'),
-    fallback
-  );
+  return sanitizePublicErrorText(value, { fallback });
 }

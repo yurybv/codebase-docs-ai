@@ -80,19 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 118: Shared Public Error Sanitizer Consolidation.
+Implement Phase 119: API Cleanup Log Sanitization Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 apps/api
-apps/cli
-packages/sdk
 docs
 ```
 
-The next step should consolidate adapter-facing API/CLI/SDK public error sanitization on the shared public error sanitizer so raw storage paths, raw secret-bearing artifact paths, and denied-source values are redacted consistently across integration surfaces.
+The next step should add API regression coverage proving run storage cleanup warning logs are sanitized when cleanup failures include raw storage paths, provider keys, denied `.env` evidence, or denied-source values.
 
 ## Completed Implementation
 
@@ -1866,6 +1864,20 @@ Verification:
 pnpm --filter @codebase-docs-ai/shared build
 pnpm test -- packages/shared/src/public-error-sanitizer.test.ts apps/web/src/api-errors.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/web typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 118 Shared Public Error Sanitizer Consolidation
+
+- Consolidated API exception filtering, CLI failure formatting, and SDK error parsing on the shared public error sanitizer.
+- Removed stale direct security package dependencies from API, CLI, and SDK manifests after adapter error handling stopped importing security directly.
+- Expanded API exception filter coverage to prove raw run storage paths are redacted with provider keys and denied source evidence.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/api-exception.filter.test.ts apps/api/src/documentation-runs.http.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts packages/shared/src/public-error-sanitizer.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 

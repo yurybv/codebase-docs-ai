@@ -96,6 +96,8 @@ Extraction must reject:
 - Add rate limits for public deployments.
 - Make retention and cleanup explicit.
 
+Public API, CLI, SDK, and Web error surfaces use the shared public error sanitizer for operator-facing text and details. Public errors must redact likely provider keys, denied `.env` evidence, denied-source sentinel values, and API run storage paths before they are returned, printed, thrown, or rendered.
+
 Rate limiting strategy is documented in [Rate Limiting](./RATE_LIMITING.md). The current product expects public or multi-tenant deployments to enforce request rates and user/project quotas at the host gateway until a trusted identity source is defined for a built-in adapter.
 
 ## AI Prompt Safety

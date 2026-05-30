@@ -59,6 +59,7 @@ describe('createApiErrorResponse', () => {
   it('sanitizes secret-bearing HTTP exception envelopes', () => {
     const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
     const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
     const response = createApiErrorResponse(
       new BadRequestException({
         code: 'INVALID_SOURCE_METADATA',
@@ -66,7 +67,8 @@ describe('createApiErrorResponse', () => {
         details: {
           fieldErrors: {
             sources: [`Remove ${embeddedOpenAiKey} from .env SHOULD_NOT_APPEAR.`]
-          }
+          },
+          artifactPath: rawStoragePath
         },
         suggestion: `Upload a safe archive without ${embeddedOpenAiKey} or .env SHOULD_NOT_APPEAR.`
       })
@@ -77,6 +79,8 @@ describe('createApiErrorResponse', () => {
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
     expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).not.toContain(rawStoragePath);
     expect(payload).not.toContain(rawOpenAiKey);
     expect(payload).not.toContain('.env');
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
