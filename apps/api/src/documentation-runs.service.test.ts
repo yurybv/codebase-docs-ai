@@ -286,6 +286,51 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain('renderedPaths');
   });
 
+  it('sorts listed run summaries by terminal duration with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const pending = await service.createRun({
+      name: `Pending Duration Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const longest = await createCompletedRun('Longest Duration Sort Docs', secretSourceName);
+    const shortest = await createFailedRun('Shortest Duration Sort Docs', secretSourceName);
+    await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+    await setRunCreatedAt(longest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(longest.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(longest.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(shortest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(shortest.runId, '2026-05-30T00:00:45.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2', sort: 'durationMs:desc' });
+    const secondPage = await service.listRuns({
+      limit: '2',
+      sort: 'durationMs:desc',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([longest.runId, shortest.runId]);
+    expect(firstPage.runs.map((run) => run.durationMs)).toEqual([90_000, 45_000]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([pending.runId]);
+    expect(secondPage.runs[0]?.durationMs).toBeUndefined();
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('limits listed run summaries by latest update time', async () => {
     const oldest = await service.createRun({
       name: 'Oldest Listed Docs',

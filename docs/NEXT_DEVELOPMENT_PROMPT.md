@@ -37,16 +37,10 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 183: API Run Listing Duration Sort Contract.
-- Then continue without stopping into Phase 184: SDK And CLI Run Listing Duration Sort Option.
+- Implement Phase 184: SDK And CLI Run Listing Duration Sort Option.
 - Then continue without stopping into Phase 185: Web Run History Duration Sort Control.
 - Then continue without stopping into Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 183 goal:
-- Add safe API run listing duration sort options, such as `durationMs:desc` and `durationMs:asc`, using only public terminal duration metadata derived from run timestamps.
-- Keep non-terminal runs deterministic in duration sorting without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
-- Cover duration-sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
 
 Phase 184 goal:
 - Expose duration sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.

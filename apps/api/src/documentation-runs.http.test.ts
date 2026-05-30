@@ -311,6 +311,80 @@ describe('Documentation runs HTTP API', () => {
     expect(payload).not.toContain('renderedPaths');
   });
 
+  it('sorts run summaries by safe terminal duration metadata', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const pending = await service.createRun({
+      name: `HTTP Pending Duration Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const longest = await createServiceRun(
+      service,
+      'HTTP Longest Duration Sort Docs',
+      secretSourceName
+    );
+    const shortest = await createServiceRun(
+      service,
+      'HTTP Shortest Duration Sort Docs',
+      secretSourceName,
+      {
+        failBeforeStart: true
+      }
+    );
+    await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+    await setRunCreatedAt(longest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(longest.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(longest.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(shortest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(shortest.runId, '2026-05-30T00:00:45.000Z');
+
+    const firstResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=durationMs:desc`
+    );
+    const firstPayload = await firstResponse.text();
+    const firstPage = JSON.parse(firstPayload) as {
+      runs: Array<{ durationMs?: number; id: string }>;
+      nextCursor?: string;
+    };
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=durationMs:desc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const secondPage = JSON.parse(secondPayload) as {
+      runs: Array<{ durationMs?: number; id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([longest.runId, shortest.runId]);
+    expect(firstPage.runs.map((run) => run.durationMs)).toEqual([90_000, 45_000]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.runs.map((run) => run.id)).toEqual([pending.runId]);
+    expect(secondPage.runs[0]?.durationMs).toBeUndefined();
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+  });
+
   it('validates and applies the run list limit query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const oldest = await service.createRun({
