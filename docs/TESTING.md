@@ -106,9 +106,18 @@ Run listing pagination is a cross-surface contract. When changing API run listin
 Run listing updated-at filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
 - `updatedAfter` and `updatedBefore` filters are forwarded as ISO timestamp query parameters;
-- updated-at filtering composes with selected `limit`, `status`, `role`, and `cursor` options;
+- updated-at filtering composes with selected `limit`, `status`, `role`, `name`, and `cursor` options;
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid updated-at filter errors use stable public error codes and sanitized messages.
+
+## Run Listing Name Filter Regression
+
+Run listing name filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `name` filters are forwarded as sanitized run-name substring query parameters;
+- name filtering composes with selected `limit`, `status`, `role`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw name input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid name filter errors use stable public error codes and sanitized messages.
 
 ## Web Completed-State Regression
 

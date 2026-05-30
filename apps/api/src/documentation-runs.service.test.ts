@@ -344,33 +344,54 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
-  it('filters listed run summaries by sanitized name without exposing raw values', async () => {
+  it('filters listed run summaries by sanitized name with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'f'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
-    const created = await service.createRun({
-      name: `Created Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      options: {
-        outputFormats: ['json'],
-        language: 'en',
-        includeSourceReferences: true,
-        includeWarnings: true
-      }
-    });
-    const completed = await createCompletedRun(
+    const older = await createCompletedRun(
+      `Older Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'backend'
+    );
+    const newer = await createCompletedRun(
       `Completed Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      secretSourceName
+      secretSourceName,
+      'backend'
     );
     await createFailedRun(
       `Failed Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       secretSourceName
     );
-    await setRunUpdatedAt(created.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(completed.runId, '2026-05-30T00:01:00.000Z');
+    await createCompletedRun(
+      `Completed Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      'frontend'
+    );
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
-    const list = await service.listRuns({ name: 'backend search' });
-    const payload = JSON.stringify(list);
+    const firstPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend search',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const secondPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend search',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
 
-    expect(list.runs.map((run) => run.id)).toEqual([completed.runId, created.runId]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
     expect(payload).toContain('[REDACTED_DENIED_VALUE]');

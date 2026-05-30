@@ -479,38 +479,43 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidBeforePayload).not.toContain('/private/tmp');
   });
 
-  it('validates and applies the run list name query parameter', async () => {
+  it('validates and applies the run list name query parameter with other list filters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
-    const createdBackend = await service.createRun({
-      name: `HTTP Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      options: {
-        outputFormats: ['json'],
-        language: 'en',
-        includeSourceReferences: true,
-        includeWarnings: true
-      }
-    });
-    await service.createRun({
-      name: `HTTP Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      options: {
-        outputFormats: ['json'],
-        language: 'en',
-        includeSourceReferences: true,
-        includeWarnings: true
-      }
-    });
+    const secretSourceName = `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const older = await createServiceRun(
+      service,
+      `HTTP Older Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      { role: 'backend' }
+    );
+    const newer = await createServiceRun(
+      service,
+      `HTTP Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      { role: 'backend' }
+    );
+    await createServiceRun(
+      service,
+      `HTTP Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName,
+      { role: 'frontend' }
+    );
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
     const filteredResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?name=${encodeURIComponent('backend search')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend search')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
     );
     const filteredPayload = await filteredResponse.text();
     const filtered = JSON.parse(filteredPayload) as {
       runs: Array<{ id: string }>;
+      nextCursor?: string;
     };
 
     expect(filteredResponse.status).toBe(200);
-    expect(filtered.runs.map((run) => run.id)).toEqual([createdBackend.runId]);
+    expect(filtered.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(filtered.nextCursor).toBeTruthy();
     expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
     expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
@@ -518,6 +523,24 @@ describe('Documentation runs HTTP API', () => {
     expect(filteredPayload).not.toContain('.env');
     expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
     expect(filteredPayload).not.toContain(tempRoot);
+
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend search')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const second = JSON.parse(secondPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(second.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(second.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
 
     const invalidOpenAiKey = `sk-${'o'.repeat(24)}`;
     const invalidName = encodeURIComponent(

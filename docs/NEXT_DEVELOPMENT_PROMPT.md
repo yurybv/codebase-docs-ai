@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
-- Then continue without stopping into Phase 151: API Run Listing Output Format Filter Contract.
+- Implement Phase 151: API Run Listing Output Format Filter Contract.
 - Then continue without stopping into Phase 152: SDK And CLI Run Listing Output Format Filters.
 - Then continue without stopping into Phase 153: Web Run History Output Format Filter Control And Audit.
+- Then continue without stopping into Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 150 goal:
-- Audit API, SDK, CLI, and Web run-name search filtering as one public operator contract.
-- Add or tighten regression coverage proving name search composes with `limit`, `status`, `role`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
-- Verify raw name-search input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
-- Update docs only if the audit changes public behavior or testing expectations.
 
 Phase 151 goal:
 - Add a safe API run listing output-format filter for operator surfaces, such as `format`.
@@ -65,6 +59,12 @@ Phase 153 goal:
 - Preserve Web run history limit/status/role/name/updated-at/cursor behavior when output format filtering is applied.
 - Audit API, SDK, CLI, and Web output-format filtering as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
+
+Phase 154 goal:
+- Audit API, SDK, CLI, and Web output-format filtering as one public operator contract.
+- Add or tighten regression coverage proving output-format filtering composes with `limit`, `status`, `role`, `name`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
+- Verify raw format filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
+- Update docs only if the audit changes public behavior or testing expectations.
 
 Verification expectations:
 - Run focused tests for every touched surface.
