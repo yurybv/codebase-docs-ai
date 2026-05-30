@@ -14,7 +14,7 @@ import type {
 import { CliError } from './cli-error.js';
 
 export type CliOutputFormat = DocumentationOutputFormat | 'zip';
-export type RunListSort = 'updatedAt:desc' | 'updatedAt:asc';
+export type RunListSort = 'updatedAt:desc' | 'updatedAt:asc' | 'createdAt:desc' | 'createdAt:asc';
 
 export interface CliSourceInput {
   inputPath: string;
@@ -63,7 +63,12 @@ const cliRunListStatusOptions: DocumentationRunStatus[] = [
 ];
 const maxRunListCursorLength = 512;
 const maxRunListNameLength = 200;
-const runListSortOptions: RunListSort[] = ['updatedAt:desc', 'updatedAt:asc'];
+const runListSortOptions: RunListSort[] = [
+  'updatedAt:desc',
+  'updatedAt:asc',
+  'createdAt:desc',
+  'createdAt:asc'
+];
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {

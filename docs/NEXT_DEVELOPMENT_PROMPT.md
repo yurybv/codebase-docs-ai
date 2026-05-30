@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 168: SDK And CLI Run Listing Created-At Sort Option.
-- Then continue without stopping into Phase 169: Web Run History Created-At Sort Control And Audit.
+- Implement Phase 169: Web Run History Created-At Sort Control And Audit.
 - Then continue without stopping into Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 171: API Run Listing Completed-At Filter Contract.
+- Then continue without stopping into Phase 172: SDK And CLI Run Listing Completed-At Filters.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 168 goal:
-- Expose created-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI created-at sort inputs before network requests where practical.
-- Verify SDK and CLI created-at sorted list requests preserve sanitized list output and invalid sort errors do not expose raw values.
 
 Phase 169 goal:
 - Expose created-at sort options through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 171 goal:
 - Validate completed-at filter inputs before storage access where practical.
 - Return persisted run summaries matching completed-at constraints without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid completed-at filtering and invalid secret-bearing completed-at errors.
+
+Phase 172 goal:
+- Expose API completed-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI completed-at filter inputs before network requests where practical.
+- Verify SDK and CLI completed-at filtered list requests preserve sanitized list output and invalid completed-at errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

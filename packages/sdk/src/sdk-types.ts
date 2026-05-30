@@ -76,7 +76,11 @@ export interface DocumentationRunListOptions {
   cursor?: string;
 }
 
-export type DocumentationRunListSort = 'updatedAt:desc' | 'updatedAt:asc';
+export type DocumentationRunListSort =
+  | 'updatedAt:desc'
+  | 'updatedAt:asc'
+  | 'createdAt:desc'
+  | 'createdAt:asc';
 
 export interface GenerateFromArchivesInput {
   name: string;

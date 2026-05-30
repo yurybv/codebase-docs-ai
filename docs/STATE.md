@@ -2581,6 +2581,21 @@ pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api 
 pnpm verify
 ```
 
+### 2026-05-30: Phase 168 SDK And CLI Run Listing Created-At Sort Option
+
+- Extended SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort` to accept `createdAt:desc` and `createdAt:asc`.
+- Kept SDK and CLI sort validation local to callers before network requests.
+- Updated SDK and CLI regression coverage for created-at sorted list requests and sanitized invalid sort failures.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
 ## Open Questions
 
 - Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.
