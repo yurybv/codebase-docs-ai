@@ -14,6 +14,7 @@ import type {
 import { CliError } from './cli-error.js';
 
 export type CliOutputFormat = DocumentationOutputFormat | 'zip';
+export type RunListSort = 'updatedAt:desc' | 'updatedAt:asc';
 
 export interface CliSourceInput {
   inputPath: string;
@@ -37,6 +38,7 @@ export interface ListRunsCommandOptions {
   format?: DocumentationOutputFormat;
   minSources?: number;
   maxSources?: number;
+  sort?: RunListSort;
   createdAfter?: string;
   createdBefore?: string;
   updatedAfter?: string;
@@ -61,6 +63,7 @@ const cliRunListStatusOptions: DocumentationRunStatus[] = [
 ];
 const maxRunListCursorLength = 512;
 const maxRunListNameLength = 200;
+const runListSortOptions: RunListSort[] = ['updatedAt:desc', 'updatedAt:asc'];
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
@@ -102,6 +105,7 @@ export function parseListRunsOptions(options: {
   format?: string;
   minSources?: string;
   maxSources?: string;
+  sort?: string;
   createdAfter?: string;
   createdBefore?: string;
   updatedAfter?: string;
@@ -122,6 +126,7 @@ export function parseListRunsOptions(options: {
   const name = parseRunListName(options.name);
   const format = parseRunListFormat(options.format);
   const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
+  const sort = parseRunListSort(options.sort);
   const createdAfter = parseRunListCreatedAfter(options.createdAfter);
   const createdBefore = parseRunListCreatedBefore(options.createdBefore);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
@@ -136,6 +141,7 @@ export function parseListRunsOptions(options: {
     ...(format === undefined ? {} : { format }),
     ...(sourceCountRange.minSources === undefined ? {} : { minSources: sourceCountRange.minSources }),
     ...(sourceCountRange.maxSources === undefined ? {} : { maxSources: sourceCountRange.maxSources }),
+    ...(sort === undefined ? {} : { sort }),
     ...(createdAfter === undefined ? {} : { createdAfter }),
     ...(createdBefore === undefined ? {} : { createdBefore }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
@@ -340,6 +346,25 @@ function invalidRunListSourceCount(): CliError {
       min: 0
     }
   );
+}
+
+function parseRunListSort(value: string | undefined): RunListSort | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!runListSortOptions.includes(value as RunListSort)) {
+    throw new CliError(
+      'CLI_RUN_LIST_SORT_INVALID',
+      'Run list sort must be a supported sort option.',
+      2,
+      {
+        allowedSorts: [...runListSortOptions]
+      }
+    );
+  }
+
+  return value as RunListSort;
 }
 
 function parseRunListCreatedAfter(value: string | undefined): string | undefined {

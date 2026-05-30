@@ -2524,6 +2524,21 @@ pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api 
 pnpm verify
 ```
 
+### 2026-05-30: Phase 164 SDK And CLI Run Listing Sort Direction Option
+
+- Added a `sort` option to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight sort validation, with sanitized stable invalid-sort failures before network requests.
+- Added SDK and CLI regression coverage for sorted list requests and secret-bearing invalid sort values.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
 ## Open Questions
 
 - Should the Web UI be Next.js or Vite React? Decision for initial implementation: Vite React.

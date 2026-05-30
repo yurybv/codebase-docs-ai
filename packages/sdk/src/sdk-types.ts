@@ -68,12 +68,15 @@ export interface DocumentationRunListOptions {
   format?: DocumentationOutputFormat;
   minSources?: number;
   maxSources?: number;
+  sort?: DocumentationRunListSort;
   createdAfter?: string;
   createdBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
 }
+
+export type DocumentationRunListSort = 'updatedAt:desc' | 'updatedAt:asc';
 
 export interface GenerateFromArchivesInput {
   name: string;

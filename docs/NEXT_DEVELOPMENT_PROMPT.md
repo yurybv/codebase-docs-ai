@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 164: SDK And CLI Run Listing Sort Direction Option.
-- Then continue without stopping into Phase 165: Web Run History Sort Direction Control And Audit.
+- Implement Phase 165: Web Run History Sort Direction Control And Audit.
 - Then continue without stopping into Phase 166: Run Listing Sort Direction Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 167: API Run Listing Created-At Sort Contract.
+- Then continue without stopping into Phase 168: SDK And CLI Run Listing Created-At Sort Option.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 164 goal:
-- Expose the API run listing sort option through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI sort inputs before network requests where practical.
-- Verify SDK and CLI sorted list requests preserve sanitized list output and invalid sort errors do not expose raw values.
 
 Phase 165 goal:
 - Expose sort-direction filtering through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 167 goal:
 - Validate created-at sort inputs before storage access where practical.
 - Return deterministic pages of persisted run summaries using created-at sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid created-at sort behavior and invalid secret-bearing sort errors.
+
+Phase 168 goal:
+- Expose created-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI created-at sort inputs before network requests where practical.
+- Verify SDK and CLI created-at sorted list requests preserve sanitized list output and invalid sort errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

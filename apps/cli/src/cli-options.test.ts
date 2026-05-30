@@ -78,6 +78,7 @@ describe('CLI option parsing', () => {
         format: 'json',
         minSources: '1',
         maxSources: '2',
+        sort: 'updatedAt:asc',
         createdAfter: '2026-05-29T23:59:30.000Z',
         createdBefore: '2026-05-30T00:01:00.000Z',
         updatedAfter: '2026-05-30T00:00:30.000Z',
@@ -93,6 +94,7 @@ describe('CLI option parsing', () => {
       format: 'json',
       minSources: 1,
       maxSources: 2,
+      sort: 'updatedAt:asc',
       createdAfter: '2026-05-29T23:59:30.000Z',
       createdBefore: '2026-05-30T00:01:00.000Z',
       updatedAfter: '2026-05-30T00:00:30.000Z',
@@ -323,6 +325,38 @@ describe('CLI option parsing', () => {
         expect(payload).not.toContain('.env');
         expect(payload).not.toContain('SHOULD_NOT_APPEAR');
       }
+    }
+  });
+
+  it('rejects invalid run listing sort filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
+    const rawSort = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        sort: rawSort
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid sort.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toEqual({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_SORT_INVALID',
+          message: 'Run list sort must be a supported sort option.',
+          details: {
+            allowedSorts: ['updatedAt:desc', 'updatedAt:asc']
+          }
+        }
+      });
+      expect(payload).not.toContain(rawSort);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     }
   });
 

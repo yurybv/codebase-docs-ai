@@ -59,6 +59,7 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const name = parseRunListName(options.name);
     const format = parseRunListFormat(options.format);
     const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
+    const sort = parseRunListSort(options.sort);
     const cursor = parseRunListCursor(options.cursor);
     const createdAfter = parseRunListCreatedAfter(options.createdAfter);
     const createdBefore = parseRunListCreatedBefore(options.createdBefore);
@@ -85,6 +86,9 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (sourceCountRange.maxSources !== undefined) {
       query.set('maxSources', String(sourceCountRange.maxSources));
+    }
+    if (sort !== undefined) {
+      query.set('sort', sort);
     }
     if (createdAfter !== undefined) {
       query.set('createdAfter', createdAfter);
@@ -556,6 +560,31 @@ function invalidRunListSourceCount(): CodebaseDocsAIClientError {
     'RUN_LIST_SOURCE_COUNT_INVALID',
     {
       min: 0
+    }
+  );
+}
+
+const runListSortOptions = ['updatedAt:desc', 'updatedAt:asc'] as const;
+
+function parseRunListSort(value: unknown): (typeof runListSortOptions)[number] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string' || !runListSortOptions.includes(value as (typeof runListSortOptions)[number])) {
+    throw invalidRunListSort();
+  }
+
+  return value as (typeof runListSortOptions)[number];
+}
+
+function invalidRunListSort(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError(
+    'Run list sort must be a supported sort option.',
+    0,
+    'RUN_LIST_SORT_INVALID',
+    {
+      allowedSorts: [...runListSortOptions]
     }
   );
 }

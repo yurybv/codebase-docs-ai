@@ -23,6 +23,7 @@ export async function runListRunsCommand(
     ...(options.format === undefined ? {} : { format: options.format }),
     ...(options.minSources === undefined ? {} : { minSources: options.minSources }),
     ...(options.maxSources === undefined ? {} : { maxSources: options.maxSources }),
+    ...(options.sort === undefined ? {} : { sort: options.sort }),
     ...(options.createdAfter === undefined ? {} : { createdAfter: options.createdAfter }),
     ...(options.createdBefore === undefined ? {} : { createdBefore: options.createdBefore }),
     ...(options.updatedAfter === undefined ? {} : { updatedAfter: options.updatedAfter }),
