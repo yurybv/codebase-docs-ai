@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 169: Web Run History Created-At Sort Control And Audit.
-- Then continue without stopping into Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
+- Implement Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 171: API Run Listing Completed-At Filter Contract.
 - Then continue without stopping into Phase 172: SDK And CLI Run Listing Completed-At Filters.
+- Then continue without stopping into Phase 173: Web Run History Completed-At Filter Controls And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 169 goal:
-- Expose created-at sort options through the Web run history operator surface.
-- Preserve Web run history limit/status/role/name/format/source-count/created-at/updated-at/cursor behavior when created-at sort is applied.
-- Audit API, SDK, CLI, and Web created-at sort behavior as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 170 goal:
 - Audit API, SDK, CLI, and Web created-at sort behavior as one public operator contract.
@@ -65,6 +59,12 @@ Phase 172 goal:
 - Expose API completed-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI completed-at filter inputs before network requests where practical.
 - Verify SDK and CLI completed-at filtered list requests preserve sanitized list output and invalid completed-at errors do not expose raw values.
+
+Phase 173 goal:
+- Expose completed-at range filtering through the Web run history operator surface.
+- Preserve Web run history limit/status/role/name/format/source-count/sort/created-at/updated-at/cursor behavior when completed-at filtering is applied.
+- Audit API, SDK, CLI, and Web completed-at filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.
