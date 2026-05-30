@@ -64,6 +64,7 @@ export interface DocumentationRunListOptions {
   limit?: number;
   status?: DocumentationRunStatus;
   role?: SourceRole;
+  cursor?: string;
 }
 
 export interface GenerateFromArchivesInput {

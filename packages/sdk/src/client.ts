@@ -54,6 +54,7 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
+    const cursor = parseRunListCursor(options.cursor);
     const query = new URLSearchParams();
     if (limit !== undefined) {
       query.set('limit', String(limit));
@@ -63,6 +64,9 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (role !== undefined) {
       query.set('role', role);
+    }
+    if (cursor !== undefined) {
+      query.set('cursor', cursor);
     }
     const queryString = query.toString();
     const path = queryString ? `/v1/documentation-runs?${queryString}` : '/v1/documentation-runs';
@@ -260,7 +264,10 @@ function assertSupportedArchiveSources(sources: UploadDocumentationSourceInput[]
 
 function sanitizeRunListResponse(response: DocumentationRunListResponse): DocumentationRunListResponse {
   return {
-    runs: response.runs.map((run) => sanitizeRunSummary(run))
+    runs: response.runs.map((run) => sanitizeRunSummary(run)),
+    ...(response.nextCursor
+      ? { nextCursor: sanitizeSdkErrorString(response.nextCursor, '[REDACTED]') }
+      : {})
   };
 }
 
@@ -352,6 +359,7 @@ const runListFilterStatuses: DocumentationRunStatus[] = [
   'cancelled',
   'expired'
 ];
+const maxRunListCursorLength = 512;
 
 function parseRunListLimit(value: unknown): number | undefined {
   if (value === undefined) {
@@ -426,4 +434,20 @@ function invalidRunListSourceRole(): CodebaseDocsAIClientError {
       allowedRoles: [...sourceRoles]
     }
   );
+}
+
+function parseRunListCursor(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string' || value.length === 0 || value.length > maxRunListCursorLength) {
+    throw invalidRunListCursor();
+  }
+
+  return value;
+}
+
+function invalidRunListCursor(): CodebaseDocsAIClientError {
+  return new CodebaseDocsAIClientError('Run list cursor is invalid.', 0, 'RUN_LIST_CURSOR_INVALID');
 }

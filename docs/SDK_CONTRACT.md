@@ -139,7 +139,8 @@ Lists persisted run summaries for operator surfaces.
 const runs = await client.documentationRuns.list({
   limit: 25,
   status: 'completed',
-  role: 'backend'
+  role: 'backend',
+  cursor: previousPage.nextCursor
 });
 ```
 
@@ -148,14 +149,18 @@ Options:
 - `limit`: optional integer from `1` to `100`. When omitted, the API default is used.
 - `status`: optional `DocumentationRunStatus` filter.
 - `role`: optional source role filter. Runs match when at least one uploaded source has this role.
+- `cursor`: optional opaque pagination cursor returned by a previous list response.
 
 Returns:
 
 ```ts
 {
   runs: DocumentationRunSummary[];
+  nextCursor?: string;
 }
 ```
+
+`nextCursor` is omitted when no further matching run summaries are available.
 
 Run summaries include safe public metadata such as run id, name, status, source count, source names/roles, requested output formats, rendered formats, progress, failure summary, and timestamps. The SDK sanitizes list response text before exposing it to callers; list results must not include upload archive storage paths, result artifact paths, raw source content, or secret-bearing evidence.
 

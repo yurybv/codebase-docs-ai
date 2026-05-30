@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 140: SDK Run Listing Pagination Cursor Option.
+Implement Phase 141: Web Run Listing Pagination Cursor Control.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should expose the API run listing pagination cursor through the SDK list helper and keep SDK list response sanitization intact.
+The next step should expose API run listing pagination through the Web run history operator surface and keep Web list rendering sanitized.
 
 ## Completed Implementation
 
@@ -2174,6 +2174,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/schemas.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 140 SDK Run Listing Pagination Cursor Option
+
+- Added a `documentationRuns.list({ cursor })` SDK option that maps to the API run listing cursor query.
+- Added SDK-side cursor validation before network requests, with sanitized stable invalid-cursor errors.
+- Added SDK regression coverage proving cursor-paginated list responses remain sanitized and invalid secret-bearing cursor values are not exposed.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts packages/shared/src/schemas.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 
