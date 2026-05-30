@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 122: Run Retention Configuration Boundary Regression Coverage.
+- Implement Phase 123: API Run Listing Contract.
 
-Phase 122 goal:
-- Add API regression coverage for run retention and cleanup interval configuration boundaries, including invalid, zero, and explicit millisecond values.
-- Verify retention cleanup remains predictable and does not accidentally delete fresh runs when configuration values are invalid or disabled.
-- Keep cleanup resilience and scheduler sanitization behavior from Phases 120 and 121 intact.
+Phase 123 goal:
+- Add a safe API run listing contract for operator surfaces.
+- Return persisted run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover listing behavior for created, completed, failed, and expired-cleaned runs as applicable.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

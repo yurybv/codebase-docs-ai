@@ -336,6 +336,33 @@ describe('DocumentationRunsService', () => {
     await expect(service.getRun(created.runId)).rejects.toThrow();
   });
 
+  it('uses fallback retention when retention configuration is invalid', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = 'invalid';
+    service = new DocumentationRunsService();
+    const completed = await createCompletedRun('Invalid Retention Docs');
+    await setRunUpdatedAt(completed.runId, '2026-05-29T00:00:00.000Z');
+
+    const cleanup = await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:02.000Z'));
+
+    expect(cleanup.deletedRunIds).toEqual([]);
+    await expect(service.getRun(completed.runId)).resolves.toMatchObject({
+      id: completed.runId,
+      status: 'completed'
+    });
+  });
+
+  it('expires runs immediately when retention is configured as zero', async () => {
+    process.env.DOCS_AI_RUN_RETENTION_MS = '0';
+    service = new DocumentationRunsService();
+    const completed = await createCompletedRun('Immediate Retention Docs');
+    await setRunUpdatedAt(completed.runId, '2026-05-29T00:00:00.000Z');
+
+    const cleanup = await service.cleanupExpiredRuns(new Date('2026-05-29T00:00:00.000Z'));
+
+    expect(cleanup.deletedRunIds).toEqual([completed.runId]);
+    await expect(service.getRun(completed.runId)).rejects.toThrow();
+  });
+
   it('expires completed, failed, and abandoned runs without leaving stale artifacts', async () => {
     process.env.DOCS_AI_RUN_RETENTION_MS = '1000';
     service = new DocumentationRunsService();
@@ -563,6 +590,21 @@ describe('DocumentationRunsService', () => {
     await vi.advanceTimersByTimeAsync(5000);
 
     expect(cleanupExpiredRuns).not.toHaveBeenCalled();
+  });
+
+  it('uses fallback cleanup interval when interval configuration is invalid', async () => {
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = 'invalid';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    const cleanupExpiredRuns = vi.spyOn(service, 'cleanupExpiredRuns').mockResolvedValue({
+      deletedRunIds: []
+    });
+
+    await service.onModuleInit();
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+
+    expect(cleanupExpiredRuns).toHaveBeenCalledTimes(2);
   });
 
   it('clears the expired run cleanup interval when the module shuts down', async () => {

@@ -98,6 +98,8 @@ export DOCS_AI_RUN_CLEANUP_INTERVAL_MS=3600000
 
 `DOCS_AI_RUN_RETENTION_MS` controls when a run is old enough to delete. `DOCS_AI_RUN_CLEANUP_INTERVAL_MS` controls how often the API scans for expired runs. Set `DOCS_AI_RUN_CLEANUP_INTERVAL_MS=0` to disable the runtime scheduler when cleanup is owned by the host platform.
 
+Invalid retention or cleanup interval values fall back to defaults. Setting `DOCS_AI_RUN_RETENTION_MS=0` makes runs eligible for deletion at the cleanup timestamp; setting `DOCS_AI_RUN_CLEANUP_INTERVAL_MS=0` disables only the recurring scheduler.
+
 ## Upload Limits
 
 Multipart source uploads are limited before archive extraction.

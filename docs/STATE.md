@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 122: Run Retention Configuration Boundary Regression Coverage.
+Implement Phase 123: API Run Listing Contract.
 
 Required package:
 
 ```text
-packages/shared
 apps/api
+packages/shared
 docs
 ```
 
-The next step should add API regression coverage for run retention and cleanup interval configuration boundaries, including invalid, zero, and explicit millisecond values.
+The next step should add a safe API run listing contract for operator surfaces, returning persisted run summaries without exposing artifact paths or source archive storage locations.
 
 ## Completed Implementation
 
@@ -1914,6 +1914,20 @@ pnpm verify
 - Added API service regression coverage proving scheduled cleanup continues after startup and interval cleanup failures.
 - Verified scheduler-triggered cleanup warning logs redact raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
 - Kept cleanup interval scheduling behavior intact after failure recovery.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 122 Run Retention Configuration Boundary Regression Coverage
+
+- Added API service regression coverage for invalid retention configuration falling back to the default retention window.
+- Added coverage for zero retention making runs eligible at the cleanup timestamp.
+- Added cleanup interval boundary coverage for invalid interval fallback while keeping explicit `0` interval disablement intact.
 
 Verification:
 
