@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
 - Phase 159: API Run Listing Created-At Range Filter Contract.
 - Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 - Phase 161: Web Run History Created-At Range Controls And Audit.
+- Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should audit source-count filtering as one cross-surface contract, then continue into created-at range filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should add created-at range filtering for operator workflows across API, SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2435,6 +2435,20 @@ Verification:
 
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/public-error-sanitizer.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 158 Run Listing Source Count Cross-Surface Regression Audit
+
+- Audited API, SDK, CLI, and Web source-count filtering as one public operator contract.
+- Tightened API service and HTTP coverage so source-count filtering composes with limit, status, role, name, format, updated-at range, and cursor pagination.
+- Kept SDK, CLI, and Web source-count filtered list coverage aligned with sanitized output and sanitized invalid source-count errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```

@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
-- Then continue without stopping into Phase 159: API Run Listing Created-At Range Filter Contract.
+- Implement Phase 159: API Run Listing Created-At Range Filter Contract.
 - Then continue without stopping into Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 - Then continue without stopping into Phase 161: Web Run History Created-At Range Controls And Audit.
+- Then continue without stopping into Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 158 goal:
-- Audit API, SDK, CLI, and Web source-count filtering as one public operator contract.
-- Add or tighten regression coverage proving source-count filtering composes with `limit`, `status`, `role`, `name`, `format`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
-- Verify raw source-count filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
-- Update docs only if the audit changes public behavior or testing expectations.
 
 Phase 159 goal:
 - Add safe API run listing created-at range filters for operator surfaces, such as `createdAfter` and `createdBefore`.
@@ -65,6 +59,12 @@ Phase 161 goal:
 - Preserve Web run history limit/status/role/name/format/source-count/updated-at/cursor behavior when created-at filtering is applied.
 - Audit API, SDK, CLI, and Web created-at filtering as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
+
+Phase 162 goal:
+- Audit API, SDK, CLI, and Web created-at filtering as one public operator contract.
+- Add or tighten regression coverage proving created-at filtering composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
+- Verify raw created-at filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
+- Update docs only if the audit changes public behavior or testing expectations.
 
 Verification expectations:
 - Run focused tests for every touched surface.

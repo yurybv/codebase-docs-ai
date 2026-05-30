@@ -464,10 +464,22 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
-  it('filters listed run summaries by source count without exposing raw values', async () => {
+  it('filters listed run summaries by source count with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'j'.repeat(24)}`;
-    const created = await service.createRun({
-      name: `Zero Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+    const older = await createCompletedRun(
+      `Older Backend Source Count Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend',
+      ['json']
+    );
+    const newer = await createCompletedRun(
+      `Completed Backend Source Count Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend',
+      ['json']
+    );
+    await service.createRun({
+      name: `Zero Source Count Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       options: {
         outputFormats: ['json'],
         language: 'en',
@@ -475,21 +487,44 @@ describe('DocumentationRunsService', () => {
         includeWarnings: true
       }
     });
-    const completed = await createCompletedRun(
-      `One Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      'backend',
+    await createCompletedRun(
+      `Frontend Source Count Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'frontend',
       ['json']
     );
-    await setRunUpdatedAt(created.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(completed.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
-    const oneSourceList = await service.listRuns({ minSources: '1', maxSources: '1' });
-    const zeroSourceList = await service.listRuns({ maxSources: '0' });
-    const payload = JSON.stringify({ oneSourceList, zeroSourceList });
+    const firstPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend source count search',
+      format: 'json',
+      minSources: '1',
+      maxSources: '1',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const secondPage = await service.listRuns({
+      limit: '1',
+      status: 'completed',
+      role: 'backend',
+      name: 'backend source count search',
+      format: 'json',
+      minSources: '1',
+      maxSources: '1',
+      updatedAfter: '2026-05-29T23:59:59.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
 
-    expect(oneSourceList.runs.map((run) => run.id)).toEqual([completed.runId]);
-    expect(zeroSourceList.runs.map((run) => run.id)).toEqual([created.runId]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([newer.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([older.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
     expect(payload).toContain('[REDACTED_DENIED_VALUE]');
