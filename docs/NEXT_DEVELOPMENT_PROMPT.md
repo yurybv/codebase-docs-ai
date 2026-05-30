@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 111: Web Multi-Source Consistency Regression Coverage.
+- Implement Phase 112: Smoke E2E Artifact Format Coverage.
 
-Phase 111 goal:
-- Add Web regression coverage proving multi-source frontend/backend runs preserve source roles, matched API contracts, rendered formats, warnings, and download behavior in the operator UI.
-- Verify selected output formats and API-returned rendered formats drive the visible download controls without losing multi-source result context.
+Phase 112 goal:
+- Expand the smoke e2e harness to verify multi-source generated artifacts across JSON, single-Markdown, and markdown-tree downloads through the real API and CLI API-mode flow.
+- Verify smoke artifacts preserve frontend/backend source roles and matched `/api/users` contracts.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

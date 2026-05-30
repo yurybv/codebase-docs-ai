@@ -80,17 +80,19 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 111: Web Multi-Source Consistency Regression Coverage.
+Implement Phase 112: Smoke E2E Artifact Format Coverage.
 
 Required package:
 
 ```text
 packages/shared
-apps/web
+apps/api
+apps/cli
+scripts
 docs
 ```
 
-The next step should add Web regression coverage proving multi-source frontend/backend runs preserve source roles, matched API contracts, rendered formats, warnings, and download behavior in the operator UI.
+The next step should expand the smoke e2e harness to verify multi-source generated artifacts across JSON, single-Markdown, and markdown-tree downloads through the real API and CLI API-mode flow.
 
 ## Completed Implementation
 
@@ -1766,6 +1768,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.http.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 111 Web Multi-Source Consistency Regression Coverage
+
+- Expanded Web rendered-format regression coverage to upload frontend and backend archives with explicit roles.
+- Verified API-returned multi-source result context remains visible when rendered formats are narrowed to single-Markdown.
+- Verified warnings, matched API contract previews, source-role rows, and download control behavior stay consistent in the operator UI.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/web typecheck
+pnpm test -- apps/web/src/main.test.ts
 pnpm verify
 ```
 

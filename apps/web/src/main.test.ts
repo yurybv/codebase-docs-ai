@@ -74,8 +74,7 @@ describe('App API error handling', () => {
         JSON.stringify({
           error: {
             code: 'SOURCE_UPLOAD_INVALID',
-            message:
-              'Source upload failed for [REDACTED_OPENAI_API_KEY] in [REDACTED_DENIED_FILE].'
+            message: 'Source upload failed for [REDACTED_OPENAI_API_KEY] in [REDACTED_DENIED_FILE].'
           }
         }),
         {
@@ -147,9 +146,9 @@ describe('App API error handling', () => {
     );
     expect(document.body.textContent).toContain('Supports .zip, .tar, .tar.gz, .tgz');
     expect(
-      Array.from(document.querySelectorAll('button')).find((button) =>
-        button.textContent?.includes('Generate')
-      )?.getAttribute('aria-label')
+      Array.from(document.querySelectorAll('button'))
+        .find((button) => button.textContent?.includes('Generate'))
+        ?.getAttribute('aria-label')
     ).toBe('Generate documentation');
   });
 
@@ -336,16 +335,18 @@ describe('App API error handling', () => {
       })
     ]);
     expect(document.body.textContent).toContain('Documentation run completed (7/7)');
-    expect(document.querySelector('[aria-label="Generated documentation warnings"]')?.textContent).toContain(
-      'Backend exposes an unmatched route.'
-    );
+    expect(
+      document.querySelector('[aria-label="Generated documentation warnings"]')?.textContent
+    ).toContain('Backend exposes an unmatched route.');
     expect(document.body.textContent).toContain('01. Overview');
     expect(document.body.textContent).toContain('14. Source References');
     expect(document.body.textContent).toContain('| frontend | frontend |');
     expect(document.body.textContent).toContain('| backend | backend |');
 
     await act(async () => {
-      getButtonByText('06. API Contracts').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      getButtonByText('06. API Contracts').dispatchEvent(
+        new MouseEvent('click', { bubbles: true })
+      );
     });
 
     expect(document.querySelector('pre')?.textContent).toContain('GET');
@@ -374,6 +375,14 @@ describe('App API error handling', () => {
           };
         }
       | undefined;
+    let uploadedMetadata:
+      | {
+          sources: Array<{
+            name: string;
+            role: string;
+          }>;
+        }
+      | undefined;
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
@@ -389,6 +398,12 @@ describe('App API error handling', () => {
       }
 
       if (url.endsWith('/v1/documentation-runs/run_rendered_formats/sources')) {
+        uploadedMetadata = JSON.parse(String((init?.body as FormData).get('metadata'))) as {
+          sources: Array<{
+            name: string;
+            role: string;
+          }>;
+        };
         return jsonResponse({
           runId: 'run_rendered_formats',
           status: 'ready'
@@ -422,7 +437,12 @@ describe('App API error handling', () => {
           renderedFormats: ['single-markdown'],
           documentation: {
             pages: completedDocumentationPages(),
-            warnings: []
+            warnings: [
+              {
+                level: 'warning',
+                message: 'Backend exposes an unmatched route.'
+              }
+            ]
           }
         });
       }
@@ -445,6 +465,9 @@ describe('App API error handling', () => {
       value: [
         new File(['frontend'], 'frontend.tar', {
           type: 'application/x-tar'
+        }),
+        new File(['backend'], 'backend.tar', {
+          type: 'application/x-tar'
         })
       ],
       configurable: true
@@ -452,6 +475,18 @@ describe('App API error handling', () => {
 
     await act(async () => {
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const [frontendRoleSelect, backendRoleSelect] = Array.from(
+      document.querySelectorAll('select')
+    ) as [HTMLSelectElement, HTMLSelectElement];
+    frontendRoleSelect.value = 'frontend';
+    await act(async () => {
+      frontendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    backendRoleSelect.value = 'backend';
+    await act(async () => {
+      backendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     await act(async () => {
@@ -464,6 +499,29 @@ describe('App API error handling', () => {
       'single-markdown',
       'json'
     ]);
+    expect(uploadedMetadata?.sources).toEqual([
+      expect.objectContaining({
+        name: 'frontend',
+        role: 'frontend'
+      }),
+      expect.objectContaining({
+        name: 'backend',
+        role: 'backend'
+      })
+    ]);
+    expect(document.body.textContent).toContain('| frontend | frontend |');
+    expect(document.body.textContent).toContain('| backend | backend |');
+    expect(
+      document.querySelector('[aria-label="Generated documentation warnings"]')?.textContent
+    ).toContain('Backend exposes an unmatched route.');
+
+    await act(async () => {
+      getButtonByText('06. API Contracts').dispatchEvent(
+        new MouseEvent('click', { bubbles: true })
+      );
+    });
+    expect(document.querySelector('pre')?.textContent).toContain('/api/users');
+    expect(document.querySelector('pre')?.textContent).toContain('matched');
     expect(getButtonByText('single-markdown')).toBeDefined();
     expect(queryButtonByText('markdown-tree')).toBeNull();
     expect(queryButtonByText('json')).toBeNull();
@@ -673,7 +731,11 @@ function jsonResponse(value: unknown): Response {
 
 function completedDocumentationPages(): Array<{ key: string; title: string; markdown: string }> {
   const pageRows: Array<[string, string, string]> = [
-    ['overview', '01. Overview', '# 01. Overview\n\n| Source | Role |\n| --- | --- |\n| frontend | frontend |\n| backend | backend |'],
+    [
+      'overview',
+      '01. Overview',
+      '# 01. Overview\n\n| Source | Role |\n| --- | --- |\n| frontend | frontend |\n| backend | backend |'
+    ],
     ['system-architecture', '02. System Architecture', '# 02. System Architecture'],
     ['source-inventory', '03. Source Inventory', '# 03. Source Inventory'],
     ['frontend', '04. Frontend', '# 04. Frontend'],
@@ -683,7 +745,11 @@ function completedDocumentationPages(): Array<{ key: string; title: string; mark
       '06. API Contracts',
       '# 06. API Contracts\n\n| Method | Path | Status |\n| --- | --- | --- |\n| GET | /api/users | matched |'
     ],
-    ['authentication-and-authorization', '07. Authentication and Authorization', '# 07. Authentication and Authorization'],
+    [
+      'authentication-and-authorization',
+      '07. Authentication and Authorization',
+      '# 07. Authentication and Authorization'
+    ],
     ['environment-variables', '08. Environment Variables', '# 08. Environment Variables'],
     ['local-development', '09. Local Development', '# 09. Local Development'],
     ['testing', '10. Testing', '# 10. Testing'],
@@ -731,5 +797,7 @@ async function waitForText(text: string): Promise<void> {
     });
   }
 
-  throw new Error(`Timed out waiting for text: ${text}. Current text: ${document.body.textContent ?? ''}`);
+  throw new Error(
+    `Timed out waiting for text: ${text}. Current text: ${document.body.textContent ?? ''}`
+  );
 }
