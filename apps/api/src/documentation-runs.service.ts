@@ -87,10 +87,13 @@ interface ListRunsOptions {
 
 interface RunListCursor {
   updatedAt: string;
+  createdAt?: string | undefined;
   id: string;
 }
 
-type RunListSort = 'updatedAt:desc' | 'updatedAt:asc';
+type RunListSort = (typeof runListSortOptions)[number];
+type RunListSortField = 'updatedAt' | 'createdAt';
+type RunListSortDirection = 'desc' | 'asc';
 
 const uploadSourcesMetadataSchema = z.object({
   sources: z.array(
@@ -131,10 +134,11 @@ const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
 const maxRunListCursorLength = 512;
 const maxRunListNameLength = 200;
-const runListSortOptions: RunListSort[] = ['updatedAt:desc', 'updatedAt:asc'];
+const runListSortOptions = ['updatedAt:desc', 'updatedAt:asc', 'createdAt:desc', 'createdAt:asc'] as const;
 
 const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
+  createdAt: z.string().datetime().optional(),
   id: z.string().min(1)
 });
 const runListTimestampSchema = z.string().datetime();
@@ -793,23 +797,38 @@ function compareRunSummaryToCursor(
 }
 
 function compareRunSummaryOrder(
-  left: Pick<DocumentationRunSummary, 'id' | 'updatedAt'>,
-  right: Pick<DocumentationRunSummary, 'id' | 'updatedAt'>,
+  left: Pick<DocumentationRunSummary, 'id' | 'createdAt' | 'updatedAt'>,
+  right: Pick<DocumentationRunSummary, 'id' | 'createdAt' | 'updatedAt'> | RunListCursor,
   sort: RunListSort
 ): number {
-  const updatedAtOrder = left.updatedAt.localeCompare(right.updatedAt);
-  if (updatedAtOrder !== 0) {
-    return sort === 'updatedAt:asc' ? updatedAtOrder : -updatedAtOrder;
+  const { field, direction } = parseRunListSortParts(sort);
+  const leftSortValue = left[field];
+  const rightSortValue = field === 'createdAt' ? right.createdAt ?? right.updatedAt : right.updatedAt;
+  const sortValueOrder = leftSortValue.localeCompare(rightSortValue);
+  if (sortValueOrder !== 0) {
+    return direction === 'asc' ? sortValueOrder : -sortValueOrder;
   }
 
   const idOrder = left.id.localeCompare(right.id);
-  return sort === 'updatedAt:asc' ? idOrder : -idOrder;
+  return direction === 'asc' ? idOrder : -idOrder;
+}
+
+function parseRunListSortParts(sort: RunListSort): {
+  field: RunListSortField;
+  direction: RunListSortDirection;
+} {
+  const [field, direction] = sort.split(':') as [RunListSortField, RunListSortDirection];
+  return {
+    field,
+    direction
+  };
 }
 
 function encodeRunListCursor(run: DocumentationRunSummary): string {
   return Buffer.from(
     JSON.stringify({
       updatedAt: run.updatedAt,
+      createdAt: run.createdAt,
       id: run.id
     }),
     'utf8'

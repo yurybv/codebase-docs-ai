@@ -349,6 +349,40 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('sorts listed run summaries by created time with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'b'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldestCreated = await createCompletedRun('Oldest Created Sort Docs', secretSourceName);
+    const newestCreated = await createCompletedRun('Newest Created Sort Docs', secretSourceName);
+    const middleCreated = await createCompletedRun('Middle Created Sort Docs', secretSourceName);
+    await setRunCreatedAt(oldestCreated.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCreatedAt(middleCreated.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCreatedAt(newestCreated.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(oldestCreated.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(middleCreated.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newestCreated.runId, '2026-05-30T00:00:00.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2', sort: 'createdAt:asc' });
+    const secondPage = await service.listRuns({
+      limit: '2',
+      sort: 'createdAt:asc',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.id)).toEqual([oldestCreated.runId, middleCreated.runId]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.id)).toEqual([newestCreated.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('filters listed run summaries by updated-at range without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;

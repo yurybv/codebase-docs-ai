@@ -485,6 +485,85 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('applies run list created-at sort query parameters with safe cursor paging', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'c'.repeat(24)}`;
+    const oldestCreated = await service.createRun({
+      name: `HTTP Oldest Created Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const newestCreated = await service.createRun({
+      name: `HTTP Newest Created Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const middleCreated = await service.createRun({
+      name: `HTTP Middle Created Sort ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunCreatedAt(oldestCreated.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCreatedAt(middleCreated.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCreatedAt(newestCreated.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(oldestCreated.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(middleCreated.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newestCreated.runId, '2026-05-30T00:00:00.000Z');
+
+    const firstResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=createdAt:asc`
+    );
+    const firstPayload = await firstResponse.text();
+    const firstPage = JSON.parse(firstPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([
+      oldestCreated.runId,
+      middleCreated.runId
+    ]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=createdAt:asc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const secondPage = JSON.parse(secondPayload) as {
+      runs: Array<{ id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.runs.map((run) => run.id)).toEqual([newestCreated.runId]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+  });
+
   it('validates and applies run list updated-at range query parameters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'y'.repeat(24)}`;

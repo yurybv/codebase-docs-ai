@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 167: API Run Listing Created-At Sort Contract.
-- Then continue without stopping into Phase 168: SDK And CLI Run Listing Created-At Sort Option.
+- Implement Phase 168: SDK And CLI Run Listing Created-At Sort Option.
 - Then continue without stopping into Phase 169: Web Run History Created-At Sort Control And Audit.
 - Then continue without stopping into Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 171: API Run Listing Completed-At Filter Contract.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 167 goal:
-- Add an API run listing sort-field contract for created-at ordering, such as `sort=createdAt:desc` and `sort=createdAt:asc`.
-- Validate created-at sort inputs before storage access where practical.
-- Return deterministic pages of persisted run summaries using created-at sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover sanitized valid created-at sort behavior and invalid secret-bearing sort errors.
 
 Phase 168 goal:
 - Expose created-at sort options through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -65,6 +59,12 @@ Phase 170 goal:
 - Add or tighten regression coverage proving created-at sort composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 171 goal:
+- Add safe API run listing completed-at range filters for completed runs where completion timestamps are available.
+- Validate completed-at filter inputs before storage access where practical.
+- Return persisted run summaries matching completed-at constraints without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover sanitized valid completed-at filtering and invalid secret-bearing completed-at errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.
