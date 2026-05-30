@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 170: Run Listing Created-At Sort Cross-Surface Regression Audit.
-- Then continue without stopping into Phase 171: API Run Listing Completed-At Filter Contract.
+- Implement Phase 171: API Run Listing Completed-At Filter Contract.
 - Then continue without stopping into Phase 172: SDK And CLI Run Listing Completed-At Filters.
 - Then continue without stopping into Phase 173: Web Run History Completed-At Filter Controls And Audit.
+- Then continue without stopping into Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 170 goal:
-- Audit API, SDK, CLI, and Web created-at sort behavior as one public operator contract.
-- Add or tighten regression coverage proving created-at sort composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
-- Verify raw sort input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
-- Update docs only if the audit changes public behavior or testing expectations.
 
 Phase 171 goal:
 - Add safe API run listing completed-at range filters for completed runs where completion timestamps are available.
@@ -65,6 +59,12 @@ Phase 173 goal:
 - Preserve Web run history limit/status/role/name/format/source-count/sort/created-at/updated-at/cursor behavior when completed-at filtering is applied.
 - Audit API, SDK, CLI, and Web completed-at filtering as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
+
+Phase 174 goal:
+- Audit API, SDK, CLI, and Web completed-at filtering as one public operator contract.
+- Add or tighten regression coverage proving completed-at filtering composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `sort`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
+- Verify raw completed-at filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
+- Update docs only if the audit changes public behavior or testing expectations.
 
 Verification expectations:
 - Run focused tests for every touched surface.
