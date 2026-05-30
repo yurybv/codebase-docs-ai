@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 115: SDK Expired Run Error Regression Coverage.
+Implement Phase 116: CLI API Expired Run Error Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
-packages/sdk
+apps/cli
 docs
 ```
 
-The next step should add SDK regression coverage proving expired and missing-artifact API envelopes are surfaced as safe `CodebaseDocsAIClientError` instances without raw storage paths or stale artifact content.
+The next step should add CLI API-mode regression coverage proving expired and missing-artifact SDK/API errors are printed safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
 
 ## Completed Implementation
 
@@ -1821,6 +1821,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.http.test.ts
 pnpm --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 115 SDK Expired Run Error Regression Coverage
+
+- Sanitized SDK terminal polling errors before throwing `CodebaseDocsAIClientError`.
+- Added SDK regression coverage for expired polling errors and missing result/download artifact envelopes.
+- Verified SDK result retrieval, download, and delete errors preserve status/code/details while omitting raw storage paths and secret-bearing artifact evidence.
+
+Verification:
+
+```text
+pnpm test -- packages/sdk/src/client.test.ts
+pnpm --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 115: SDK Expired Run Error Regression Coverage.
+- Implement Phase 116: CLI API Expired Run Error Regression Coverage.
 
-Phase 115 goal:
-- Add SDK regression coverage proving expired and missing-artifact API envelopes are surfaced as safe `CodebaseDocsAIClientError` instances without raw storage paths or stale artifact content.
-- Verify SDK polling, result retrieval, download, and delete paths preserve error codes and sanitized details for expired or missing artifacts.
+Phase 116 goal:
+- Add CLI API-mode regression coverage proving expired and missing-artifact SDK/API errors are printed safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
+- Verify CLI failure JSON preserves useful error codes/details for expired or missing artifacts while remaining sanitized.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

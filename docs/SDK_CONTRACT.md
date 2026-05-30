@@ -326,6 +326,8 @@ try {
 
 For API responses, `code` and `details` are parsed from the public `{ error: ... }` envelope. Polling timeout, terminal run failures, and client-side upload preflight failures use status `0` because no failing HTTP response exists.
 
+SDK-thrown error messages and details are sanitized before they are exposed to callers. Public SDK errors must not include raw provider keys, denied source evidence, or API run storage paths.
+
 ## Versioning Boundaries
 
 Stable public SDK surface:

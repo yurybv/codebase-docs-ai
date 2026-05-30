@@ -705,6 +705,108 @@ describe('CodebaseDocsAIClient', () => {
     ).rejects.toThrow('Generation failed.');
   });
 
+  it('sanitizes expired run polling errors before throwing', async () => {
+    const rawOpenAiKey = `sk-${'w'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        id: 'run_expired',
+        status: 'expired',
+        error: {
+          message: `Documentation run expired while reading ${rawStoragePath}.`
+        }
+      })
+    );
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: fetchMock
+    });
+
+    try {
+      await client.documentationRuns.waitUntilComplete('run_expired', {
+        intervalMs: 0,
+        timeoutMs: 10
+      });
+      throw new Error('Expected expired run polling to fail.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+      expect((error as CodebaseDocsAIClientError).status).toBe(0);
+      expect((error as CodebaseDocsAIClientError).message).toContain('[REDACTED_STORAGE_PATH]');
+      expectSafeSdkError(error, rawOpenAiKey, rawStoragePath);
+    }
+  });
+
+  it('surfaces safe expired and missing-artifact API envelopes', async () => {
+    const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/rendered-single-markdown.json`;
+    const client = new CodebaseDocsAIClient({
+      apiBaseUrl: 'http://localhost:3000',
+      fetch: vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          jsonErrorResponse(
+            400,
+            'DOCUMENTATION_RESULT_ARTIFACT_MISSING',
+            `Documentation result artifact is unavailable at ${rawStoragePath}.`,
+            {
+              path: rawStoragePath
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          jsonErrorResponse(
+            400,
+            'DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING',
+            `Documentation download artifact is unavailable at ${rawStoragePath}.`,
+            {
+              path: rawStoragePath
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          jsonErrorResponse(
+            404,
+            'DOCUMENTATION_RUN_NOT_FOUND',
+            `Documentation run was not found after cleanup at ${rawStoragePath}.`,
+            {
+              path: rawStoragePath
+            }
+          )
+        )
+    });
+
+    await expectSdkError(
+      client.documentationRuns.getResult('run_missing'),
+      {
+        status: 400,
+        code: 'DOCUMENTATION_RESULT_ARTIFACT_MISSING'
+      },
+      rawOpenAiKey,
+      rawStoragePath
+    );
+    await expectSdkError(
+      client.documentationRuns.download({
+        runId: 'run_missing',
+        format: 'single-markdown'
+      }),
+      {
+        status: 400,
+        code: 'DOCUMENTATION_DOWNLOAD_ARTIFACT_MISSING'
+      },
+      rawOpenAiKey,
+      rawStoragePath
+    );
+    await expectSdkError(
+      client.documentationRuns.delete('run_missing'),
+      {
+        status: 404,
+        code: 'DOCUMENTATION_RUN_NOT_FOUND'
+      },
+      rawOpenAiKey,
+      rawStoragePath
+    );
+  });
+
   it('times out while polling non-terminal runs', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async () =>
       jsonResponse({
@@ -862,6 +964,29 @@ function jsonResponse(body: unknown): Response {
   });
 }
 
+function jsonErrorResponse(
+  status: number,
+  code: string,
+  message: string,
+  details: unknown
+): Response {
+  return new Response(
+    JSON.stringify({
+      error: {
+        code,
+        message,
+        details
+      }
+    }),
+    {
+      status,
+      headers: {
+        'content-type': 'application/json'
+      }
+    }
+  );
+}
+
 function expectConsistentMultiSourceArtifact(content: string): void {
   expect(content).toContain('Frontend');
   expect(content).toContain('frontend');
@@ -871,4 +996,37 @@ function expectConsistentMultiSourceArtifact(content: string): void {
   expect(content).toContain('matched');
   expect(content).not.toContain('No source input was marked as frontend');
   expect(content).not.toContain('No source input was marked as backend');
+}
+
+async function expectSdkError(
+  action: Promise<unknown>,
+  expected: {
+    status: number;
+    code: string;
+  },
+  rawOpenAiKey: string,
+  rawStoragePath: string
+): Promise<void> {
+  try {
+    await action;
+    throw new Error('Expected SDK request to fail.');
+  } catch (error) {
+    expect(error).toBeInstanceOf(CodebaseDocsAIClientError);
+    expect((error as CodebaseDocsAIClientError).status).toBe(expected.status);
+    expect((error as CodebaseDocsAIClientError).code).toBe(expected.code);
+    expect((error as CodebaseDocsAIClientError).message).toContain('[REDACTED_STORAGE_PATH]');
+    expect((error as CodebaseDocsAIClientError).details).toEqual({
+      path: '[REDACTED_STORAGE_PATH]'
+    });
+    expectSafeSdkError(error, rawOpenAiKey, rawStoragePath);
+  }
+}
+
+function expectSafeSdkError(error: unknown, rawOpenAiKey: string, rawStoragePath: string): void {
+  const payload = JSON.stringify(error);
+  expect(payload).not.toContain(rawStoragePath);
+  expect(payload).not.toContain(rawOpenAiKey);
+  expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+  expect(payload).not.toContain('.env');
+  expect(payload).not.toContain('/private/tmp');
 }

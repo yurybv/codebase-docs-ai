@@ -95,7 +95,10 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
 
       if (run.status === 'failed' || run.status === 'cancelled' || run.status === 'expired') {
         throw new CodebaseDocsAIClientError(
-          run.error?.message ?? `Documentation run ended with status ${run.status}.`,
+          sanitizeSdkErrorString(
+            run.error?.message ?? `Documentation run ended with status ${run.status}.`,
+            `Documentation run ended with status ${run.status}.`
+          ),
           0
         );
       }
@@ -235,7 +238,7 @@ async function parseErrorResponse(
     const parsed = JSON.parse(text) as unknown;
     if (!isRecord(parsed)) {
       return {
-        message: sanitizePublicString(text, 'Request failed.')
+        message: sanitizeSdkErrorString(text, 'Request failed.')
       };
     }
 
@@ -244,14 +247,14 @@ async function parseErrorResponse(
     return {
       message:
         typeof source.message === 'string'
-          ? sanitizePublicString(source.message, 'Request failed.')
-          : sanitizePublicString(text, 'Request failed.'),
+          ? sanitizeSdkErrorString(source.message, 'Request failed.')
+          : sanitizeSdkErrorString(text, 'Request failed.'),
       ...(typeof source.code === 'string' ? { code: source.code } : {}),
       ...('details' in source ? { details: sanitizePublicValue(source.details) } : {})
     };
   } catch {
     return {
-      message: sanitizePublicString(text, 'Request failed.')
+      message: sanitizeSdkErrorString(text, 'Request failed.')
     };
   }
 }
@@ -268,7 +271,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function sanitizePublicValue(value: unknown): unknown {
   if (typeof value === 'string') {
-    return sanitizePublicString(value, '[REDACTED]');
+    return sanitizeSdkErrorString(value, '[REDACTED]');
   }
 
   if (Array.isArray(value)) {
@@ -286,4 +289,14 @@ function sanitizePublicValue(value: unknown): unknown {
 
 function sanitizePublicString(value: string, fallback: string): string {
   return sanitizePublicText(value, { fallback });
+}
+
+const storagePathPattern =
+  /(?:\/(?:Users|home|tmp|private|var|data|mnt)\/[^\s"'<>),;]+|[A-Za-z]:\\[^\s"'<>),;]+)/g;
+
+function sanitizeSdkErrorString(value: string, fallback: string): string {
+  return sanitizePublicString(
+    value.replace(storagePathPattern, '[REDACTED_STORAGE_PATH]'),
+    fallback
+  );
 }
