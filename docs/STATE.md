@@ -80,17 +80,19 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 117: Web Expired Run Error Display Regression Coverage.
+Implement Phase 118: Shared Public Error Sanitizer Consolidation.
 
 Required package:
 
 ```text
 packages/shared
-apps/web
+apps/api
+apps/cli
+packages/sdk
 docs
 ```
 
-The next step should add Web regression coverage proving expired and missing-artifact API error envelopes render safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
+The next step should consolidate adapter-facing API/CLI/SDK public error sanitization on the shared public error sanitizer so raw storage paths, raw secret-bearing artifact paths, and denied-source values are redacted consistently across integration surfaces.
 
 ## Completed Implementation
 
@@ -1849,6 +1851,21 @@ Verification:
 ```text
 pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/generate-command.test.ts
 pnpm --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 117 Web Expired Run Error Display Regression Coverage
+
+- Added shared browser-safe public error sanitization for raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
+- Wired Web API error parsing and failed run detail display through the shared sanitizer.
+- Added Web regressions for expired run and missing-artifact API envelopes that preserve useful error codes while omitting raw storage paths and stale artifact content.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/shared build
+pnpm test -- packages/shared/src/public-error-sanitizer.test.ts apps/web/src/api-errors.test.ts apps/web/src/main.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 

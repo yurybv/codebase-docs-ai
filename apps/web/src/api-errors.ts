@@ -1,3 +1,5 @@
+import { sanitizePublicErrorText, sanitizePublicErrorValue } from '@codebase-docs-ai/shared';
+
 export interface WebApiErrorPayload {
   code?: string;
   message: string;
@@ -17,20 +19,27 @@ export async function parseApiError(response: Response): Promise<WebApiErrorPayl
 
     const source = isRecord(parsed.error) ? parsed.error : parsed;
     return {
-      message: typeof source.message === 'string' ? source.message : text,
+      message:
+        typeof source.message === 'string'
+          ? sanitizeWebErrorText(source.message, 'Request failed.')
+          : sanitizeWebErrorText(text, 'Request failed.'),
       ...(typeof source.code === 'string' ? { code: source.code } : {}),
-      ...('details' in source ? { details: source.details } : {})
+      ...('details' in source ? { details: sanitizePublicErrorValue(source.details) } : {})
     };
   } catch {
     return {
-      message: text
+      message: sanitizeWebErrorText(text, 'Request failed.')
     };
   }
 }
 
 export function formatApiErrorMessage(error: WebApiErrorPayload, fallback: string): string {
-  const message = error.message || fallback;
+  const message = sanitizeWebErrorText(error.message || fallback, fallback);
   return error.code ? `${error.code}: ${message}` : message;
+}
+
+export function sanitizeWebErrorText(value: string, fallback: string): string {
+  return sanitizePublicErrorText(value, { fallback });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

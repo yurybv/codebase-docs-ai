@@ -34,6 +34,7 @@ Current expected behavior:
 - progress element exposes a readable `aria-valuetext`;
 - generate action is disabled while generation is already creating, uploading, or running;
 - download buttons have format-specific accessible labels.
+- failed run messages are sanitized before display and must not expose raw provider keys, denied source evidence, or API run storage paths.
 
 ## Manual Follow-Up Areas
 
@@ -105,6 +106,15 @@ Expected behavior:
 - warnings are exposed through a labeled `region` so operators can find them without opening JSON output;
 - warning level and message are visible above generated page navigation;
 - warning display does not block page preview or download controls.
+
+## Failed Run Error Display
+
+Expected behavior:
+
+- standardized API error codes remain visible in failed generation states;
+- expired run and missing-artifact API envelopes render as operator-facing status text;
+- Web-rendered error text redacts raw provider keys, denied `.env` evidence, denied-source values, and API run storage paths;
+- stale artifact content must not appear in the failed state after run storage cleanup.
 
 ## Output Format Selection
 

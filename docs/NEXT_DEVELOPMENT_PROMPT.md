@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 117: Web Expired Run Error Display Regression Coverage.
+- Implement Phase 118: Shared Public Error Sanitizer Consolidation.
 
-Phase 117 goal:
-- Add Web regression coverage proving expired and missing-artifact API error envelopes render safely without raw storage paths, raw secret-bearing artifact paths, or stale artifact content.
-- Verify operator-facing Web failure states preserve useful API error codes while remaining sanitized.
-- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
+Phase 118 goal:
+- Consolidate adapter-facing API/CLI/SDK public error sanitization on the shared public error sanitizer.
+- Verify raw storage paths, raw secret-bearing artifact paths, provider keys, and denied-source values are redacted consistently across API, CLI, SDK, and Web error surfaces.
+- Keep existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

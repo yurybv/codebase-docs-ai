@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { AlertTriangle, Download, FileArchive, Play, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
-import { formatApiErrorMessage, parseApiError } from './api-errors.js';
+import { formatApiErrorMessage, parseApiError, sanitizeWebErrorText } from './api-errors.js';
 import {
   buildSourceUploadMetadata,
   inferSourceName,
@@ -262,7 +262,7 @@ export function App(): JSX.Element {
               ) : null}
               {runState.error ? (
                 <span className="error-detail" role="alert">
-                  {runState.error.message}
+                  {sanitizeWebErrorText(runState.error.message, 'Documentation generation failed.')}
                 </span>
               ) : null}
             </div>
@@ -478,7 +478,14 @@ async function failedRunDetails(runId: string | undefined): Promise<Pick<RunStat
     const run = await getRun(runId);
     return {
       ...(run.progress ? { progress: run.progress } : {}),
-      ...(run.error ? { error: run.error } : {})
+      ...(run.error
+        ? {
+            error: {
+              ...run.error,
+              message: sanitizeWebErrorText(run.error.message, 'Documentation generation failed.')
+            }
+          }
+        : {})
     };
   } catch {
     return {};

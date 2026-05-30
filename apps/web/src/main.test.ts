@@ -679,6 +679,162 @@ describe('App API error handling', () => {
     }
   });
 
+  it('renders sanitized expired run API errors without raw storage or stale artifact content', async () => {
+    const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        return jsonResponse({
+          runId: 'run_expired_ui',
+          status: 'created'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_expired_ui/sources')) {
+        return jsonResponse({
+          runId: 'run_expired_ui',
+          status: 'ready'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_expired_ui/start')) {
+        return jsonResponse({
+          runId: 'run_expired_ui',
+          status: 'completed'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_expired_ui')) {
+        return jsonErrorResponse(404, 'DOCUMENTATION_RUN_NOT_FOUND', {
+          message: `Documentation run expired after cleanup. Stale artifact at ${rawStoragePath} contained SHOULD_NOT_APPEAR.`
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File([`fetch("/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR")`], 'frontend.tar', {
+          type: 'application/x-tar'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('DOCUMENTATION_RUN_NOT_FOUND');
+
+    expectSafeWebFailure(rawOpenAiKey, rawStoragePath);
+    expect(document.body.textContent).toContain('DOCUMENTATION_RUN_NOT_FOUND');
+    expect(document.body.textContent).toContain('[REDACTED_STORAGE_PATH]');
+  });
+
+  it('renders sanitized missing artifact API errors without raw storage or stale artifact content', async () => {
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/documentation-tree.json`;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/documentation-runs') && init?.method === 'POST') {
+        return jsonResponse({
+          runId: 'run_missing_artifact_ui',
+          status: 'created'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_missing_artifact_ui/sources')) {
+        return jsonResponse({
+          runId: 'run_missing_artifact_ui',
+          status: 'ready'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_missing_artifact_ui/start')) {
+        return jsonResponse({
+          runId: 'run_missing_artifact_ui',
+          status: 'completed'
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_missing_artifact_ui')) {
+        return jsonResponse({
+          id: 'run_missing_artifact_ui',
+          status: 'completed',
+          renderedFormats: ['json'],
+          progress: {
+            currentStep: 'Documentation run completed',
+            completedSteps: 7,
+            totalSteps: 7
+          },
+          error: {
+            message: `Stored run error referenced ${rawStoragePath} and SHOULD_NOT_APPEAR.`
+          }
+        });
+      }
+
+      if (url.endsWith('/v1/documentation-runs/run_missing_artifact_ui/result')) {
+        return jsonErrorResponse(400, 'DOCUMENTATION_RESULT_ARTIFACT_MISSING', {
+          message: `Documentation result artifact is missing at ${rawStoragePath}; stale markdown SHOULD_NOT_APPEAR was removed.`,
+          details: {
+            path: rawStoragePath,
+            staleContent: `# SHOULD_NOT_APPEAR ${rawOpenAiKey}`
+          }
+        });
+      }
+
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(fileInput, 'files', {
+      value: [
+        new File([`fetch("/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR")`], 'frontend.tar', {
+          type: 'application/x-tar'
+        })
+      ],
+      configurable: true
+    });
+
+    await act(async () => {
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Generate').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('DOCUMENTATION_RESULT_ARTIFACT_MISSING');
+
+    expectSafeWebFailure(rawOpenAiKey, rawStoragePath);
+    expect(document.body.textContent).toContain('DOCUMENTATION_RESULT_ARTIFACT_MISSING');
+    expect(document.body.textContent).toContain('[REDACTED_STORAGE_PATH]');
+  });
+
   it('requires at least one selected output format', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
 
@@ -727,6 +883,40 @@ function jsonResponse(value: unknown): Response {
       'content-type': 'application/json'
     }
   });
+}
+
+function jsonErrorResponse(
+  status: number,
+  code: string,
+  error: {
+    message: string;
+    details?: unknown;
+  }
+): Response {
+  return new Response(
+    JSON.stringify({
+      error: {
+        code,
+        message: error.message,
+        ...(error.details ? { details: error.details } : {})
+      }
+    }),
+    {
+      status,
+      headers: {
+        'content-type': 'application/json'
+      }
+    }
+  );
+}
+
+function expectSafeWebFailure(rawOpenAiKey: string, rawStoragePath: string): void {
+  const renderedText = document.body.textContent ?? '';
+
+  expect(renderedText).not.toContain(rawStoragePath);
+  expect(renderedText).not.toContain(rawOpenAiKey);
+  expect(renderedText).not.toContain('.env');
+  expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
 }
 
 function completedDocumentationPages(): Array<{ key: string; title: string; markdown: string }> {
