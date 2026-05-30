@@ -71,6 +71,8 @@ export interface DocumentationRunListOptions {
   sort?: DocumentationRunListSort;
   createdAfter?: string;
   createdBefore?: string;
+  completedAfter?: string;
+  completedBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;

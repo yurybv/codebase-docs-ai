@@ -26,6 +26,8 @@ export async function runListRunsCommand(
     ...(options.sort === undefined ? {} : { sort: options.sort }),
     ...(options.createdAfter === undefined ? {} : { createdAfter: options.createdAfter }),
     ...(options.createdBefore === undefined ? {} : { createdBefore: options.createdBefore }),
+    ...(options.completedAfter === undefined ? {} : { completedAfter: options.completedAfter }),
+    ...(options.completedBefore === undefined ? {} : { completedBefore: options.completedBefore }),
     ...(options.updatedAfter === undefined ? {} : { updatedAfter: options.updatedAfter }),
     ...(options.updatedBefore === undefined ? {} : { updatedBefore: options.updatedBefore }),
     ...(options.cursor === undefined ? {} : { cursor: options.cursor })

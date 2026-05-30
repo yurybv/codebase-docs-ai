@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 172: SDK And CLI Run Listing Completed-At Filters.
 - Phase 173: Web Run History Completed-At Filter Controls And Audit.
 - Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
 - Phase 175: API Run Listing Completed-At Sort Contract.
+- Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose completed-at range filtering through SDK, CLI, and Web, audit it as one cross-surface contract, then continue into completed-at sort support for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose completed-at range filtering through Web, audit it as one cross-surface contract, then continue into completed-at sort support for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2635,6 +2635,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 172 SDK And CLI Run Listing Completed-At Filters
+
+- Added `completedAfter` and `completedBefore` options to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight completed-at validation, with sanitized stable invalid completed-at failures before network requests.
+- Added SDK and CLI regression coverage for completed-at filtered list requests and secret-bearing invalid timestamp values.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

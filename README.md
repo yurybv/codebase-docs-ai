@@ -31,7 +31,7 @@ This repository now contains the first executable product slice:
 Web UI upload -> API run -> source extraction -> analysis -> documentation tree -> Markdown/JSON download
 ```
 
-It also includes a typed SDK, a local CLI generation command, and operator run-history filtering across status, source role, run name, output format, source count, updated-at range, and pagination cursor.
+It also includes a typed SDK, a local CLI generation command, and operator run-history filtering across status, source role, run name, output format, source count, sort direction, created-at range, completed-at range, updated-at range, and pagination cursor.
 
 Start with:
 
@@ -113,12 +113,14 @@ pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --sort createdAt:asc \
   --created-after 2026-05-29T23:00:00.000Z \
   --created-before 2026-05-30T01:00:00.000Z \
+  --completed-after 2026-05-30T00:00:00.000Z \
+  --completed-before 2026-05-30T01:00:00.000Z \
   --updated-after 2026-05-30T00:00:00.000Z \
   --updated-before 2026-05-30T01:00:00.000Z \
   --cursor eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
-When more matching runs are available, list responses include `nextCursor`. Pass that value to `--cursor` to request the next page with the same limit, status, role, name, output-format, source-count, sort, created-at, and updated-at filters.
+When more matching runs are available, list responses include `nextCursor`. Pass that value to `--cursor` to request the next page with the same limit, status, role, name, output-format, source-count, sort, created-at, completed-at, and updated-at filters.
 
 ## Optional AI Provider
 

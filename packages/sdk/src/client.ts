@@ -63,6 +63,8 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const cursor = parseRunListCursor(options.cursor);
     const createdAfter = parseRunListCreatedAfter(options.createdAfter);
     const createdBefore = parseRunListCreatedBefore(options.createdBefore);
+    const completedAfter = parseRunListCompletedAfter(options.completedAfter);
+    const completedBefore = parseRunListCompletedBefore(options.completedBefore);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
     const query = new URLSearchParams();
@@ -95,6 +97,12 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (createdBefore !== undefined) {
       query.set('createdBefore', createdBefore);
+    }
+    if (completedAfter !== undefined) {
+      query.set('completedAfter', completedAfter);
+    }
+    if (completedBefore !== undefined) {
+      query.set('completedBefore', completedBefore);
     }
     if (updatedAfter !== undefined) {
       query.set('updatedAfter', updatedAfter);
@@ -618,6 +626,22 @@ function parseRunListCreatedBefore(value: unknown): string | undefined {
     value,
     'RUN_LIST_CREATED_BEFORE_INVALID',
     'Run list createdBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedAfter(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_COMPLETED_AFTER_INVALID',
+    'Run list completedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedBefore(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_COMPLETED_BEFORE_INVALID',
+    'Run list completedBefore must be a valid ISO timestamp.'
   );
 }
 

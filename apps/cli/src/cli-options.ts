@@ -41,6 +41,8 @@ export interface ListRunsCommandOptions {
   sort?: RunListSort;
   createdAfter?: string;
   createdBefore?: string;
+  completedAfter?: string;
+  completedBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -113,6 +115,8 @@ export function parseListRunsOptions(options: {
   sort?: string;
   createdAfter?: string;
   createdBefore?: string;
+  completedAfter?: string;
+  completedBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -134,6 +138,8 @@ export function parseListRunsOptions(options: {
   const sort = parseRunListSort(options.sort);
   const createdAfter = parseRunListCreatedAfter(options.createdAfter);
   const createdBefore = parseRunListCreatedBefore(options.createdBefore);
+  const completedAfter = parseRunListCompletedAfter(options.completedAfter);
+  const completedBefore = parseRunListCompletedBefore(options.completedBefore);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
   const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
@@ -149,6 +155,8 @@ export function parseListRunsOptions(options: {
     ...(sort === undefined ? {} : { sort }),
     ...(createdAfter === undefined ? {} : { createdAfter }),
     ...(createdBefore === undefined ? {} : { createdBefore }),
+    ...(completedAfter === undefined ? {} : { completedAfter }),
+    ...(completedBefore === undefined ? {} : { completedBefore }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
     ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
@@ -385,6 +393,22 @@ function parseRunListCreatedBefore(value: string | undefined): string | undefine
     value,
     'CLI_RUN_LIST_CREATED_BEFORE_INVALID',
     'Run list createdBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedAfter(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_COMPLETED_AFTER_INVALID',
+    'Run list completedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedBefore(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_COMPLETED_BEFORE_INVALID',
+    'Run list completedBefore must be a valid ISO timestamp.'
   );
 }
 

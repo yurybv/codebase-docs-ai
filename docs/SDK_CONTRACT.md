@@ -147,6 +147,8 @@ const runs = await client.documentationRuns.list({
   sort: 'createdAt:asc',
   createdAfter: '2026-05-29T23:00:00.000Z',
   createdBefore: '2026-05-30T01:00:00.000Z',
+  completedAfter: '2026-05-30T00:00:00.000Z',
+  completedBefore: '2026-05-30T01:00:00.000Z',
   updatedAfter: '2026-05-30T00:00:00.000Z',
   updatedBefore: '2026-05-30T01:00:00.000Z',
   cursor: previousPage.nextCursor
@@ -165,6 +167,8 @@ Options:
 - `sort`: optional sort order, either `updatedAt:desc`, `updatedAt:asc`, `createdAt:desc`, or `createdAt:asc`. When omitted, the API default is used.
 - `createdAfter`: optional ISO timestamp lower bound for `createdAt`.
 - `createdBefore`: optional ISO timestamp upper bound for `createdAt`.
+- `completedAfter`: optional ISO timestamp lower bound for `completedAt`.
+- `completedBefore`: optional ISO timestamp upper bound for `completedAt`.
 - `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`.
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`.
 - `cursor`: optional opaque pagination cursor returned by a previous list response.

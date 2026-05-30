@@ -123,6 +123,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Paginated run listing helper.
 - Sorted run listing helper.
 - Created-at filtered run listing helper.
+- Completed-at filtered run listing helper.
 - Updated-at filtered run listing helper.
 - Name-filtered run listing helper.
 - Output-format filtered run listing helper.
@@ -142,6 +143,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Filter API-backed run summaries by status.
 - Filter API-backed run summaries by source role.
 - Filter API-backed run summaries by created-at range.
+- Filter API-backed run summaries by completed-at range.
 - Filter API-backed run summaries by updated-at range.
 - Filter API-backed run summaries by run name.
 - Filter API-backed run summaries by output format.

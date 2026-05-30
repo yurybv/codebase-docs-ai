@@ -45,6 +45,8 @@ program
   .option('--sort <sort>', 'Sort recent runs: updatedAt:desc, updatedAt:asc, createdAt:desc, or createdAt:asc')
   .option('--created-after <timestamp>', 'Filter recent runs created at or after an ISO timestamp')
   .option('--created-before <timestamp>', 'Filter recent runs created at or before an ISO timestamp')
+  .option('--completed-after <timestamp>', 'Filter recent runs completed at or after an ISO timestamp')
+  .option('--completed-before <timestamp>', 'Filter recent runs completed at or before an ISO timestamp')
   .option('--updated-after <timestamp>', 'Filter recent runs updated at or after an ISO timestamp')
   .option('--updated-before <timestamp>', 'Filter recent runs updated at or before an ISO timestamp')
   .option('--cursor <cursor>', 'Continue listing runs from a previous nextCursor')
@@ -61,6 +63,8 @@ program
       sort?: string;
       createdAfter?: string;
       createdBefore?: string;
+      completedAfter?: string;
+      completedBefore?: string;
       updatedAfter?: string;
       updatedBefore?: string;
       cursor?: string;
