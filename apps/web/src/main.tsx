@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { defaultDocumentationRunListLimit } from '@codebase-docs-ai/shared';
+import type { DocumentationRunStatus } from '@codebase-docs-ai/shared';
 import { AlertTriangle, Download, FileArchive, Play, RefreshCw, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
@@ -27,6 +28,7 @@ export function App(): JSX.Element {
     useState<DocumentationOutputFormat[]>(defaultOutputFormats);
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
   const [runHistoryLimit, setRunHistoryLimit] = useState(defaultDocumentationRunListLimit);
+  const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
   const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
     status: 'idle'
@@ -94,7 +96,7 @@ export function App(): JSX.Element {
       setRunHistoryState({
         status: 'loading'
       });
-      const list = await listRuns(runHistoryLimit);
+      const list = await listRuns(runHistoryLimit, runHistoryStatus);
       setRunHistory(sanitizeRunSummaries(list.runs));
       setRunHistoryState({
         status: 'loaded'
@@ -289,6 +291,24 @@ export function App(): JSX.Element {
                     {runHistoryLimitOptions.map((limit) => (
                       <option value={limit} key={limit}>
                         {limit}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="history-limit">
+                  <span>Status</span>
+                  <select
+                    value={runHistoryStatus}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run status"
+                    onChange={(event) => {
+                      setRunHistoryStatus(event.currentTarget.value as RunHistoryStatusFilter);
+                    }}
+                  >
+                    <option value="all">All</option>
+                    {runHistoryStatusOptions.map((status) => (
+                      <option value={status} key={status}>
+                        {status}
                       </option>
                     ))}
                   </select>
@@ -510,9 +530,19 @@ interface RunListResponse {
 
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
+type RunHistoryStatusFilter = DocumentationRunStatus | 'all';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
+const runHistoryStatusOptions: DocumentationRunStatus[] = [
+  'created',
+  'ready',
+  'running',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+];
 const apiBaseUrl =
   import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -536,10 +566,13 @@ async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ 
   return parseResponse(response);
 }
 
-async function listRuns(limit: number): Promise<RunListResponse> {
+async function listRuns(limit: number, status: RunHistoryStatusFilter): Promise<RunListResponse> {
   const query = new URLSearchParams({
     limit: String(limit)
   });
+  if (status !== 'all') {
+    query.set('status', status);
+  }
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs?${query}`);
   return parseResponse(response);
 }

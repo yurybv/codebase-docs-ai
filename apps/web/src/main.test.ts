@@ -237,7 +237,7 @@ describe('App API error handling', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
   });
 
-  it('requests run history with the selected limit while preserving sanitized summaries', async () => {
+  it('requests run history with selected limit and status while preserving sanitized summaries', async () => {
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
     const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
@@ -246,7 +246,7 @@ describe('App API error handling', () => {
           {
             id: 'run_limited',
             name: `Limited ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-            status: 'completed',
+            status: 'failed',
             sources: [
               {
                 name: `Frontend ${rawStoragePath}`,
@@ -279,11 +279,18 @@ describe('App API error handling', () => {
     await act(async () => {
       limitSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    const statusSelect = document.querySelector(
+      'select[aria-label="Recent run status"]'
+    ) as HTMLSelectElement;
+    statusSelect.value = 'failed';
+    await act(async () => {
+      statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await act(async () => {
       getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    await waitForText('completed · 1 source');
+    await waitForText('failed · 1 source');
 
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('json');
@@ -294,7 +301,9 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain(rawOpenAiKey);
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=10');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed'
+    );
   });
 
   it('sanitizes run history limit API errors before rendering', async () => {
@@ -325,6 +334,43 @@ describe('App API error handling', () => {
 
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('RUN_LIST_LIMIT_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
+  });
+
+  it('sanitizes run history status API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_STATUS_INVALID', {
+        message: `Invalid run list status from ${rawStoragePath}.`,
+        details: {
+          status: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_STATUS_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_STATUS_INVALID');
     expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
     expect(renderedText).not.toContain(rawStoragePath);
     expect(renderedText).not.toContain(rawOpenAiKey);

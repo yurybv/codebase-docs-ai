@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 133: Web Run Listing Status Filter Control.
+- Implement Phase 134: CLI Run Listing Status Filter Flag.
 
-Phase 133 goal:
-- Expose the API run listing `status` filter through the Web operator run history view.
-- Keep the Web UI as a thin API-backed surface with no core analysis, rendering, or cleanup logic.
-- Verify Web status-filtered list requests preserve sanitized list results and invalid-status errors do not expose raw values.
+Phase 134 goal:
+- Expose the API run listing `status` filter through the CLI `list-runs` command.
+- Validate CLI list status inputs before network requests where practical.
+- Verify CLI status-filtered list requests preserve sanitized list output and invalid-status errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
