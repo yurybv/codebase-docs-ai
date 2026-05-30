@@ -110,6 +110,15 @@ Run listing updated-at filtering is a cross-surface contract. When changing API 
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid updated-at filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Created-At Filter Regression
+
+Run listing created-at filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `createdAfter` and `createdBefore` filters are forwarded as ISO timestamp query parameters;
+- created-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid created-at filter errors use stable public error codes and sanitized messages.
+
 ## Run Listing Name Filter Regression
 
 Run listing name filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:

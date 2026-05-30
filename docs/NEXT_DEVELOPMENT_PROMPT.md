@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 159: API Run Listing Created-At Range Filter Contract.
-- Then continue without stopping into Phase 160: SDK And CLI Run Listing Created-At Range Filters.
+- Implement Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 - Then continue without stopping into Phase 161: Web Run History Created-At Range Controls And Audit.
 - Then continue without stopping into Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 163: API Run Listing Sort Direction Contract.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 159 goal:
-- Add safe API run listing created-at range filters for operator surfaces, such as `createdAfter` and `createdBefore`.
-- Validate created-at filter inputs before storage access where practical.
-- Return persisted run summaries whose `createdAt` values match the selected range without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover sanitized valid created-at filtering and invalid secret-bearing created-at errors.
 
 Phase 160 goal:
 - Expose API run listing created-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -65,6 +59,12 @@ Phase 162 goal:
 - Add or tighten regression coverage proving created-at filtering composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw created-at filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 163 goal:
+- Add a safe API run listing sort direction contract for operator surfaces, such as `sort=updatedAt:desc` and `sort=updatedAt:asc`.
+- Validate sort inputs before storage access where practical.
+- Return deterministic pages of persisted run summaries using the selected sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover sanitized valid sort behavior and invalid secret-bearing sort errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.

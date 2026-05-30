@@ -83,6 +83,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Create documentation run.
 - List documentation run summaries.
 - Paginate documentation run summaries.
+- Filter documentation run summaries by created-at range.
 - Filter documentation run summaries by updated-at range.
 - Filter documentation run summaries by run name.
 - Filter documentation run summaries by output format.

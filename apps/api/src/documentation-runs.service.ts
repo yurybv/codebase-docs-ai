@@ -78,6 +78,8 @@ interface ListRunsOptions {
   minSources?: unknown;
   maxSources?: unknown;
   cursor?: unknown;
+  createdAfter?: unknown;
+  createdBefore?: unknown;
   updatedAfter?: unknown;
   updatedBefore?: unknown;
 }
@@ -213,17 +215,26 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const format = parseRunListFormat(options.format);
     const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
     const cursor = parseRunListCursor(options.cursor);
+    const createdAfter = parseRunListCreatedAfter(options.createdAfter);
+    const createdBefore = parseRunListCreatedBefore(options.createdBefore);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
         const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
+        const createdAt = Date.parse(storedRun.run.createdAt);
         const updatedAt = Date.parse(storedRun.run.updatedAt);
         if (status && storedRun.run.status !== status) {
           continue;
         }
         if (role && !storedRun.run.sources.some((source) => source.role === role)) {
+          continue;
+        }
+        if (createdAfter !== undefined && createdAt < createdAfter) {
+          continue;
+        }
+        if (createdBefore !== undefined && createdAt > createdBefore) {
           continue;
         }
         if (updatedAfter !== undefined && updatedAt < updatedAfter) {
@@ -1062,6 +1073,22 @@ function invalidRunListCursor(): BadRequestException {
     code: 'RUN_LIST_CURSOR_INVALID',
     message: 'Run list cursor is invalid.'
   });
+}
+
+function parseRunListCreatedAfter(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_CREATED_AFTER_INVALID',
+    'Run list createdAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCreatedBefore(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_CREATED_BEFORE_INVALID',
+    'Run list createdBefore must be a valid ISO timestamp.'
+  );
 }
 
 function parseRunListUpdatedAfter(value: unknown): number | undefined {

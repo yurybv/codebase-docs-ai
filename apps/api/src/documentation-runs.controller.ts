@@ -40,6 +40,8 @@ export class DocumentationRunsController {
     @Query('minSources') minSources: string | undefined,
     @Query('maxSources') maxSources: string | undefined,
     @Query('cursor') cursor: string | undefined,
+    @Query('createdAfter') createdAfter: string | undefined,
+    @Query('createdBefore') createdBefore: string | undefined,
     @Query('updatedAfter') updatedAfter: string | undefined,
     @Query('updatedBefore') updatedBefore: string | undefined
   ): Promise<object> {
@@ -52,6 +54,8 @@ export class DocumentationRunsController {
       minSources,
       maxSources,
       cursor,
+      createdAfter,
+      createdBefore,
       updatedAfter,
       updatedBefore
     });

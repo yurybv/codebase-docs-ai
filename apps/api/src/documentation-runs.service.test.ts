@@ -344,6 +344,35 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by created-at range without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldest = await createCompletedRun('Oldest Created Range Docs', secretSourceName);
+    const newest = await createCompletedRun('Newest Created Range Docs', secretSourceName);
+    const middle = await createCompletedRun('Middle Created Range Docs', secretSourceName);
+    await setRunCreatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCreatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCreatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const list = await service.listRuns({
+      createdAfter: '2026-05-30T00:00:30.000Z',
+      createdBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([middle.runId]);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('filters listed run summaries by sanitized name with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'f'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
@@ -730,6 +759,37 @@ describe('DocumentationRunsService', () => {
       try {
         await service.listRuns(options);
         throw new Error('Expected listRuns to reject invalid updated-at filter.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(payload).not.toContain(rawTimestamp);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
+    }
+  });
+
+  it('rejects invalid run listing created-at filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const rawTimestamp = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ createdAfter: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_CREATED_AFTER_INVALID',
+        message: 'Run list createdAfter must be a valid ISO timestamp.'
+      }
+    });
+    await expect(service.listRuns({ createdBefore: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_CREATED_BEFORE_INVALID',
+        message: 'Run list createdBefore must be a valid ISO timestamp.'
+      }
+    });
+
+    for (const options of [{ createdAfter: rawTimestamp }, { createdBefore: rawTimestamp }]) {
+      try {
+        await service.listRuns(options);
+        throw new Error('Expected listRuns to reject invalid created-at filter.');
       } catch (error) {
         const payload = JSON.stringify(error);
         expect(payload).not.toContain(rawTimestamp);
@@ -1368,6 +1428,17 @@ async function setRunUpdatedAt(runId: string, updatedAt: string): Promise<void> 
     };
   };
   manifest.run.updatedAt = updatedAt;
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+async function setRunCreatedAt(runId: string, createdAt: string): Promise<void> {
+  const manifestPath = path.join(tempRoot, runId, 'run.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+    run: {
+      createdAt: string;
+    };
+  };
+  manifest.run.createdAt = createdAt;
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 
