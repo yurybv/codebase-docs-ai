@@ -16,6 +16,7 @@ import {
   createDocumentationRunSchema,
   documentationOutputFormatSchema,
   isSupportedSourceArchiveFileName,
+  sanitizePublicErrorText,
   sourceInputMetadataSchema,
   supportedSourceArchiveExtensions
 } from '@codebase-docs-ai/shared';
@@ -409,7 +410,10 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`Deleted ${cleanup.deletedRunIds.length} expired documentation run(s).`);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown cleanup failure.';
+      const message =
+        error instanceof Error
+          ? sanitizePublicErrorText(error.message, { fallback: 'Unknown cleanup failure.' })
+          : 'Unknown cleanup failure.';
       this.logger.warn(`Documentation run cleanup failed: ${message}`);
     }
   }

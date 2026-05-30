@@ -80,7 +80,7 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 119: API Cleanup Log Sanitization Regression Coverage.
+Implement Phase 120: API Cleanup Resilience Regression Coverage.
 
 Required package:
 
@@ -90,7 +90,7 @@ apps/api
 docs
 ```
 
-The next step should add API regression coverage proving run storage cleanup warning logs are sanitized when cleanup failures include raw storage paths, provider keys, denied `.env` evidence, or denied-source values.
+The next step should add API regression coverage proving run storage cleanup continues across independent expired runs when one expired run cannot be removed, while logging sanitized cleanup failure details.
 
 ## Completed Implementation
 
@@ -1878,6 +1878,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/api-exception.filter.test.ts apps/api/src/documentation-runs.http.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts packages/shared/src/public-error-sanitizer.test.ts apps/web/src/api-errors.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/web typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 119 API Cleanup Log Sanitization Regression Coverage
+
+- Sanitized run storage cleanup warning logs with the shared public error sanitizer.
+- Added API service regression coverage for cleanup failures containing raw storage paths, provider keys, denied `.env` evidence, and denied-source values.
+- Verified cleanup warning logs retain useful context without exposing raw secret-bearing storage failure details.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

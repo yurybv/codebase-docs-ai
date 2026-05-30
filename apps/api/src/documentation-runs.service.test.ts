@@ -447,6 +447,33 @@ describe('DocumentationRunsService', () => {
     expect(cleanupExpiredRuns).toHaveBeenCalledTimes(2);
   });
 
+  it('sanitizes expired run cleanup warning logs', async () => {
+    const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/prefix_${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '1000';
+    service = new DocumentationRunsService();
+    vi.useFakeTimers();
+    vi.spyOn(service, 'cleanupExpiredRuns').mockRejectedValue(
+      new Error(`Cleanup failed while removing ${rawStoragePath}.`)
+    );
+    const warn = vi
+      .spyOn(
+        (service as unknown as { logger: { warn: (message: string) => void } }).logger,
+        'warn'
+      )
+      .mockImplementation(() => undefined);
+
+    await service.onModuleInit();
+
+    const message = String(warn.mock.calls[0]?.[0] ?? '');
+    expect(message).toContain('[REDACTED_STORAGE_PATH]');
+    expect(message).not.toContain(rawStoragePath);
+    expect(message).not.toContain('/private/tmp');
+    expect(message).not.toContain(rawOpenAiKey);
+    expect(message).not.toContain('.env');
+    expect(message).not.toContain('SHOULD_NOT_APPEAR');
+  });
+
   it('does not schedule expired run cleanup when the interval is disabled', async () => {
     process.env.DOCS_AI_RUN_CLEANUP_INTERVAL_MS = '0';
     service = new DocumentationRunsService();

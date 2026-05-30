@@ -17,6 +17,7 @@ Security is a core product feature because the module processes private source c
 - Never log uploaded source code by default.
 - Never log secrets.
 - Never log full AI prompts containing private source.
+- Sanitize operational warning logs before including storage or cleanup failure details.
 - Delete temporary artifacts according to retention policy.
 
 ## Denylisted Files
