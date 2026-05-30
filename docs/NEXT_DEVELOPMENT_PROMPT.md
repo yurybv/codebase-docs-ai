@@ -37,14 +37,8 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 185: Web Run History Duration Sort Control.
-- Then continue without stopping into Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
+- Implement Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 185 goal:
-- Expose duration sorting through the Web run history sort selector.
-- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when duration sorting is applied.
-- Verify duration-sorted Web history displays sanitized duration metadata without adding core logic to the Web surface.
 
 Phase 186 goal:
 - Audit API, SDK, CLI, and Web duration sort behavior as one public operator contract.

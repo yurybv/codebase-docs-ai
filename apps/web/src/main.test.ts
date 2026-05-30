@@ -325,7 +325,7 @@ describe('App API error handling', () => {
     const sortSelect = document.querySelector(
       'select[aria-label="Recent run sort"]'
     ) as HTMLSelectElement;
-    sortSelect.value = 'completedAt:asc';
+    sortSelect.value = 'durationMs:desc';
     await act(async () => {
       sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -381,7 +381,7 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=completedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A00%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A30.000Z&completedBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=durationMs%3Adesc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A00%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A30.000Z&completedBefore=2026-05-30T00%3A01%3A30.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
     );
   });
 
@@ -500,7 +500,7 @@ describe('App API error handling', () => {
     const sortSelect = document.querySelector(
       'select[aria-label="Recent run sort"]'
     ) as HTMLSelectElement;
-    sortSelect.value = 'completedAt:asc';
+    sortSelect.value = 'durationMs:desc';
     await act(async () => {
       sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -565,11 +565,11 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=completedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A45.000Z&completedBefore=2026-05-30T00%3A02%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=durationMs%3Adesc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A45.000Z&completedBefore=2026-05-30T00%3A02%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=completedAt%3Aasc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A45.000Z&completedBefore=2026-05-30T00%3A02%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
+      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&minSources=1&maxSources=2&sort=durationMs%3Adesc&createdAfter=2026-05-29T23%3A59%3A30.000Z&createdBefore=2026-05-30T00%3A01%3A30.000Z&completedAfter=2026-05-30T00%3A00%3A45.000Z&completedBefore=2026-05-30T00%3A02%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
     );
   });
 

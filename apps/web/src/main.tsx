@@ -775,7 +775,9 @@ type RunHistorySort =
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'
-  | 'completedAt:asc';
+  | 'completedAt:asc'
+  | 'durationMs:desc'
+  | 'durationMs:asc';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
@@ -785,7 +787,9 @@ const runHistorySortOptions: RunHistorySort[] = [
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',
-  'completedAt:asc'
+  'completedAt:asc',
+  'durationMs:desc',
+  'durationMs:asc'
 ];
 const runHistoryStatusOptions: DocumentationRunStatus[] = [
   'created',
