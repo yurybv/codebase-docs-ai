@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 129: Web Run Listing Limit Control.
+- Implement Phase 130: CLI Run Listing Limit Flag.
 
-Phase 129 goal:
-- Expose the API run listing `limit` option through the Web operator run history view.
-- Keep the Web UI as a thin API-backed surface with no core analysis, rendering, or cleanup logic.
-- Verify Web list limit requests preserve sanitized list results and invalid-limit errors do not expose raw values.
+Phase 130 goal:
+- Expose the API run listing `limit` option through the CLI `list-runs` command.
+- Validate CLI list limit inputs before network requests where practical.
+- Verify CLI list limit requests preserve sanitized list output and invalid-limit errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

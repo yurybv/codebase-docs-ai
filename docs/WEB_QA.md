@@ -121,6 +121,7 @@ Expected behavior:
 Expected behavior:
 
 - operators can refresh recent documentation run summaries from the API;
+- operators can choose a recent-run limit before refreshing history;
 - recent runs show status, source count, and rendered formats when available;
 - run history rendering remains a thin API client and does not perform analysis, generation, rendering, or cleanup logic in the Web app;
 - run history text redacts raw provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths.

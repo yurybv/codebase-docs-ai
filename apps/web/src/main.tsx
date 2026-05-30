@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { defaultDocumentationRunListLimit } from '@codebase-docs-ai/shared';
 import { AlertTriangle, Download, FileArchive, Play, RefreshCw, Upload, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import './styles.css';
@@ -25,6 +26,7 @@ export function App(): JSX.Element {
   const [selectedOutputFormats, setSelectedOutputFormats] =
     useState<DocumentationOutputFormat[]>(defaultOutputFormats);
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
+  const [runHistoryLimit, setRunHistoryLimit] = useState(defaultDocumentationRunListLimit);
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
   const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
     status: 'idle'
@@ -92,7 +94,7 @@ export function App(): JSX.Element {
       setRunHistoryState({
         status: 'loading'
       });
-      const list = await listRuns();
+      const list = await listRuns(runHistoryLimit);
       setRunHistory(sanitizeRunSummaries(list.runs));
       setRunHistoryState({
         status: 'loaded'
@@ -273,16 +275,35 @@ export function App(): JSX.Element {
           <section className="run-history" aria-label="Recent documentation runs">
             <div className="run-history-heading">
               <span>Recent runs</span>
-              <button
-                className="secondary-action history-refresh"
-                type="button"
-                onClick={refreshRunHistory}
-                disabled={runHistoryState.status === 'loading'}
-                aria-label="Refresh recent documentation runs"
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
+              <div className="run-history-controls">
+                <label className="history-limit">
+                  <span>Limit</span>
+                  <select
+                    value={runHistoryLimit}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run limit"
+                    onChange={(event) => {
+                      setRunHistoryLimit(Number(event.currentTarget.value));
+                    }}
+                  >
+                    {runHistoryLimitOptions.map((limit) => (
+                      <option value={limit} key={limit}>
+                        {limit}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="secondary-action history-refresh"
+                  type="button"
+                  onClick={refreshRunHistory}
+                  disabled={runHistoryState.status === 'loading'}
+                  aria-label="Refresh recent documentation runs"
+                >
+                  <RefreshCw size={15} />
+                  Refresh
+                </button>
+              </div>
             </div>
             {runHistoryState.status === 'failed' ? (
               <p className="history-error" role="alert">
@@ -491,6 +512,7 @@ const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mo
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
+const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
 const apiBaseUrl =
   import.meta.env.VITE_WEB_API_BASE_URL ?? import.meta.env.WEB_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -514,8 +536,11 @@ async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ 
   return parseResponse(response);
 }
 
-async function listRuns(): Promise<RunListResponse> {
-  const response = await fetch(`${apiBaseUrl}/v1/documentation-runs`);
+async function listRuns(limit: number): Promise<RunListResponse> {
+  const query = new URLSearchParams({
+    limit: String(limit)
+  });
+  const response = await fetch(`${apiBaseUrl}/v1/documentation-runs?${query}`);
   return parseResponse(response);
 }
 

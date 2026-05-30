@@ -234,7 +234,104 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain(rawOpenAiKey);
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
+  });
+
+  it('requests run history with the selected limit while preserving sanitized summaries', async () => {
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        runs: [
+          {
+            id: 'run_limited',
+            name: `Limited ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+            status: 'completed',
+            sources: [
+              {
+                name: `Frontend ${rawStoragePath}`,
+                role: 'frontend'
+              }
+            ],
+            sourceCount: 1,
+            outputFormats: ['json'],
+            renderedFormats: ['json'],
+            createdAt: '2026-05-30T00:00:00.000Z',
+            updatedAt: '2026-05-30T00:01:00.000Z'
+          }
+        ]
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const limitSelect = document.querySelector(
+      'select[aria-label="Recent run limit"]'
+    ) as HTMLSelectElement;
+    limitSelect.value = '10';
+    await act(async () => {
+      limitSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('completed · 1 source');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('json');
+    expect(renderedText).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(renderedText).toContain('[REDACTED_DENIED_FILE]');
+    expect(renderedText).toContain('[REDACTED_DENIED_VALUE]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=10');
+  });
+
+  it('sanitizes run history limit API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'t'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_LIMIT_INVALID', {
+        message: `Invalid run list limit from ${rawStoragePath}.`,
+        details: {
+          limit: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_LIMIT_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_LIMIT_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
   });
 
   it('shows a client-side error for unsupported archive file selections', async () => {
@@ -379,7 +476,7 @@ describe('App API error handling', () => {
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    const roleSelects = Array.from(document.querySelectorAll('select'));
+    const roleSelects = Array.from(document.querySelectorAll('select[aria-label="Source role"]'));
     expect(roleSelects).toHaveLength(2);
     const [frontendRoleSelect] = roleSelects as [HTMLSelectElement, HTMLSelectElement];
     frontendRoleSelect.value = 'frontend';
@@ -387,7 +484,7 @@ describe('App API error handling', () => {
       frontendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    const backendRoleSelect = document.querySelectorAll('select')[1] as HTMLSelectElement;
+    const backendRoleSelect = roleSelects[1] as HTMLSelectElement;
     backendRoleSelect.value = 'backend';
     await act(async () => {
       backendRoleSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -563,7 +660,7 @@ describe('App API error handling', () => {
     });
 
     const [frontendRoleSelect, backendRoleSelect] = Array.from(
-      document.querySelectorAll('select')
+      document.querySelectorAll('select[aria-label="Source role"]')
     ) as [HTMLSelectElement, HTMLSelectElement];
     frontendRoleSelect.value = 'frontend';
     await act(async () => {

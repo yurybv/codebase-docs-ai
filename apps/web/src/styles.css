@@ -181,6 +181,30 @@ p {
   font-weight: 700;
 }
 
+.run-history-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-limit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4f5f69;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.history-limit select {
+  min-width: 72px;
+  padding: 7px 8px;
+  border: 1px solid #c8d2da;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172026;
+}
+
 .history-refresh {
   min-width: 104px;
 }
