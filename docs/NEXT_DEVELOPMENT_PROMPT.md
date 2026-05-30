@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 107: System Analyzer Embedded Secret Correlation Regression Coverage.
+- Implement Phase 108: Embedded Secret End-To-End Artifact Regression Coverage.
 
-Phase 107 goal:
-- Add system-analyzer regression coverage proving cross-source relationships, API contracts, environment links, integrations, risks, and unknowns do not propagate embedded raw provider keys or denied evidence when repository maps contain sanitized or adversarial analyzer fields.
-- Sanitize system-level correlation output if needed before it reaches documentation trees and AI prompts.
-- Keep shared sanitizer and existing repository-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
+Phase 108 goal:
+- Add end-to-end API/CLI/SDK regression coverage proving embedded secret-bearing analyzer evidence remains sanitized in generated artifacts and downloads across local and HTTP flows.
+- Verify raw embedded provider keys, denied `.env` evidence, and denied-source values are absent from JSON, single-Markdown, markdown-tree, and zip outputs.
+- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
 - Commit the completed phase directly to master.

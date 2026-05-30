@@ -1,3 +1,4 @@
+import { sanitizePublicText } from '@codebase-docs-ai/security';
 import type {
   ApiClientCallInfo,
   ApiContract,
@@ -62,19 +63,85 @@ const knownAuthDependencies = new Map<string, string>([
 ]);
 
 export function analyzeSystem(input: AnalyzeSystemInput): SystemMap {
-  const apiContracts = buildApiContracts(input.repositories);
-  const environmentLinks = buildEnvironmentLinks(input.repositories);
+  const repositories = input.repositories.map(sanitizeRepositoryMap);
+  const apiContracts = buildApiContracts(repositories);
+  const environmentLinks = buildEnvironmentLinks(repositories);
 
   return {
-    sources: input.repositories,
-    relationships: buildRelationships(input.repositories, apiContracts, environmentLinks),
+    sources: repositories,
+    relationships: buildRelationships(repositories, apiContracts, environmentLinks),
     apiContracts,
-    authFlows: detectAuthFlows(input.repositories),
+    authFlows: detectAuthFlows(repositories),
     environmentLinks,
-    integrations: detectIntegrations(input.repositories),
+    integrations: detectIntegrations(repositories),
     risks: buildSystemRisks(apiContracts),
-    unknowns: buildSystemUnknowns(input.repositories),
+    unknowns: buildSystemUnknowns(repositories),
     generatedAt: new Date().toISOString()
+  };
+}
+
+function sanitizeRepositoryMap(repository: RepositoryMap): RepositoryMap {
+  return {
+    ...repository,
+    source: {
+      ...repository.source,
+      name: sanitizeSystemText(repository.source.name)
+    },
+    packageManager: {
+      ...repository.packageManager,
+      evidence: repository.packageManager.evidence.map(sanitizeSourceReference)
+    },
+    frameworks: repository.frameworks.map((framework) => ({
+      ...framework,
+      name: sanitizeSystemText(framework.name),
+      evidence: framework.evidence.map(sanitizeSourceReference)
+    })),
+    scripts: repository.scripts.map((script) => ({
+      ...script,
+      name: sanitizeSystemText(script.name),
+      command: sanitizeSystemText(script.command),
+      sourceReference: sanitizeSourceReference(script.sourceReference)
+    })),
+    dependencies: repository.dependencies.map((dependency) => ({
+      ...dependency,
+      name: sanitizeSystemText(dependency.name),
+      version: sanitizeSystemText(dependency.version),
+      sourceReference: sanitizeSourceReference(dependency.sourceReference)
+    })),
+    routes: repository.routes.map((route) => ({
+      ...route,
+      path: sanitizeSystemText(route.path),
+      sourceReference: sanitizeSourceReference(route.sourceReference)
+    })),
+    apiEndpoints: repository.apiEndpoints.map((endpoint) => ({
+      ...endpoint,
+      method: sanitizeSystemText(endpoint.method),
+      path: sanitizeSystemText(endpoint.path),
+      ...(endpoint.controller ? { controller: sanitizeSystemText(endpoint.controller) } : {}),
+      sourceReference: sanitizeSourceReference(endpoint.sourceReference)
+    })),
+    apiClientCalls: repository.apiClientCalls.map((call) => ({
+      ...call,
+      method: sanitizeSystemText(call.method),
+      path: sanitizeSystemText(call.path),
+      sourceReference: sanitizeSourceReference(call.sourceReference)
+    })),
+    environmentVariables: repository.environmentVariables.map((envVar) => ({
+      name: sanitizeSystemText(envVar.name),
+      sourceReferences: envVar.sourceReferences.map(sanitizeSourceReference)
+    })),
+    configFiles: repository.configFiles.map((configFile) => ({
+      ...configFile,
+      kind: sanitizeSystemText(configFile.kind),
+      sourceReference: sanitizeSourceReference(configFile.sourceReference)
+    })),
+    risks: repository.risks.map((risk) => ({
+      ...risk,
+      message: sanitizeSystemText(risk.message),
+      ...(risk.sourceReferences
+        ? { sourceReferences: risk.sourceReferences.map(sanitizeSourceReference) }
+        : {})
+    }))
   };
 }
 
@@ -350,13 +417,14 @@ function dedupeReferences(sourceReferences: SourceReference[]): SourceReference[
   const deduped: SourceReference[] = [];
 
   for (const sourceReference of sourceReferences) {
-    const key = `${sourceReference.sourceName}:${sourceReference.path}`;
+    const sanitizedReference = sanitizeSourceReference(sourceReference);
+    const key = `${sanitizedReference.sourceName}:${sanitizedReference.path}`;
     if (keys.has(key)) {
       continue;
     }
 
     keys.add(key);
-    deduped.push(sourceReference);
+    deduped.push(sanitizedReference);
   }
 
   return deduped;
@@ -377,4 +445,16 @@ function dedupeRelationships(relationships: SourceRelationship[]): SourceRelatio
   }
 
   return deduped;
+}
+
+function sanitizeSourceReference(sourceReference: SourceReference): SourceReference {
+  return {
+    ...sourceReference,
+    sourceName: sanitizeSystemText(sourceReference.sourceName),
+    path: sanitizeSystemText(sourceReference.path)
+  };
+}
+
+function sanitizeSystemText(value: string): string {
+  return sanitizePublicText(value);
 }

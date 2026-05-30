@@ -80,18 +80,21 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 107: System Analyzer Embedded Secret Correlation Regression Coverage.
+Implement Phase 108: Embedded Secret End-To-End Artifact Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 packages/security
-packages/system-analyzer
+packages/core
+apps/api
+apps/cli
+packages/sdk
 docs
 ```
 
-The next step should add system-analyzer regression coverage proving cross-source relationships, API contracts, environment links, integrations, risks, and unknowns do not propagate embedded raw provider keys or denied evidence when repository maps contain sanitized or adversarial analyzer fields.
+The next step should add end-to-end API/CLI/SDK regression coverage proving embedded secret-bearing analyzer evidence remains sanitized in generated artifacts and downloads across local and HTTP flows.
 
 ## Completed Implementation
 
@@ -1711,6 +1714,20 @@ Verification:
 ```text
 pnpm -r --sort --filter @codebase-docs-ai/repo-analyzer --filter @codebase-docs-ai/core typecheck
 pnpm test -- packages/repo-analyzer/src/analyze-repository.test.ts packages/core/src/documentation-engine.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 107 System Analyzer Embedded Secret Correlation Regression Coverage
+
+- Sanitized repository maps at the system-analyzer boundary before cross-source correlation.
+- Added system-analyzer regression coverage for embedded secret-bearing source names, source references, API contracts, environment links, integrations, relationships, and risk source references.
+- Verified core AI prompt payloads remain free of raw denied evidence after system-level correlation.
+
+Verification:
+
+```text
+pnpm -r --sort --filter @codebase-docs-ai/system-analyzer --filter @codebase-docs-ai/core typecheck
+pnpm test -- packages/system-analyzer/src/analyze-system.test.ts packages/core/src/documentation-engine.test.ts
 pnpm verify
 ```
 
