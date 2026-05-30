@@ -749,6 +749,83 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidBeforePayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies run list completed-at range query parameters', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const oldest = await createServiceRun(
+      service,
+      `HTTP Oldest Completed Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    const newest = await createServiceRun(
+      service,
+      `HTTP Newest Completed Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    const middle = await createServiceRun(
+      service,
+      `HTTP Middle Completed Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    await createServiceRun(
+      service,
+      `HTTP Failed Completed Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { failBeforeStart: true, role: 'backend', outputFormats: ['json'] }
+    );
+    await setRunCompletedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCompletedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const filteredResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?completedAfter=${encodeURIComponent('2026-05-30T00:00:30.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
+    );
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
+      runs: Array<{ completedAt?: string; id: string }>;
+    };
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([middle.runId]);
+    expect(filtered.runs[0]?.completedAt).toBe('2026-05-30T00:01:00.000Z');
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const invalidTimestamp = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidAfterResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?completedAfter=${invalidTimestamp}`
+    );
+    const invalidAfterPayload = await invalidAfterResponse.text();
+    const invalidBeforeResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?completedBefore=${invalidTimestamp}`
+    );
+    const invalidBeforePayload = await invalidBeforeResponse.text();
+
+    expect(invalidAfterResponse.status).toBe(400);
+    expect(invalidAfterPayload).toContain('RUN_LIST_COMPLETED_AFTER_INVALID');
+    expect(invalidAfterPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidAfterPayload).not.toContain('.env');
+    expect(invalidAfterPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidAfterPayload).not.toContain('/private/tmp');
+    expect(invalidBeforeResponse.status).toBe(400);
+    expect(invalidBeforePayload).toContain('RUN_LIST_COMPLETED_BEFORE_INVALID');
+    expect(invalidBeforePayload).not.toContain(invalidOpenAiKey);
+    expect(invalidBeforePayload).not.toContain('.env');
+    expect(invalidBeforePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidBeforePayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list name query parameter with other list filters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
@@ -1721,6 +1798,17 @@ async function setRunCreatedAt(runId: string, createdAt: string): Promise<void> 
     };
   };
   manifest.run.createdAt = createdAt;
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+async function setRunCompletedAt(runId: string, completedAt: string): Promise<void> {
+  const manifestPath = path.join(tempRoot, runId, 'run.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+    run: {
+      completedAt?: string;
+    };
+  };
+  manifest.run.completedAt = completedAt;
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 

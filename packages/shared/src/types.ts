@@ -299,6 +299,7 @@ export interface DocumentationRun {
   error?: DocumentationRunError;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
 }
 
 export interface DocumentationRunSourceSummary {
@@ -319,6 +320,7 @@ export interface DocumentationRunSummary {
   error?: DocumentationRunError;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
 }
 
 export interface DocumentationRunListResponse {

@@ -43,6 +43,8 @@ export class DocumentationRunsController {
     @Query('cursor') cursor: string | undefined,
     @Query('createdAfter') createdAfter: string | undefined,
     @Query('createdBefore') createdBefore: string | undefined,
+    @Query('completedAfter') completedAfter: string | undefined,
+    @Query('completedBefore') completedBefore: string | undefined,
     @Query('updatedAfter') updatedAfter: string | undefined,
     @Query('updatedBefore') updatedBefore: string | undefined
   ): Promise<object> {
@@ -58,6 +60,8 @@ export class DocumentationRunsController {
       cursor,
       createdAfter,
       createdBefore,
+      completedAfter,
+      completedBefore,
       updatedAfter,
       updatedBefore
     });

@@ -549,6 +549,66 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by completed-at range without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'m'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldest = await createCompletedRun('Oldest Completed Range Docs', secretSourceName);
+    const newest = await createCompletedRun('Newest Completed Range Docs', secretSourceName);
+    const middle = await createCompletedRun('Middle Completed Range Docs', secretSourceName);
+    await createFailedRun('Failed Completed Range Docs', secretSourceName);
+    await setRunCompletedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunCompletedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const list = await service.listRuns({
+      completedAfter: '2026-05-30T00:00:30.000Z',
+      completedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([middle.runId]);
+    expect(list.runs[0]?.completedAt).toBe('2026-05-30T00:01:00.000Z');
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
+  it('rejects invalid run listing completed-at filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const rawTimestamp = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ completedAfter: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_COMPLETED_AFTER_INVALID',
+        message: 'Run list completedAfter must be a valid ISO timestamp.'
+      }
+    });
+    await expect(service.listRuns({ completedBefore: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_COMPLETED_BEFORE_INVALID',
+        message: 'Run list completedBefore must be a valid ISO timestamp.'
+      }
+    });
+
+    for (const options of [{ completedAfter: rawTimestamp }, { completedBefore: rawTimestamp }]) {
+      try {
+        await service.listRuns(options);
+        throw new Error('Expected listRuns to reject invalid completed-at filter.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(payload).not.toContain(rawTimestamp);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('/private/tmp');
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
+    }
+  });
+
   it('filters listed run summaries by output format with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'h'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
@@ -1581,6 +1641,17 @@ async function setRunCreatedAt(runId: string, createdAt: string): Promise<void> 
     };
   };
   manifest.run.createdAt = createdAt;
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+async function setRunCompletedAt(runId: string, completedAt: string): Promise<void> {
+  const manifestPath = path.join(tempRoot, runId, 'run.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+    run: {
+      completedAt?: string;
+    };
+  };
+  manifest.run.completedAt = completedAt;
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 

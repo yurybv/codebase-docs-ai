@@ -81,6 +81,8 @@ interface ListRunsOptions {
   cursor?: unknown;
   createdAfter?: unknown;
   createdBefore?: unknown;
+  completedAfter?: unknown;
+  completedBefore?: unknown;
   updatedAfter?: unknown;
   updatedBefore?: unknown;
 }
@@ -226,6 +228,8 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const cursor = parseRunListCursor(options.cursor);
     const createdAfter = parseRunListCreatedAfter(options.createdAfter);
     const createdBefore = parseRunListCreatedBefore(options.createdBefore);
+    const completedAfter = parseRunListCompletedAfter(options.completedAfter);
+    const completedBefore = parseRunListCompletedBefore(options.completedBefore);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
 
@@ -234,6 +238,8 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
         const createdAt = Date.parse(storedRun.run.createdAt);
         const updatedAt = Date.parse(storedRun.run.updatedAt);
+        const completedAt =
+          storedRun.run.completedAt === undefined ? undefined : Date.parse(storedRun.run.completedAt);
         if (status && storedRun.run.status !== status) {
           continue;
         }
@@ -250,6 +256,12 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
         if (updatedBefore !== undefined && updatedAt > updatedBefore) {
+          continue;
+        }
+        if (completedAfter !== undefined && (completedAt === undefined || completedAt < completedAfter)) {
+          continue;
+        }
+        if (completedBefore !== undefined && (completedAt === undefined || completedAt > completedBefore)) {
           continue;
         }
         const summary = toRunSummary(storedRun.run);
@@ -583,7 +595,11 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     progress?: DocumentationRunProgress
   ): Promise<void> {
     storedRun.run.status = status;
-    storedRun.run.updatedAt = new Date().toISOString();
+    const now = new Date().toISOString();
+    storedRun.run.updatedAt = now;
+    if (status === 'completed') {
+      storedRun.run.completedAt = storedRun.run.completedAt ?? now;
+    }
     if (progress) {
       storedRun.run.progress = progress;
     }
@@ -780,7 +796,8 @@ function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
         }
       : {}),
     createdAt: run.createdAt,
-    updatedAt: run.updatedAt
+    updatedAt: run.updatedAt,
+    ...(run.completedAt ? { completedAt: run.completedAt } : {})
   };
 }
 
@@ -1137,6 +1154,22 @@ function parseRunListCreatedBefore(value: unknown): number | undefined {
     value,
     'RUN_LIST_CREATED_BEFORE_INVALID',
     'Run list createdBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedAfter(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_COMPLETED_AFTER_INVALID',
+    'Run list completedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCompletedBefore(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_COMPLETED_BEFORE_INVALID',
+    'Run list completedBefore must be a valid ISO timestamp.'
   );
 }
 

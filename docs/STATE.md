@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 161: Web Run History Created-At Range Controls And Audit.
-- Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
-- Phase 163: API Run Listing Sort Direction Contract.
-- Phase 164: SDK And CLI Run Listing Sort Direction Option.
+- Phase 172: SDK And CLI Run Listing Completed-At Filters.
+- Phase 173: Web Run History Completed-At Filter Controls And Audit.
+- Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
+- Phase 175: API Run Listing Completed-At Sort Contract.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose created-at range filtering through Web, audit it as one cross-surface contract, then continue into run listing sort direction controls for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose completed-at range filtering through SDK, CLI, and Web, audit it as one cross-surface contract, then continue into completed-at sort support for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2621,6 +2621,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 171 API Run Listing Completed-At Filter Contract
+
+- Added `completedAt` metadata to completed runs and public run summaries.
+- Added API `completedAfter` and `completedBefore` query filters for `GET /v1/documentation-runs`; runs without completion timestamps do not match completed-at range filters.
+- Added service and HTTP regression coverage for sanitized completed-at filtered summaries and invalid secret-bearing completed-at timestamp inputs.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

@@ -63,7 +63,7 @@ Response:
 ## List Runs
 
 ```http
-GET /v1/documentation-runs?limit=50&status=completed&role=backend&name=backend&format=json&minSources=1&maxSources=2&createdAfter=2026-05-30T00%3A00%3A00.000Z&createdBefore=2026-05-30T01%3A00%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A00.000Z&updatedBefore=2026-05-30T01%3A00%3A00.000Z&sort=updatedAt%3Adesc&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
+GET /v1/documentation-runs?limit=50&status=completed&role=backend&name=backend&format=json&minSources=1&maxSources=2&createdAfter=2026-05-30T00%3A00%3A00.000Z&createdBefore=2026-05-30T01%3A00%3A00.000Z&completedAfter=2026-05-30T00%3A00%3A00.000Z&completedBefore=2026-05-30T01%3A00%3A00.000Z&updatedAfter=2026-05-30T00%3A00%3A00.000Z&updatedBefore=2026-05-30T01%3A00%3A00.000Z&sort=updatedAt%3Adesc&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
 Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending by default. Deleted and expired-cleaned runs are omitted. The Web run history, SDK list helper, and CLI `list-runs` command use this same filter contract.
@@ -88,6 +88,10 @@ Query:
 - invalid `createdAfter` values return `RUN_LIST_CREATED_AFTER_INVALID`;
 - `createdBefore`: optional ISO timestamp upper bound for `createdAt`;
 - invalid `createdBefore` values return `RUN_LIST_CREATED_BEFORE_INVALID`;
+- `completedAfter`: optional ISO timestamp lower bound for `completedAt`. Runs without a completion timestamp do not match completed-at range filters;
+- invalid `completedAfter` values return `RUN_LIST_COMPLETED_AFTER_INVALID`;
+- `completedBefore`: optional ISO timestamp upper bound for `completedAt`. Runs without a completion timestamp do not match completed-at range filters;
+- invalid `completedBefore` values return `RUN_LIST_COMPLETED_BEFORE_INVALID`;
 - `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`;
 - invalid `updatedAfter` values return `RUN_LIST_UPDATED_AFTER_INVALID`;
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`;
@@ -122,7 +126,8 @@ Response:
         "totalSteps": 7
       },
       "createdAt": "2026-05-30T00:00:00.000Z",
-      "updatedAt": "2026-05-30T00:01:00.000Z"
+      "updatedAt": "2026-05-30T00:01:00.000Z",
+      "completedAt": "2026-05-30T00:01:00.000Z"
     }
   ],
   "nextCursor": "eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ"

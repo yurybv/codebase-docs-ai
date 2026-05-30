@@ -119,6 +119,16 @@ Run listing created-at filtering is a cross-surface contract. When changing API 
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid created-at filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Completed-At Filter Regression
+
+Run listing completed-at filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `completedAfter` and `completedBefore` filters are forwarded as ISO timestamp query parameters;
+- runs without `completedAt` do not match completed-at range filters;
+- completed-at filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid completed-at filter errors use stable public error codes and sanitized messages.
+
 ## Run Listing Sort Regression
 
 Run listing sort direction is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
