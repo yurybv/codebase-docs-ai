@@ -447,6 +447,8 @@ describe('DocumentationRunsService', () => {
     await setRunCreatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
     await setRunUpdatedAt(older.runId, '2026-05-30T00:00:00.000Z');
     await setRunUpdatedAt(newer.runId, '2026-05-30T00:01:00.000Z');
+    await setRunCompletedAt(older.runId, '2026-05-30T00:00:30.000Z');
+    await setRunCompletedAt(newer.runId, '2026-05-30T00:01:00.000Z');
 
     const firstPage = await service.listRuns({
       limit: '1',
@@ -459,6 +461,8 @@ describe('DocumentationRunsService', () => {
       sort: 'createdAt:asc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
+      completedAfter: '2026-05-30T00:00:00.000Z',
+      completedBefore: '2026-05-30T00:01:30.000Z',
       updatedAfter: '2026-05-29T23:59:59.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z'
     });
@@ -473,6 +477,8 @@ describe('DocumentationRunsService', () => {
       sort: 'createdAt:asc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
+      completedAfter: '2026-05-30T00:00:00.000Z',
+      completedBefore: '2026-05-30T00:01:30.000Z',
       updatedAfter: '2026-05-29T23:59:59.000Z',
       updatedBefore: '2026-05-30T00:01:30.000Z',
       cursor: firstPage.nextCursor

@@ -37,18 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 174: Run Listing Completed-At Cross-Surface Regression Audit.
-- Then continue without stopping into Phase 175: API Run Listing Completed-At Sort Contract.
+- Implement Phase 175: API Run Listing Completed-At Sort Contract.
 - Then continue without stopping into Phase 176: SDK And CLI Run Listing Completed-At Sort Option.
 - Then continue without stopping into Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Then continue without stopping into Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 174 goal:
-- Audit API, SDK, CLI, and Web completed-at filtering as one public operator contract.
-- Add or tighten regression coverage proving completed-at filtering composes with `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `sort`, `createdAfter`, `createdBefore`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
-- Verify raw completed-at filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
-- Update docs only if the audit changes public behavior or testing expectations.
 
 Phase 175 goal:
 - Add API run listing `sort` support for `completedAt:desc` and `completedAt:asc`.
