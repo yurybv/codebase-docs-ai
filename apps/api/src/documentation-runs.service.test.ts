@@ -344,6 +344,42 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by sanitized name without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'f'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const created = await service.createRun({
+      name: `Created Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const completed = await createCompletedRun(
+      `Completed Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName
+    );
+    await createFailedRun(
+      `Failed Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      secretSourceName
+    );
+    await setRunUpdatedAt(created.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(completed.runId, '2026-05-30T00:01:00.000Z');
+
+    const list = await service.listRuns({ name: 'backend search' });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([completed.runId, created.runId]);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('rejects invalid run listing limits without echoing raw values', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -547,6 +583,36 @@ describe('DocumentationRunsService', () => {
         expect(payload).not.toContain('.env');
         expect(payload).not.toContain('SHOULD_NOT_APPEAR');
       }
+    }
+  });
+
+  it('rejects invalid run listing name filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'g'.repeat(24)}`;
+    const rawName = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const longRawName = rawName.repeat(5);
+
+    await expect(service.listRuns({ name: '   ' })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_NAME_INVALID',
+        message: 'Run list name filter must be between 1 and 200 characters.'
+      }
+    });
+    await expect(service.listRuns({ name: longRawName })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_NAME_INVALID',
+        message: 'Run list name filter must be between 1 and 200 characters.'
+      }
+    });
+
+    try {
+      await service.listRuns({ name: longRawName });
+      throw new Error('Expected listRuns to reject invalid name filter.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(longRawName);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     }
   });
 

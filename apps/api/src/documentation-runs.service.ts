@@ -73,6 +73,7 @@ interface ListRunsOptions {
   limit?: unknown;
   status?: unknown;
   role?: unknown;
+  name?: unknown;
   cursor?: unknown;
   updatedAfter?: unknown;
   updatedBefore?: unknown;
@@ -121,6 +122,7 @@ const runListFilterStatuses: DocumentationRunStatus[] = [
 const defaultRunRetentionMs = 24 * 60 * 60 * 1000;
 const defaultRunCleanupIntervalMs = 60 * 60 * 1000;
 const maxRunListCursorLength = 512;
+const maxRunListNameLength = 200;
 
 const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
@@ -204,6 +206,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const limit = parseRunListLimit(options.limit);
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
+    const name = parseRunListName(options.name);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -224,7 +227,11 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
         if (updatedBefore !== undefined && updatedAt > updatedBefore) {
           continue;
         }
-        runs.push(toRunSummary(storedRun.run));
+        const summary = toRunSummary(storedRun.run);
+        if (name && !summary.name.toLowerCase().includes(name)) {
+          continue;
+        }
+        runs.push(summary);
       } catch {
         continue;
       }
@@ -899,6 +906,30 @@ function invalidRunListSourceRole(): BadRequestException {
     details: {
       allowedRoles: [...sourceRoleSchema.options]
     }
+  });
+}
+
+function parseRunListName(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListName();
+  }
+
+  const name = String(value).trim();
+  if (name.length === 0 || name.length > maxRunListNameLength) {
+    throw invalidRunListName();
+  }
+
+  return name.toLowerCase();
+}
+
+function invalidRunListName(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_NAME_INVALID',
+    message: `Run list name filter must be between 1 and ${maxRunListNameLength} characters.`
   });
 }
 

@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 147: API Run Listing Name Search Filter Contract.
-- Then continue without stopping into Phase 148: SDK And CLI Run Listing Name Search Filters.
+- Implement Phase 148: SDK And CLI Run Listing Name Search Filters.
 - Then continue without stopping into Phase 149: Web Run History Name Search Control And Audit.
 - Then continue without stopping into Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 151: API Run Listing Output Format Filter Contract.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 147 goal:
-- Add a safe API run listing name search filter for operator surfaces, such as `name`.
-- Validate name-search inputs before storage access where practical, including length and blank-value handling.
-- Return persisted run summaries matching sanitized run names without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover created, completed, failed, and expired-cleaned runs where applicable, plus sanitized invalid-name errors.
 
 Phase 148 goal:
 - Expose the API run listing name search filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -65,6 +59,12 @@ Phase 150 goal:
 - Add or tighten regression coverage proving name search composes with `limit`, `status`, `role`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw name-search input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 151 goal:
+- Add a safe API run listing output-format filter for operator surfaces, such as `format`.
+- Validate output-format inputs before storage access where practical.
+- Return persisted run summaries whose requested or rendered output formats include the selected format without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover sanitized valid-format filtering and invalid secret-bearing format errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.

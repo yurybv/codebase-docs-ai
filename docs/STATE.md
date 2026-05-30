@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 147: API Run Listing Name Search Filter Contract.
 - Phase 148: SDK And CLI Run Listing Name Search Filters.
 - Phase 149: Web Run History Name Search Control And Audit.
 - Phase 150: Run Listing Name Search Cross-Surface Regression Audit.
+- Phase 151: API Run Listing Output Format Filter Contract.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should continue into a sanitized run-name search filter for operator workflows across API, SDK, CLI, and Web, then audit the cross-surface name-search contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose sanitized run-name search through SDK, CLI, and Web, audit the cross-surface name-search contract, then continue into output-format filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2280,6 +2280,20 @@ Verification:
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 147 API Run Listing Name Search Filter Contract
+
+- Added an API `name` query filter for `GET /v1/documentation-runs` that matches sanitized run summary names case-insensitively.
+- Validated blank and too-long name filters with sanitized `RUN_LIST_NAME_INVALID` errors.
+- Added service and HTTP regression coverage for name-filtered summaries and invalid secret-bearing name filter inputs.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

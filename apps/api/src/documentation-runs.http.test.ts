@@ -479,6 +479,61 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidBeforePayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies the run list name query parameter', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const createdBackend = await service.createRun({
+      name: `HTTP Backend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await service.createRun({
+      name: `HTTP Frontend Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+
+    const filteredResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?name=${encodeURIComponent('backend search')}`
+    );
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
+      runs: Array<{ id: string }>;
+    };
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([createdBackend.runId]);
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'o'.repeat(24)}`;
+    const invalidName = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`.repeat(5)
+    );
+    const invalidResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?name=${invalidName}`);
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_NAME_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list status query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;

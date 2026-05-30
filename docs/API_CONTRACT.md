@@ -63,7 +63,7 @@ Response:
 ## List Runs
 
 ```http
-GET /v1/documentation-runs?limit=50&status=completed&role=backend&updatedAfter=2026-05-30T00%3A00%3A00.000Z&updatedBefore=2026-05-30T01%3A00%3A00.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
+GET /v1/documentation-runs?limit=50&status=completed&role=backend&name=backend&updatedAfter=2026-05-30T00%3A00%3A00.000Z&updatedBefore=2026-05-30T01%3A00%3A00.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
 Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
@@ -77,6 +77,8 @@ Query:
 - invalid status values return `RUN_LIST_STATUS_INVALID`;
 - `role`: optional source role filter. Runs match when at least one uploaded source has this role;
 - invalid role values return `RUN_LIST_SOURCE_ROLE_INVALID`.
+- `name`: optional case-insensitive substring filter over sanitized run names;
+- blank or too-long `name` values return `RUN_LIST_NAME_INVALID`;
 - `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`;
 - invalid `updatedAfter` values return `RUN_LIST_UPDATED_AFTER_INVALID`;
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`;
