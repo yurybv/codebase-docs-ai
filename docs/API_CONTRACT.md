@@ -63,10 +63,16 @@ Response:
 ## List Runs
 
 ```http
-GET /v1/documentation-runs
+GET /v1/documentation-runs?limit=50
 ```
 
 Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
+
+Query:
+
+- `limit`: optional integer from `1` to `100`;
+- default: `50`;
+- invalid values return `RUN_LIST_LIMIT_INVALID`.
 
 Response:
 

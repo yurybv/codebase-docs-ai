@@ -258,6 +258,61 @@ describe('Documentation runs HTTP API', () => {
     expect(payload).not.toContain('results');
   });
 
+  it('validates and applies the run list limit query parameter', async () => {
+    const service = app.get(DocumentationRunsService);
+    const oldest = await service.createRun({
+      name: 'HTTP Oldest Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const newest = await service.createRun({
+      name: 'HTTP Newest Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const middle = await service.createRun({
+      name: 'HTTP Middle Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const limited = await fetchJson<{ runs: Array<{ id: string }> }>(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2`
+    );
+    expect(limited.runs.map((run) => run.id)).toEqual([newest.runId, middle.runId]);
+
+    const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const invalidLimit = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=${invalidLimit}`
+    );
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_LIMIT_INVALID');
+    expect(invalidPayload).not.toContain(rawOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+  });
+
   it('keeps multi-source artifacts consistent across results and downloads', async () => {
     const outputFormats = ['markdown-tree', 'single-markdown', 'json'];
     const created = await fetchJson<{ runId: string; status: string }>(

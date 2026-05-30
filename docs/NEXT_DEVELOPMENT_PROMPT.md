@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 127: API Run Listing Limit Contract.
+- Implement Phase 128: SDK Run Listing Limit Option.
 
-Phase 127 goal:
-- Add a bounded API run listing limit contract so operator run history remains predictable as retained run storage grows.
-- Support a safe `limit` query parameter with validation, a documented default, and a maximum.
-- Verify invalid limits return sanitized API errors and valid limits preserve latest-updated ordering without exposing storage paths or secret-bearing evidence.
+Phase 128 goal:
+- Expose the API run listing `limit` option through the TypeScript SDK.
+- Validate SDK list limit inputs before network requests where practical.
+- Verify SDK list limit requests preserve sanitized list results and invalid-limit errors do not expose raw values.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

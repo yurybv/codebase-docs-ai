@@ -14,8 +14,10 @@ import { DocumentationEngine } from '@codebase-docs-ai/core';
 import { renderZip } from '@codebase-docs-ai/renderers';
 import {
   createDocumentationRunSchema,
+  defaultDocumentationRunListLimit,
   documentationOutputFormatSchema,
   isSupportedSourceArchiveFileName,
+  maxDocumentationRunListLimit,
   sanitizePublicErrorText,
   sourceInputMetadataSchema,
   supportedSourceArchiveExtensions
@@ -63,6 +65,10 @@ interface DownloadResult {
 
 interface CleanupExpiredRunsResult {
   deletedRunIds: string[];
+}
+
+interface ListRunsOptions {
+  limit?: unknown;
 }
 
 const uploadSourcesMetadataSchema = z.object({
@@ -159,8 +165,9 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  async listRuns(): Promise<DocumentationRunListResponse> {
+  async listRuns(options: ListRunsOptions = {}): Promise<DocumentationRunListResponse> {
     const runs: DocumentationRunSummary[] = [];
+    const limit = parseRunListLimit(options.limit);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
@@ -172,7 +179,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     }
 
     return {
-      runs: runs.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+      runs: runs.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)).slice(0, limit)
     };
   }
 
@@ -706,6 +713,39 @@ function parseDurationMs(value: string | undefined, fallback: number): number {
   }
 
   return parsed;
+}
+
+function parseRunListLimit(value: unknown): number {
+  if (value === undefined) {
+    return defaultDocumentationRunListLimit;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListLimit();
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (
+    !Number.isInteger(parsed) ||
+    parsed < 1 ||
+    parsed > maxDocumentationRunListLimit ||
+    String(value).trim() !== String(parsed)
+  ) {
+    throw invalidRunListLimit();
+  }
+
+  return parsed;
+}
+
+function invalidRunListLimit(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_LIMIT_INVALID',
+    message: `Run list limit must be an integer between 1 and ${maxDocumentationRunListLimit}.`,
+    details: {
+      min: 1,
+      max: maxDocumentationRunListLimit
+    }
+  });
 }
 
 function assertRunStatus(

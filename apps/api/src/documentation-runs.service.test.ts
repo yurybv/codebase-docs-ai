@@ -247,6 +247,70 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain('results');
   });
 
+  it('limits listed run summaries by latest update time', async () => {
+    const oldest = await service.createRun({
+      name: 'Oldest Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const newest = await service.createRun({
+      name: 'Newest Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const middle = await service.createRun({
+      name: 'Middle Listed Docs',
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const list = await service.listRuns({ limit: '2' });
+
+    expect(list.runs.map((run) => run.id)).toEqual([newest.runId, middle.runId]);
+  });
+
+  it('rejects invalid run listing limits without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ limit: rawLimit })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_LIMIT_INVALID',
+        message: 'Run list limit must be an integer between 1 and 100.',
+        details: {
+          min: 1,
+          max: 100
+        }
+      }
+    });
+
+    try {
+      await service.listRuns({ limit: rawLimit });
+      throw new Error('Expected listRuns to reject invalid limit.');
+    } catch (error) {
+      const payload = JSON.stringify(error);
+      expect(payload).not.toContain(rawLimit);
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
   it('rejects source uploads and restarts after completion', async () => {
     const created = await service.createRun({
       name: 'Completed Fixture Docs',

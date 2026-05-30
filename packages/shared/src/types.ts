@@ -24,6 +24,9 @@ export type DocumentationRunStatus =
   | 'cancelled'
   | 'expired';
 
+export const defaultDocumentationRunListLimit = 50;
+export const maxDocumentationRunListLimit = 100;
+
 export type WarningLevel = 'low' | 'medium' | 'high';
 
 export interface SourceInputMetadata {

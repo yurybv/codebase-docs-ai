@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 127: API Run Listing Limit Contract.
+Implement Phase 128: SDK Run Listing Limit Option.
 
 Required package:
 
 ```text
-apps/api
 packages/shared
+packages/sdk
 docs
 ```
 
-The next step should add a bounded API run listing limit contract so operator run history remains predictable as retained run storage grows.
+The next step should expose the API run listing `limit` option through the TypeScript SDK and keep list result sanitization intact.
 
 ## Completed Implementation
 
@@ -1991,6 +1991,21 @@ Verification:
 ```text
 pnpm test -- apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 127 API Run Listing Limit Contract
+
+- Added shared default and maximum run listing limit constants.
+- Added API `limit` query validation for `GET /v1/documentation-runs`, with default `50` and maximum `100`.
+- Added service and HTTP regression coverage for latest-updated ordering, valid limits, and sanitized invalid-limit errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm --filter @codebase-docs-ai/shared build
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 
