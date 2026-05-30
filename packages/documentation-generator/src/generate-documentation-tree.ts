@@ -106,7 +106,7 @@ async function generateAiPage(
     key: pagePlan.key,
     title: pagePlan.title,
     order: pagePlan.order,
-    markdown: parsed.data.markdown,
+    markdown: sanitizeGeneratedText(parsed.data.markdown),
     sourceReferences: normalizeSourceReferences(parsed.data.sourceReferences),
     warnings: mergeWarnings(pagePlan.warnings, parsed.data.warnings)
   };
@@ -698,8 +698,8 @@ type ParsedDocumentationWarning = z.infer<typeof documentationWarningSchema>;
 
 function normalizeSourceReferences(sourceReferences: ParsedSourceReference[]): SourceReference[] {
   return sourceReferences.map((sourceReference) => ({
-    sourceName: sourceReference.sourceName,
-    path: sourceReference.path,
+    sourceName: sanitizeGeneratedText(sourceReference.sourceName),
+    path: sanitizeGeneratedText(sourceReference.path),
     ...(sourceReference.line ? { line: sourceReference.line } : {})
   }));
 }
@@ -710,7 +710,14 @@ function mergeWarnings(
 ): DocumentationWarning[] {
   return [...planWarnings, ...aiWarnings].map((warning) => ({
     level: warning.level,
-    message: warning.message,
+    message: sanitizeGeneratedText(warning.message),
     ...(warning.sourceReferences ? { sourceReferences: normalizeSourceReferences(warning.sourceReferences) } : {})
   }));
+}
+
+function sanitizeGeneratedText(value: string): string {
+  return value
+    .replace(/\bsk-[A-Za-z0-9_-]{20,}\b/g, '[REDACTED_OPENAI_API_KEY]')
+    .replace(/\.env(?:\.[A-Za-z0-9_-]+)?/g, '[REDACTED_DENIED_FILE]')
+    .replace(/SHOULD_NOT_APPEAR/g, '[REDACTED_DENIED_VALUE]');
 }

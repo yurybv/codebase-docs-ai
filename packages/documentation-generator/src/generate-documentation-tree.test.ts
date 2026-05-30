@@ -77,6 +77,47 @@ describe('createDocumentationPlan', () => {
       expect(message).not.toContain('.env');
     }
   });
+
+  it('sanitizes accepted AI page output before building the documentation tree', async () => {
+    const rawOpenAiKey = `sk-${'b'.repeat(25)}`;
+    const provider = new LocalJsonProvider(() => ({
+      key: 'overview',
+      title: '01. Overview',
+      markdown: `# Safe Shape\n\nGenerated from ${rawOpenAiKey} in .env SHOULD_NOT_APPEAR.`,
+      sourceReferences: [
+        {
+          sourceName: `Frontend ${rawOpenAiKey}`,
+          path: `.env/${rawOpenAiKey}/SHOULD_NOT_APPEAR.ts`
+        }
+      ],
+      warnings: [
+        {
+          level: 'medium',
+          message: `Unsafe warning ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+          sourceReferences: [
+            {
+              sourceName: 'Frontend',
+              path: `.env/${rawOpenAiKey}/SHOULD_NOT_APPEAR.ts`
+            }
+          ]
+        }
+      ]
+    }));
+
+    const documentationTree = await generateDocumentationTreeWithAi({
+      title: 'Customer Portal Documentation',
+      systemMap: systemMapFixture(),
+      aiProvider: provider
+    });
+    const payload = JSON.stringify(documentationTree);
+
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain('.env');
+  });
 });
 
 describe('generateDocumentationTree', () => {
