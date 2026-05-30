@@ -118,6 +118,12 @@ const generationSteps = [
 
 const sourceUploadAllowedStatuses: DocumentationRunStatus[] = ['created', 'ready'];
 const startAllowedStatuses: DocumentationRunStatus[] = ['ready'];
+const durationSummaryStatuses: DocumentationRunStatus[] = [
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+];
 const runListFilterStatuses: DocumentationRunStatus[] = [
   'created',
   'uploading_sources',
@@ -777,6 +783,8 @@ function availableRenderedFormats(storedRun: StoredRun): DocumentationOutputForm
 }
 
 function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
+  const durationMs = terminalRunDurationMs(run);
+
   return {
     id: sanitizePublicErrorText(run.id, { fallback: '[REDACTED]' }),
     name: sanitizePublicErrorText(run.name, { fallback: '[REDACTED]' }),
@@ -806,8 +814,23 @@ function toRunSummary(run: DocumentationRun): DocumentationRunSummary {
       : {}),
     createdAt: run.createdAt,
     updatedAt: run.updatedAt,
-    ...(run.completedAt ? { completedAt: run.completedAt } : {})
+    ...(run.completedAt ? { completedAt: run.completedAt } : {}),
+    ...(durationMs === undefined ? {} : { durationMs })
   };
+}
+
+function terminalRunDurationMs(run: DocumentationRun): number | undefined {
+  if (!durationSummaryStatuses.includes(run.status)) {
+    return undefined;
+  }
+
+  const createdAt = Date.parse(run.createdAt);
+  const terminalAt = Date.parse(run.completedAt ?? run.updatedAt);
+  if (!Number.isFinite(createdAt) || !Number.isFinite(terminalAt) || terminalAt < createdAt) {
+    return undefined;
+  }
+
+  return terminalAt - createdAt;
 }
 
 function sortRunSummaries(runs: DocumentationRunSummary[], sort: RunListSort): DocumentationRunSummary[] {

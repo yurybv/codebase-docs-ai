@@ -82,7 +82,6 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 179: Run Listing Terminal Duration Contract Exploration.
 - Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
 - Phase 181: Web Terminal Duration Display Follow-Up.
 - Phase 182: Terminal Duration Cross-Surface Regression Audit.
@@ -91,14 +90,13 @@ Required package:
 
 ```text
 packages/shared
-apps/api
 apps/cli
 packages/sdk
 apps/web
 docs
 ```
 
-The next step should explore a safe terminal duration contract for run summaries, then continue through SDK, CLI, Web, and cross-surface coverage if the contract is accepted. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose the safe API terminal `durationMs` summary contract through SDK, CLI, Web, and cross-surface coverage. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2735,6 +2733,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 179 Run Listing Terminal Duration Contract Exploration
+
+- Added safe terminal `durationMs` metadata to public run summaries without persisting additional storage state.
+- Derived completed durations from `createdAt` and `completedAt`, and failed/cancelled/expired durations from `createdAt` and terminal `updatedAt`.
+- Added API service and HTTP regression coverage proving duration-bearing summaries remain sanitized and non-terminal summaries omit duration metadata.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

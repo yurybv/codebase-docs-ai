@@ -129,6 +129,16 @@ Run listing completed-at filtering is a cross-surface contract. When changing AP
 - API, SDK, Web, and CLI surfaces do not expose raw timestamp input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid completed-at filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Terminal Duration Regression
+
+Run listing terminal duration metadata is a public summary contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- completed summaries derive `durationMs` from `createdAt` and `completedAt`;
+- failed, cancelled, and expired summaries derive `durationMs` from `createdAt` and terminal `updatedAt`;
+- non-terminal summaries omit `durationMs`;
+- duration metadata composes with selected `limit`, `status`, `role`, `name`, `format`, `minSources`, `maxSources`, `sort`, created-at, completed-at, updated-at, and `cursor` options where each surface supports them;
+- API, SDK, Web, and CLI surfaces do not expose provider keys, denied source evidence, upload storage paths, or artifact paths while displaying or forwarding duration-bearing summaries.
+
 ## Run Listing Sort Regression
 
 Run listing sort direction is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:

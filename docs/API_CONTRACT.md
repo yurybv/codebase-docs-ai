@@ -127,7 +127,8 @@ Response:
       },
       "createdAt": "2026-05-30T00:00:00.000Z",
       "updatedAt": "2026-05-30T00:01:00.000Z",
-      "completedAt": "2026-05-30T00:01:00.000Z"
+      "completedAt": "2026-05-30T00:01:00.000Z",
+      "durationMs": 60000
     }
   ],
   "nextCursor": "eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ"
@@ -135,6 +136,8 @@ Response:
 ```
 
 `nextCursor` is omitted when no further matching run summaries are available. Cursor tokens are opaque public pagination state and must not contain artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+
+Terminal run summaries include `durationMs` when it can be safely derived from public timestamps. Completed runs use `completedAt`; failed, cancelled, and expired summaries use their terminal `updatedAt`. Non-terminal summaries omit `durationMs`.
 
 Run summaries must not expose upload archive storage paths, extracted source paths, result artifact paths, raw source content, or secret-bearing evidence.
 

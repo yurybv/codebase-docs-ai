@@ -321,6 +321,7 @@ export interface DocumentationRunSummary {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
+  durationMs?: number;
 }
 
 export interface DocumentationRunListResponse {

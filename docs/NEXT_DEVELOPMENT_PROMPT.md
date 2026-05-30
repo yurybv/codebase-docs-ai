@@ -37,29 +37,21 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 179: Run Listing Terminal Duration Contract Exploration.
-- Then continue without stopping into Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
+- Implement Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
 - Then continue without stopping into Phase 181: Web Terminal Duration Display Follow-Up.
 - Then continue without stopping into Phase 182: Terminal Duration Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
-Phase 179 goal:
-- Explore whether public run summaries should expose safe terminal duration metadata derived from `createdAt`, `completedAt`, and terminal failure timestamps.
-- If the contract is safe and useful, add an API-first duration contract with sanitized tests; otherwise document why it should be deferred.
-- Do not introduce raw artifact paths, upload storage paths, source content, or secret-bearing evidence into duration-related output or errors.
-
 Phase 180 goal:
-- If Phase 179 adds safe terminal duration metadata, expose it through SDK and CLI list outputs without adding core logic to those surfaces.
+- Expose the safe API terminal `durationMs` run summary metadata through SDK and CLI list outputs without adding core logic to those surfaces.
 - Add SDK and CLI regression coverage proving duration metadata remains sanitized and does not expose raw storage paths or secret-bearing evidence.
-- If Phase 179 defers duration metadata, remove this follow-up from the next prompt and choose the next highest-value product gap.
 
 Phase 181 goal:
-- If Phase 179 adds safe terminal duration metadata, display it in Web run history without adding core logic to the Web surface.
+- Display safe API terminal `durationMs` metadata in Web run history without adding core logic to the Web surface.
 - Add Web regression coverage proving duration display remains sanitized and composes with existing run-history filters.
-- If Phase 179 defers duration metadata, remove this follow-up from the next prompt and choose the next highest-value product gap.
 
 Phase 182 goal:
-- If terminal duration metadata is added, audit API, SDK, CLI, and Web duration behavior as one public operator contract.
+- Audit API, SDK, CLI, and Web duration behavior as one public operator contract.
 - Add or tighten regression coverage proving duration metadata composes with run listing filters, sorting, and pagination where applicable.
 - Verify raw duration-related inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
 
