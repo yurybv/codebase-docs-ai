@@ -66,7 +66,7 @@ Response:
 GET /v1/documentation-runs?limit=50&status=completed&role=backend&name=backend&format=json&updatedAfter=2026-05-30T00%3A00%3A00.000Z&updatedBefore=2026-05-30T01%3A00%3A00.000Z&cursor=eyJ1cGRhdGVkQXQiOiIyMDI2LTA1LTMwVDAwOjAxOjAwLjAwMFoiLCJpZCI6InJ1bl8xMjMifQ
 ```
 
-Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted.
+Returns persisted run summaries for operator surfaces, sorted by `updatedAt` descending. Deleted and expired-cleaned runs are omitted. The Web run history, SDK list helper, and CLI `list-runs` command use this same filter contract.
 
 Query:
 

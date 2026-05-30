@@ -102,6 +102,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Run history pagination.
 - Run history updated-at range filters.
 - Run history name search.
+- Run history output-format filtering.
 - Run progress display.
 - Warnings display.
 - Page preview.

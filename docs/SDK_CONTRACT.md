@@ -133,7 +133,7 @@ Returns:
 
 ### `list(options?)`
 
-Lists persisted run summaries for operator surfaces.
+Lists persisted run summaries for operator surfaces. The SDK mirrors the API run listing filters used by Web run history and CLI `list-runs`.
 
 ```ts
 const runs = await client.documentationRuns.list({

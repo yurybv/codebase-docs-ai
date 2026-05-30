@@ -299,6 +299,13 @@ describe('App API error handling', () => {
     await act(async () => {
       setTextInputValue(nameInput, 'backend search');
     });
+    const formatSelect = document.querySelector(
+      'select[aria-label="Recent run output format"]'
+    ) as HTMLSelectElement;
+    formatSelect.value = 'json';
+    await act(async () => {
+      formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     const updatedAfterInput = document.querySelector(
       'input[aria-label="Recent run updated after"]'
     ) as HTMLInputElement;
@@ -327,7 +334,7 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend&name=backend+search&format=json&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A01%3A30.000Z'
     );
   });
 
@@ -420,6 +427,13 @@ describe('App API error handling', () => {
     await act(async () => {
       setTextInputValue(nameInput, 'backend search');
     });
+    const formatSelect = document.querySelector(
+      'select[aria-label="Recent run output format"]'
+    ) as HTMLSelectElement;
+    formatSelect.value = 'json';
+    await act(async () => {
+      formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     const updatedAfterInput = document.querySelector(
       'input[aria-label="Recent run updated after"]'
     ) as HTMLInputElement;
@@ -455,11 +469,11 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z'
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
+      `http://localhost:3000/v1/documentation-runs?limit=10&status=completed&role=backend&name=backend+search&format=json&updatedAfter=2026-05-30T00%3A00%3A30.000Z&updatedBefore=2026-05-30T00%3A02%3A30.000Z&cursor=${cursor}`
     );
   });
 
@@ -617,6 +631,53 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:3000/v1/documentation-runs?limit=50&name=backend+search'
+    );
+  });
+
+  it('sanitizes run history format API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'f'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_FORMAT_INVALID', {
+        message: `Invalid run list format from ${rawStoragePath}.`,
+        details: {
+          format: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    const formatSelect = document.querySelector(
+      'select[aria-label="Recent run output format"]'
+    ) as HTMLSelectElement;
+    formatSelect.value = 'json';
+    await act(async () => {
+      formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_FORMAT_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_FORMAT_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=50&format=json'
     );
   });
 

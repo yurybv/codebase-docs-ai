@@ -31,6 +31,7 @@ export function App(): JSX.Element {
   const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
   const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
   const [runHistoryName, setRunHistoryName] = useState('');
+  const [runHistoryFormat, setRunHistoryFormat] = useState<RunHistoryFormatFilter>('all');
   const [runHistoryUpdatedAfter, setRunHistoryUpdatedAfter] = useState('');
   const [runHistoryUpdatedBefore, setRunHistoryUpdatedBefore] = useState('');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
@@ -126,6 +127,7 @@ export function App(): JSX.Element {
         runHistoryStatus,
         runHistoryRole,
         runHistoryName,
+        runHistoryFormat,
         runHistoryUpdatedAfter,
         runHistoryUpdatedBefore,
         cursor
@@ -384,6 +386,25 @@ export function App(): JSX.Element {
                   />
                 </label>
                 <label className="history-limit">
+                  <span>Format</span>
+                  <select
+                    value={runHistoryFormat}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run output format"
+                    onChange={(event) => {
+                      setRunHistoryFormat(event.currentTarget.value as RunHistoryFormatFilter);
+                      resetRunHistoryPagination();
+                    }}
+                  >
+                    <option value="all">All</option>
+                    {outputFormatOptions.map((format) => (
+                      <option value={format} key={format}>
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="history-limit">
                   <span>Updated after</span>
                   <input
                     value={runHistoryUpdatedAfter}
@@ -639,6 +660,7 @@ const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mo
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 type RunHistoryStatusFilter = DocumentationRunStatus | 'all';
 type RunHistoryRoleFilter = SourceRole | 'all';
+type RunHistoryFormatFilter = DocumentationOutputFormat | 'all';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
@@ -679,6 +701,7 @@ async function listRuns(
   status: RunHistoryStatusFilter,
   role: RunHistoryRoleFilter,
   name: string,
+  format: RunHistoryFormatFilter,
   updatedAfter: string,
   updatedBefore: string,
   cursor?: string
@@ -697,6 +720,9 @@ async function listRuns(
   const updatedBeforeFilter = updatedBefore.trim();
   if (nameFilter) {
     query.set('name', nameFilter);
+  }
+  if (format !== 'all') {
+    query.set('format', format);
   }
   if (updatedAfterFilter) {
     query.set('updatedAfter', updatedAfterFilter);

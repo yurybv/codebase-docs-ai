@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 153: Web Run History Output Format Filter Control And Audit.
-- Then continue without stopping into Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
+- Implement Phase 154: Run Listing Output Format Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 155: API Run Listing Source Count Filter Contract.
 - Then continue without stopping into Phase 156: SDK And CLI Run Listing Source Count Filters.
+- Then continue without stopping into Phase 157: Web Run History Source Count Filter Control And Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 153 goal:
-- Expose output-format filtering through the Web run history operator surface.
-- Preserve Web run history limit/status/role/name/updated-at/cursor behavior when output format filtering is applied.
-- Audit API, SDK, CLI, and Web output-format filtering as one cross-surface contract.
-- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Phase 154 goal:
 - Audit API, SDK, CLI, and Web output-format filtering as one public operator contract.
@@ -65,6 +59,12 @@ Phase 156 goal:
 - Expose API run listing source-count filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
 - Validate SDK and CLI source-count filter inputs before network requests where practical.
 - Verify SDK and CLI source-count filtered list requests preserve sanitized list output and invalid source-count errors do not expose raw values.
+
+Phase 157 goal:
+- Expose source-count filtering through the Web run history operator surface.
+- Preserve Web run history limit/status/role/name/format/updated-at/cursor behavior when source-count filtering is applied.
+- Audit API, SDK, CLI, and Web source-count filtering as one cross-surface contract.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, State, and this next prompt where the behavior is now public.
 
 Verification expectations:
 - Run focused tests for every touched surface.
