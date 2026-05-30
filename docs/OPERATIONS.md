@@ -201,7 +201,8 @@ List recent API runs without downloading artifacts:
 ```bash
 pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --api-url http://localhost:3000 \
-  --limit 25
+  --limit 25 \
+  --status completed
 ```
 
 CLI failures are printed as JSON to stderr:

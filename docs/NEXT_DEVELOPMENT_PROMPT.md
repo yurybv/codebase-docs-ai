@@ -37,12 +37,12 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 134: CLI Run Listing Status Filter Flag.
+- Implement Phase 135: API Run Listing Source Role Filter Contract.
 
-Phase 134 goal:
-- Expose the API run listing `status` filter through the CLI `list-runs` command.
-- Validate CLI list status inputs before network requests where practical.
-- Verify CLI status-filtered list requests preserve sanitized list output and invalid-status errors do not expose raw values.
+Phase 135 goal:
+- Add a safe API run listing source role filter for operator surfaces.
+- Return filtered run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover valid source role filtering and sanitized invalid-role errors.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

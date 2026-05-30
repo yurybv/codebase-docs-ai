@@ -9,20 +9,23 @@ export type SourceRole =
 
 export type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 
-export type DocumentationRunStatus =
-  | 'created'
-  | 'uploading_sources'
-  | 'ready'
-  | 'running'
-  | 'extracting_sources'
-  | 'analyzing_sources'
-  | 'building_system_map'
-  | 'generating_documentation'
-  | 'rendering_output'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-  | 'expired';
+export const documentationRunStatuses = [
+  'created',
+  'uploading_sources',
+  'ready',
+  'running',
+  'extracting_sources',
+  'analyzing_sources',
+  'building_system_map',
+  'generating_documentation',
+  'rendering_output',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+] as const;
+
+export type DocumentationRunStatus = (typeof documentationRunStatuses)[number];
 
 export const defaultDocumentationRunListLimit = 50;
 export const maxDocumentationRunListLimit = 100;

@@ -164,4 +164,70 @@ describe('runListRunsCommand', () => {
       undefined
     );
   });
+
+  it('passes status filters through the SDK while preserving sanitized output', async () => {
+    const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          runs: [
+            {
+              id: 'run_failed',
+              name: `Failed ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+              status: 'failed',
+              sources: [
+                {
+                  name: `Backend ${rawStoragePath}`,
+                  role: 'backend'
+                }
+              ],
+              sourceCount: 1,
+              outputFormats: ['json'],
+              error: {
+                message: `Documentation generation failed at ${rawStoragePath}.`
+              },
+              createdAt: '2026-05-30T00:00:00.000Z',
+              updatedAt: '2026-05-30T00:01:00.000Z'
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json'
+          }
+        }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await runListRunsCommand({
+      apiUrl: 'http://localhost:3000',
+      limit: 2,
+      status: 'failed'
+    });
+    const payload = JSON.stringify(result);
+
+    expect(result.status).toBe('completed');
+    expect(result.runCount).toBe(1);
+    expect(result.runs[0]).toMatchObject({
+      id: 'run_failed',
+      status: 'failed',
+      sourceCount: 1
+    });
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_STORAGE_PATH]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawStoragePath);
+    expect(payload).not.toContain('/private/tmp');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/v1/documentation-runs?limit=2&status=failed',
+      undefined
+    );
+  });
 });

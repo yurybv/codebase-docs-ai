@@ -116,6 +116,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Generate docs from local folders.
 - List API-backed run summaries.
 - Limit API-backed run summaries.
+- Filter API-backed run summaries by status.
 - Select output format.
 - Write output to local folder.
 

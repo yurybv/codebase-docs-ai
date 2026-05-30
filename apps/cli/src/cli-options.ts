@@ -7,6 +7,7 @@ import {
 } from '@codebase-docs-ai/shared';
 import type {
   DocumentationOutputFormat,
+  DocumentationRunStatus,
   SourceInputMetadata,
   SourceRole
 } from '@codebase-docs-ai/shared';
@@ -30,7 +31,24 @@ export interface GenerateCommandOptions {
 export interface ListRunsCommandOptions {
   apiUrl: string;
   limit?: number;
+  status?: DocumentationRunStatus;
 }
+
+const cliRunListStatusOptions: DocumentationRunStatus[] = [
+  'created',
+  'uploading_sources',
+  'ready',
+  'running',
+  'extracting_sources',
+  'analyzing_sources',
+  'building_system_map',
+  'generating_documentation',
+  'rendering_output',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired'
+];
 
 export function collectRepeatedOption(value: string, previous: string[]): string[] {
   return [...previous, value];
@@ -62,7 +80,11 @@ export function parseGenerateOptions(options: {
   return parsedOptions;
 }
 
-export function parseListRunsOptions(options: { apiUrl?: string; limit?: string }): ListRunsCommandOptions {
+export function parseListRunsOptions(options: {
+  apiUrl?: string;
+  limit?: string;
+  status?: string;
+}): ListRunsCommandOptions {
   if (!options.apiUrl) {
     throw new CliError(
       'CLI_API_URL_REQUIRED',
@@ -72,9 +94,11 @@ export function parseListRunsOptions(options: { apiUrl?: string; limit?: string 
 
   assertHttpUrl(options.apiUrl);
   const limit = parseRunListLimit(options.limit);
+  const status = parseRunListStatus(options.status);
   return {
     apiUrl: options.apiUrl,
-    ...(limit === undefined ? {} : { limit })
+    ...(limit === undefined ? {} : { limit }),
+    ...(status === undefined ? {} : { status })
   };
 }
 
@@ -145,6 +169,25 @@ function parseRunListLimit(value: string | undefined): number | undefined {
   }
 
   return parsed;
+}
+
+function parseRunListStatus(value: string | undefined): DocumentationRunStatus | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!cliRunListStatusOptions.includes(value as DocumentationRunStatus)) {
+    throw new CliError(
+      'CLI_RUN_LIST_STATUS_INVALID',
+      'Run list status must be a supported documentation run status.',
+      2,
+      {
+        allowedStatuses: [...cliRunListStatusOptions]
+      }
+    );
+  }
+
+  return value as DocumentationRunStatus;
 }
 
 function sourceNameFromPath(inputPath: string): string {

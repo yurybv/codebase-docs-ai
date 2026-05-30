@@ -67,6 +67,20 @@ describe('CLI option parsing', () => {
     });
   });
 
+  it('parses run listing status filters', () => {
+    expect(
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        limit: '25',
+        status: 'completed'
+      })
+    ).toEqual({
+      apiUrl: 'https://docs.example.test',
+      limit: 25,
+      status: 'completed'
+    });
+  });
+
   it('rejects invalid run listing limits without echoing raw values', () => {
     const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -89,6 +103,37 @@ describe('CLI option parsing', () => {
           details: {
             min: 1,
             max: 100
+          }
+        }
+      });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing status filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const rawStatus = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        status: rawStatus
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid status.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toMatchObject({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_STATUS_INVALID',
+          message: 'Run list status must be a supported documentation run status.',
+          details: {
+            allowedStatuses: expect.arrayContaining(['created', 'completed', 'failed'])
           }
         }
       });
