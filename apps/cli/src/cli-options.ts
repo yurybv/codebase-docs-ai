@@ -37,6 +37,8 @@ export interface ListRunsCommandOptions {
   format?: DocumentationOutputFormat;
   minSources?: number;
   maxSources?: number;
+  createdAfter?: string;
+  createdBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -100,6 +102,8 @@ export function parseListRunsOptions(options: {
   format?: string;
   minSources?: string;
   maxSources?: string;
+  createdAfter?: string;
+  createdBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;
@@ -118,6 +122,8 @@ export function parseListRunsOptions(options: {
   const name = parseRunListName(options.name);
   const format = parseRunListFormat(options.format);
   const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
+  const createdAfter = parseRunListCreatedAfter(options.createdAfter);
+  const createdBefore = parseRunListCreatedBefore(options.createdBefore);
   const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
   const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
   const cursor = parseRunListCursor(options.cursor);
@@ -130,6 +136,8 @@ export function parseListRunsOptions(options: {
     ...(format === undefined ? {} : { format }),
     ...(sourceCountRange.minSources === undefined ? {} : { minSources: sourceCountRange.minSources }),
     ...(sourceCountRange.maxSources === undefined ? {} : { maxSources: sourceCountRange.maxSources }),
+    ...(createdAfter === undefined ? {} : { createdAfter }),
+    ...(createdBefore === undefined ? {} : { createdBefore }),
     ...(updatedAfter === undefined ? {} : { updatedAfter }),
     ...(updatedBefore === undefined ? {} : { updatedBefore }),
     ...(cursor === undefined ? {} : { cursor })
@@ -331,6 +339,22 @@ function invalidRunListSourceCount(): CliError {
     {
       min: 0
     }
+  );
+}
+
+function parseRunListCreatedAfter(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_CREATED_AFTER_INVALID',
+    'Run list createdAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCreatedBefore(value: string | undefined): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'CLI_RUN_LIST_CREATED_BEFORE_INVALID',
+    'Run list createdBefore must be a valid ISO timestamp.'
   );
 }
 

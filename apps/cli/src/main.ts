@@ -42,6 +42,8 @@ program
   .option('--format <format>', 'Filter recent runs by output format')
   .option('--min-sources <count>', 'Filter recent runs by minimum source count')
   .option('--max-sources <count>', 'Filter recent runs by maximum source count')
+  .option('--created-after <timestamp>', 'Filter recent runs created at or after an ISO timestamp')
+  .option('--created-before <timestamp>', 'Filter recent runs created at or before an ISO timestamp')
   .option('--updated-after <timestamp>', 'Filter recent runs updated at or after an ISO timestamp')
   .option('--updated-before <timestamp>', 'Filter recent runs updated at or before an ISO timestamp')
   .option('--cursor <cursor>', 'Continue listing runs from a previous nextCursor')
@@ -55,6 +57,8 @@ program
       format?: string;
       minSources?: string;
       maxSources?: string;
+      createdAfter?: string;
+      createdBefore?: string;
       updatedAfter?: string;
       updatedBefore?: string;
       cursor?: string;

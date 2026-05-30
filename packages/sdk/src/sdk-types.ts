@@ -68,6 +68,8 @@ export interface DocumentationRunListOptions {
   format?: DocumentationOutputFormat;
   minSources?: number;
   maxSources?: number;
+  createdAfter?: string;
+  createdBefore?: string;
   updatedAfter?: string;
   updatedBefore?: string;
   cursor?: string;

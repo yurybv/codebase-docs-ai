@@ -60,6 +60,8 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     const format = parseRunListFormat(options.format);
     const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
     const cursor = parseRunListCursor(options.cursor);
+    const createdAfter = parseRunListCreatedAfter(options.createdAfter);
+    const createdBefore = parseRunListCreatedBefore(options.createdBefore);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
     const query = new URLSearchParams();
@@ -83,6 +85,12 @@ class HttpDocumentationRunsClient implements DocumentationRunsClient {
     }
     if (sourceCountRange.maxSources !== undefined) {
       query.set('maxSources', String(sourceCountRange.maxSources));
+    }
+    if (createdAfter !== undefined) {
+      query.set('createdAfter', createdAfter);
+    }
+    if (createdBefore !== undefined) {
+      query.set('createdBefore', createdBefore);
     }
     if (updatedAfter !== undefined) {
       query.set('updatedAfter', updatedAfter);
@@ -566,6 +574,22 @@ function parseRunListCursor(value: unknown): string | undefined {
 
 function invalidRunListCursor(): CodebaseDocsAIClientError {
   return new CodebaseDocsAIClientError('Run list cursor is invalid.', 0, 'RUN_LIST_CURSOR_INVALID');
+}
+
+function parseRunListCreatedAfter(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_CREATED_AFTER_INVALID',
+    'Run list createdAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListCreatedBefore(value: unknown): string | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_CREATED_BEFORE_INVALID',
+    'Run list createdBefore must be a valid ISO timestamp.'
+  );
 }
 
 function parseRunListUpdatedAfter(value: unknown): string | undefined {

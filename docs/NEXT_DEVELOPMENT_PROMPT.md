@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 160: SDK And CLI Run Listing Created-At Range Filters.
-- Then continue without stopping into Phase 161: Web Run History Created-At Range Controls And Audit.
+- Implement Phase 161: Web Run History Created-At Range Controls And Audit.
 - Then continue without stopping into Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
 - Then continue without stopping into Phase 163: API Run Listing Sort Direction Contract.
+- Then continue without stopping into Phase 164: SDK And CLI Run Listing Sort Direction Option.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 160 goal:
-- Expose API run listing created-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
-- Validate SDK and CLI created-at filter inputs before network requests where practical.
-- Verify SDK and CLI created-at filtered list requests preserve sanitized list output and invalid created-at errors do not expose raw values.
 
 Phase 161 goal:
 - Expose created-at range filtering through the Web run history operator surface.
@@ -65,6 +60,11 @@ Phase 163 goal:
 - Validate sort inputs before storage access where practical.
 - Return deterministic pages of persisted run summaries using the selected sort without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
 - Cover sanitized valid sort behavior and invalid secret-bearing sort errors.
+
+Phase 164 goal:
+- Expose the API run listing sort option through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI sort inputs before network requests where practical.
+- Verify SDK and CLI sorted list requests preserve sanitized list output and invalid sort errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

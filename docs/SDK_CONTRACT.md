@@ -144,6 +144,8 @@ const runs = await client.documentationRuns.list({
   format: 'json',
   minSources: 1,
   maxSources: 2,
+  createdAfter: '2026-05-29T23:00:00.000Z',
+  createdBefore: '2026-05-30T01:00:00.000Z',
   updatedAfter: '2026-05-30T00:00:00.000Z',
   updatedBefore: '2026-05-30T01:00:00.000Z',
   cursor: previousPage.nextCursor
@@ -159,6 +161,8 @@ Options:
 - `format`: optional output format filter. Runs match when requested or rendered formats include this value.
 - `minSources`: optional minimum source count filter.
 - `maxSources`: optional maximum source count filter.
+- `createdAfter`: optional ISO timestamp lower bound for `createdAt`.
+- `createdBefore`: optional ISO timestamp upper bound for `createdAt`.
 - `updatedAfter`: optional ISO timestamp lower bound for `updatedAt`.
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`.
 - `cursor`: optional opaque pagination cursor returned by a previous list response.

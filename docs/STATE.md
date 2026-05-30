@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 160: SDK And CLI Run Listing Created-At Range Filters.
 - Phase 161: Web Run History Created-At Range Controls And Audit.
 - Phase 162: Run Listing Created-At Cross-Surface Regression Audit.
 - Phase 163: API Run Listing Sort Direction Contract.
+- Phase 164: SDK And CLI Run Listing Sort Direction Option.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose created-at range filtering through SDK, CLI, and Web, audit it as one cross-surface contract, then continue into run listing sort direction controls for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose created-at range filtering through Web, audit it as one cross-surface contract, then continue into run listing sort direction controls for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2464,6 +2464,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 160 SDK And CLI Run Listing Created-At Range Filters
+
+- Added `createdAfter` and `createdBefore` options to the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Added SDK and CLI preflight created-at validation, with sanitized stable invalid created-at failures before network requests.
+- Added SDK and CLI regression coverage for created-at filtered list requests and secret-bearing invalid timestamp values.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 
