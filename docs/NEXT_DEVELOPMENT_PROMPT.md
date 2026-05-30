@@ -37,12 +37,13 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 138: CLI Run Listing Source Role Filter Flag.
+- Implement Phase 139: API Run Listing Pagination Cursor Contract.
 
-Phase 138 goal:
-- Expose the API run listing `role` filter through the CLI `list-runs` command.
-- Validate CLI list role inputs before network requests where practical.
-- Verify CLI role-filtered list requests preserve sanitized list output and invalid-role errors do not expose raw values.
+Phase 139 goal:
+- Add a safe API run listing pagination cursor contract for operator surfaces.
+- Return deterministic pages of persisted run summaries without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Validate pagination cursor inputs before storage access where practical.
+- Cover listing behavior for first-page and subsequent-page requests, including sanitized invalid-cursor errors.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

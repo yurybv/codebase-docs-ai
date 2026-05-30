@@ -72,12 +72,14 @@ describe('CLI option parsing', () => {
       parseListRunsOptions({
         apiUrl: 'https://docs.example.test',
         limit: '25',
-        status: 'completed'
+        status: 'completed',
+        role: 'backend'
       })
     ).toEqual({
       apiUrl: 'https://docs.example.test',
       limit: 25,
-      status: 'completed'
+      status: 'completed',
+      role: 'backend'
     });
   });
 
@@ -134,6 +136,37 @@ describe('CLI option parsing', () => {
           message: 'Run list status must be a supported documentation run status.',
           details: {
             allowedStatuses: expect.arrayContaining(['created', 'completed', 'failed'])
+          }
+        }
+      });
+      expect(payload).not.toContain(rawOpenAiKey);
+      expect(payload).not.toContain('/private/tmp');
+      expect(payload).not.toContain('.env');
+      expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing source role filters without echoing raw values', () => {
+    const rawOpenAiKey = `sk-${'a'.repeat(24)}`;
+    const rawRole = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    try {
+      parseListRunsOptions({
+        apiUrl: 'https://docs.example.test',
+        role: rawRole
+      });
+      throw new Error('Expected parseListRunsOptions to reject invalid role.');
+    } catch (error) {
+      const failure = formatCliError(error);
+      const payload = JSON.stringify(failure);
+      expect(failure).toMatchObject({
+        status: 'failed',
+        exitCode: 2,
+        error: {
+          code: 'CLI_RUN_LIST_SOURCE_ROLE_INVALID',
+          message: 'Run list source role must be a supported source role.',
+          details: {
+            allowedRoles: expect.arrayContaining(['frontend', 'backend', 'unknown'])
           }
         }
       });

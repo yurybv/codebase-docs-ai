@@ -104,7 +104,8 @@ List recent runs from a running API service:
 pnpm --filter @codebase-docs-ai/cli exec tsx src/main.ts list-runs \
   --api-url http://localhost:3000 \
   --limit 25 \
-  --status completed
+  --status completed \
+  --role backend
 ```
 
 ## Optional AI Provider

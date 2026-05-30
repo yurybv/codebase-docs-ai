@@ -16,7 +16,8 @@ export async function runListRunsCommand(
   });
   const listOptions = {
     ...(options.limit === undefined ? {} : { limit: options.limit }),
-    ...(options.status === undefined ? {} : { status: options.status })
+    ...(options.status === undefined ? {} : { status: options.status }),
+    ...(options.role === undefined ? {} : { role: options.role })
   };
   const list = await client.documentationRuns.list(
     Object.keys(listOptions).length === 0 ? undefined : listOptions

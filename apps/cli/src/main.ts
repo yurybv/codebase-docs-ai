@@ -37,7 +37,8 @@ program
   .option('--api-url <url>', 'Remote codebase-docs-ai API URL')
   .option('--limit <count>', 'Maximum number of recent runs to list, from 1 to 100')
   .option('--status <status>', 'Filter recent runs by documentation run status')
-  .action(async (options: { apiUrl?: string; limit?: string; status?: string }) => {
+  .option('--role <role>', 'Filter recent runs by source role')
+  .action(async (options: { apiUrl?: string; limit?: string; status?: string; role?: string }) => {
     const result = await runListRunsCommand(parseListRunsOptions(options));
     console.log(JSON.stringify(result, null, 2));
   });

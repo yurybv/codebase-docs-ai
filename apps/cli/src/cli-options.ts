@@ -32,6 +32,7 @@ export interface ListRunsCommandOptions {
   apiUrl: string;
   limit?: number;
   status?: DocumentationRunStatus;
+  role?: SourceRole;
 }
 
 const cliRunListStatusOptions: DocumentationRunStatus[] = [
@@ -84,6 +85,7 @@ export function parseListRunsOptions(options: {
   apiUrl?: string;
   limit?: string;
   status?: string;
+  role?: string;
 }): ListRunsCommandOptions {
   if (!options.apiUrl) {
     throw new CliError(
@@ -95,10 +97,12 @@ export function parseListRunsOptions(options: {
   assertHttpUrl(options.apiUrl);
   const limit = parseRunListLimit(options.limit);
   const status = parseRunListStatus(options.status);
+  const role = parseRunListSourceRole(options.role);
   return {
     apiUrl: options.apiUrl,
     ...(limit === undefined ? {} : { limit }),
-    ...(status === undefined ? {} : { status })
+    ...(status === undefined ? {} : { status }),
+    ...(role === undefined ? {} : { role })
   };
 }
 
@@ -188,6 +192,26 @@ function parseRunListStatus(value: string | undefined): DocumentationRunStatus |
   }
 
   return value as DocumentationRunStatus;
+}
+
+function parseRunListSourceRole(value: string | undefined): SourceRole | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = sourceRoleSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new CliError(
+      'CLI_RUN_LIST_SOURCE_ROLE_INVALID',
+      'Run list source role must be a supported source role.',
+      2,
+      {
+        allowedRoles: [...sourceRoleSchema.options]
+      }
+    );
+  }
+
+  return parsed.data;
 }
 
 function sourceNameFromPath(inputPath: string): string {
