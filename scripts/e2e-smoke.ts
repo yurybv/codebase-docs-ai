@@ -2,6 +2,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { inflateRawSync } from 'node:zlib';
 
 const apiPort = 3300;
 const webPort = 5174;
@@ -57,29 +58,51 @@ async function main(): Promise<void> {
 }
 
 async function runCliApiMode(tempRoot: string): Promise<void> {
-  const outputPath = path.join(tempRoot, 'cli-api-output');
-  await runCommand('pnpm', [
-    '--filter',
-    '@codebase-docs-ai/cli',
-    'exec',
-    'tsx',
-    'src/main.ts',
-    'generate',
-    '--api-url',
-    apiBaseUrl,
-    '--source',
-    `${path.join(tempRoot, 'frontend.tar')}:frontend`,
-    '--source',
-    `${path.join(tempRoot, 'backend.tar')}:backend`,
-    '--output',
-    outputPath,
-    '--format',
-    'single-markdown',
-    '--name',
-    'CLI API Smoke Documentation'
-  ]);
-  const markdown = await readFile(path.join(outputPath, 'PROJECT_DOCUMENTATION.md'), 'utf8');
-  assert(markdown.includes('/api/users'), 'CLI API mode Markdown did not contain the matched API path.');
+  const formats: Array<{ format: 'single-markdown' | 'json' | 'zip'; fileName: string }> = [
+    {
+      format: 'single-markdown',
+      fileName: 'PROJECT_DOCUMENTATION.md'
+    },
+    {
+      format: 'json',
+      fileName: 'documentation-tree.json'
+    },
+    {
+      format: 'zip',
+      fileName: 'documentation.zip'
+    }
+  ];
+
+  for (const { format, fileName } of formats) {
+    const outputPath = path.join(tempRoot, `cli-api-output-${format}`);
+    await runCommand('pnpm', [
+      '--filter',
+      '@codebase-docs-ai/cli',
+      'exec',
+      'tsx',
+      'src/main.ts',
+      'generate',
+      '--api-url',
+      apiBaseUrl,
+      '--source',
+      `${path.join(tempRoot, 'frontend.tar')}:frontend`,
+      '--source',
+      `${path.join(tempRoot, 'backend.tar')}:backend`,
+      '--output',
+      outputPath,
+      '--format',
+      format,
+      '--name',
+      `CLI API Smoke Documentation ${format}`
+    ]);
+
+    const artifactPath = path.join(outputPath, fileName);
+    const artifact =
+      format === 'zip'
+        ? extractZipText(await readFile(artifactPath))
+        : await readFile(artifactPath, 'utf8');
+    assertMultiSourceArtifact(artifact, `CLI API mode ${format}`);
+  }
 }
 
 async function createFixtureArchives(tempRoot: string): Promise<void> {
@@ -152,7 +175,11 @@ async function runApiLifecycle(tempRoot: string): Promise<void> {
       ]
     })
   );
-  formData.append('frontend', await archiveBlob(path.join(tempRoot, 'frontend.tar')), 'frontend.tar');
+  formData.append(
+    'frontend',
+    await archiveBlob(path.join(tempRoot, 'frontend.tar')),
+    'frontend.tar'
+  );
   formData.append('backend', await archiveBlob(path.join(tempRoot, 'backend.tar')), 'backend.tar');
 
   await fetchJson(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/sources`, {
@@ -162,15 +189,32 @@ async function runApiLifecycle(tempRoot: string): Promise<void> {
   await fetchJson(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/start`, {
     method: 'POST'
   });
-  const result = await fetchJson<{ documentation: { pages: Array<{ markdown: string }> } }>(
-    `${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`
+  const result = await fetchJson<{
+    renderedFormats: string[];
+    documentation: { pages: Array<{ markdown: string }> };
+  }>(`${apiBaseUrl}/v1/documentation-runs/${created.runId}/result`);
+  assert(
+    JSON.stringify(result.renderedFormats) ===
+      JSON.stringify(['markdown-tree', 'single-markdown', 'json']),
+    'API result did not preserve requested rendered formats.'
   );
   assert(result.documentation.pages.length > 0, 'Documentation pages were not generated.');
+  assertMultiSourceArtifact(JSON.stringify(result.documentation), 'API result');
 
   const markdown = await fetchText(
     `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=single-markdown`
   );
-  assert(markdown.includes('/api/users'), 'Generated Markdown did not contain the matched API path.');
+  assertMultiSourceArtifact(markdown, 'API single-Markdown download');
+
+  const json = await fetchText(
+    `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=json`
+  );
+  assertMultiSourceArtifact(json, 'API JSON download');
+
+  const zip = await fetchBuffer(
+    `${apiBaseUrl}/v1/documentation-runs/${created.runId}/download?format=markdown-tree`
+  );
+  assertMultiSourceArtifact(extractZipText(zip), 'API markdown-tree download');
 }
 
 async function archiveBlob(filePath: string): Promise<Blob> {
@@ -237,6 +281,56 @@ async function fetchText(url: string): Promise<string> {
   }
 
   return response.text();
+}
+
+async function fetchBuffer(url: string): Promise<Buffer> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Request failed ${response.status}: ${await response.text()}`);
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+function extractZipText(zipBuffer: Buffer): string {
+  const extracted: string[] = [];
+  let offset = 0;
+
+  while (offset < zipBuffer.length) {
+    const signature = zipBuffer.readUInt32LE(offset);
+    if (signature !== 0x04034b50) {
+      break;
+    }
+
+    const compressionMethod = zipBuffer.readUInt16LE(offset + 8);
+    const compressedSize = zipBuffer.readUInt32LE(offset + 18);
+    const fileNameLength = zipBuffer.readUInt16LE(offset + 26);
+    const extraFieldLength = zipBuffer.readUInt16LE(offset + 28);
+    const dataStart = offset + 30 + fileNameLength + extraFieldLength;
+    const dataEnd = dataStart + compressedSize;
+    const compressedEntry = zipBuffer.subarray(dataStart, dataEnd);
+
+    if (compressedSize > 0) {
+      if (compressionMethod === 0) {
+        extracted.push(compressedEntry.toString('utf8'));
+      } else if (compressionMethod === 8) {
+        extracted.push(inflateRawSync(compressedEntry).toString('utf8'));
+      } else {
+        throw new Error(`Unsupported smoke zip compression method: ${compressionMethod}.`);
+      }
+    }
+
+    offset = dataEnd;
+  }
+
+  return extracted.join('\n');
+}
+
+function assertMultiSourceArtifact(content: string, label: string): void {
+  assert(content.includes('frontend'), `${label} did not contain the frontend source role.`);
+  assert(content.includes('backend'), `${label} did not contain the backend source role.`);
+  assert(content.includes('/api/users'), `${label} did not contain the matched API path.`);
+  assert(content.includes('matched'), `${label} did not contain the matched API contract status.`);
 }
 
 async function runCommand(command: string, args: string[]): Promise<void> {

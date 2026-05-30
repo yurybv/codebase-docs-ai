@@ -80,19 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 112: Smoke E2E Artifact Format Coverage.
+Implement Phase 113: Run Storage Expiration Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 apps/api
-apps/cli
-scripts
+packages/core
 docs
 ```
 
-The next step should expand the smoke e2e harness to verify multi-source generated artifacts across JSON, single-Markdown, and markdown-tree downloads through the real API and CLI API-mode flow.
+The next step should add regression coverage for API run storage expiration and cleanup behavior so completed, failed, and abandoned runs expire predictably without exposing stale artifacts.
 
 ## Completed Implementation
 
@@ -1782,6 +1781,19 @@ Verification:
 ```text
 pnpm --filter @codebase-docs-ai/web typecheck
 pnpm test -- apps/web/src/main.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 112 Smoke E2E Artifact Format Coverage
+
+- Expanded the smoke e2e API lifecycle to verify multi-source JSON, single-Markdown, and markdown-tree download content.
+- Expanded CLI API-mode smoke coverage to generate single-Markdown, JSON, and zip outputs against the running API.
+- Documented the stronger smoke harness behavior in testing and operations docs.
+
+Verification:
+
+```text
+pnpm smoke:e2e
 pnpm verify
 ```
 

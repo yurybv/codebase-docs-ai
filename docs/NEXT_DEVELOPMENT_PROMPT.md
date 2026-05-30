@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 112: Smoke E2E Artifact Format Coverage.
+- Implement Phase 113: Run Storage Expiration Regression Coverage.
 
-Phase 112 goal:
-- Expand the smoke e2e harness to verify multi-source generated artifacts across JSON, single-Markdown, and markdown-tree downloads through the real API and CLI API-mode flow.
-- Verify smoke artifacts preserve frontend/backend source roles and matched `/api/users` contracts.
+Phase 113 goal:
+- Add regression coverage for API run storage expiration and cleanup behavior so completed, failed, and abandoned runs expire predictably without exposing stale artifacts.
+- Sanitize any expiration or missing-artifact errors if needed.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.

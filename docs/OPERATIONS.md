@@ -252,8 +252,8 @@ The smoke harness:
 
 - starts API and Web dev servers;
 - creates frontend/backend fixture archives;
-- verifies API create/upload/start/result/download lifecycle;
-- verifies CLI API mode against the running API;
+- verifies API create/upload/start/result/download lifecycle across JSON, single-Markdown, and markdown-tree outputs;
+- verifies CLI API mode against the running API across all CLI output formats;
 - verifies Web root reachability.
 
 ## Storage And Cleanup
