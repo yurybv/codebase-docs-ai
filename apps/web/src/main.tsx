@@ -29,6 +29,7 @@ export function App(): JSX.Element {
   const [selectedPageKey, setSelectedPageKey] = useState<string | null>(null);
   const [runHistoryLimit, setRunHistoryLimit] = useState(defaultDocumentationRunListLimit);
   const [runHistoryStatus, setRunHistoryStatus] = useState<RunHistoryStatusFilter>('all');
+  const [runHistoryRole, setRunHistoryRole] = useState<RunHistoryRoleFilter>('all');
   const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
   const [runHistoryState, setRunHistoryState] = useState<RunHistoryState>({
     status: 'idle'
@@ -96,7 +97,7 @@ export function App(): JSX.Element {
       setRunHistoryState({
         status: 'loading'
       });
-      const list = await listRuns(runHistoryLimit, runHistoryStatus);
+      const list = await listRuns(runHistoryLimit, runHistoryStatus, runHistoryRole);
       setRunHistory(sanitizeRunSummaries(list.runs));
       setRunHistoryState({
         status: 'loaded'
@@ -309,6 +310,24 @@ export function App(): JSX.Element {
                     {runHistoryStatusOptions.map((status) => (
                       <option value={status} key={status}>
                         {status}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="history-limit">
+                  <span>Role</span>
+                  <select
+                    value={runHistoryRole}
+                    disabled={runHistoryState.status === 'loading'}
+                    aria-label="Recent run source role"
+                    onChange={(event) => {
+                      setRunHistoryRole(event.currentTarget.value as RunHistoryRoleFilter);
+                    }}
+                  >
+                    <option value="all">All</option>
+                    {sourceRoles.map((role) => (
+                      <option value={role} key={role}>
+                        {role}
                       </option>
                     ))}
                   </select>
@@ -531,6 +550,7 @@ interface RunListResponse {
 const sourceRoles: SourceRole[] = ['frontend', 'backend', 'shared', 'infra', 'mobile', 'docs', 'unknown'];
 type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 type RunHistoryStatusFilter = DocumentationRunStatus | 'all';
+type RunHistoryRoleFilter = SourceRole | 'all';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
@@ -566,12 +586,19 @@ async function createRun(outputFormats: DocumentationOutputFormat[]): Promise<{ 
   return parseResponse(response);
 }
 
-async function listRuns(limit: number, status: RunHistoryStatusFilter): Promise<RunListResponse> {
+async function listRuns(
+  limit: number,
+  status: RunHistoryStatusFilter,
+  role: RunHistoryRoleFilter
+): Promise<RunListResponse> {
   const query = new URLSearchParams({
     limit: String(limit)
   });
   if (status !== 'all') {
     query.set('status', status);
+  }
+  if (role !== 'all') {
+    query.set('role', role);
   }
   const response = await fetch(`${apiBaseUrl}/v1/documentation-runs?${query}`);
   return parseResponse(response);

@@ -237,7 +237,7 @@ describe('App API error handling', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
   });
 
-  it('requests run history with selected limit and status while preserving sanitized summaries', async () => {
+  it('requests run history with selected limit, status, and role while preserving sanitized summaries', async () => {
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
     const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR/run.json`;
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
@@ -249,8 +249,8 @@ describe('App API error handling', () => {
             status: 'failed',
             sources: [
               {
-                name: `Frontend ${rawStoragePath}`,
-                role: 'frontend'
+                name: `Backend ${rawStoragePath}`,
+                role: 'backend'
               }
             ],
             sourceCount: 1,
@@ -286,6 +286,13 @@ describe('App API error handling', () => {
     await act(async () => {
       statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    const roleSelect = document.querySelector(
+      'select[aria-label="Recent run source role"]'
+    ) as HTMLSelectElement;
+    roleSelect.value = 'backend';
+    await act(async () => {
+      roleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await act(async () => {
       getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -302,7 +309,7 @@ describe('App API error handling', () => {
     expect(renderedText).not.toContain('.env');
     expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed'
+      'http://localhost:3000/v1/documentation-runs?limit=10&status=failed&role=backend'
     );
   });
 
@@ -371,6 +378,43 @@ describe('App API error handling', () => {
 
     const renderedText = document.body.textContent ?? '';
     expect(renderedText).toContain('RUN_LIST_STATUS_INVALID');
+    expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
+    expect(renderedText).not.toContain(rawStoragePath);
+    expect(renderedText).not.toContain(rawOpenAiKey);
+    expect(renderedText).not.toContain('/private/tmp');
+    expect(renderedText).not.toContain('.env');
+    expect(renderedText).not.toContain('SHOULD_NOT_APPEAR');
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/v1/documentation-runs?limit=50');
+  });
+
+  it('sanitizes run history source role API errors before rendering', async () => {
+    const rawOpenAiKey = `sk-${'v'.repeat(24)}`;
+    const rawStoragePath = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonErrorResponse(400, 'RUN_LIST_SOURCE_ROLE_INVALID', {
+        message: `Invalid run list source role from ${rawStoragePath}.`,
+        details: {
+          role: rawStoragePath
+        }
+      })
+    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock);
+
+    const rootElement = document.createElement('div');
+    document.body.append(rootElement);
+    const root = ReactDOM.createRoot(rootElement);
+
+    await act(async () => {
+      root.render(React.createElement(App));
+    });
+
+    await act(async () => {
+      getButtonByText('Refresh').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await waitForText('RUN_LIST_SOURCE_ROLE_INVALID');
+
+    const renderedText = document.body.textContent ?? '';
+    expect(renderedText).toContain('RUN_LIST_SOURCE_ROLE_INVALID');
     expect(renderedText).toContain('[REDACTED_STORAGE_PATH]');
     expect(renderedText).not.toContain(rawStoragePath);
     expect(renderedText).not.toContain(rawOpenAiKey);

@@ -80,17 +80,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 137: Web Run Listing Source Role Filter Control.
+Implement Phase 138: CLI Run Listing Source Role Filter Flag.
 
 Required package:
 
 ```text
 packages/shared
-apps/web
+apps/cli
 docs
 ```
 
-The next step should expose the API run listing `role` filter through the Web operator run history view and keep rendered list sanitization intact.
+The next step should expose the API run listing `role` filter through the CLI `list-runs` command and keep command output sanitization intact.
 
 ## Completed Implementation
 
@@ -2132,6 +2132,20 @@ Verification:
 ```text
 pnpm test -- packages/sdk/src/client.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 137 Web Run Listing Source Role Filter Control
+
+- Added a Web run history source role filter selector that sends the API `role` query during manual refresh.
+- Kept the run history view as a thin API-backed operator surface with no analysis, rendering, or cleanup logic.
+- Added Web regression coverage for selected role requests, sanitized filtered summaries, and sanitized run-list role API errors.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 
