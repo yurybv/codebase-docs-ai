@@ -80,21 +80,18 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 108: Embedded Secret End-To-End Artifact Regression Coverage.
+Implement Phase 109: Web Embedded Secret Result Display Regression Coverage.
 
 Required package:
 
 ```text
 packages/shared
 packages/security
-packages/core
-apps/api
-apps/cli
-packages/sdk
+apps/web
 docs
 ```
 
-The next step should add end-to-end API/CLI/SDK regression coverage proving embedded secret-bearing analyzer evidence remains sanitized in generated artifacts and downloads across local and HTTP flows.
+The next step should add Web regression coverage proving embedded secret-bearing documentation results from the API remain sanitized in displayed previews, warnings, and download controls.
 
 ## Completed Implementation
 
@@ -1728,6 +1725,20 @@ Verification:
 ```text
 pnpm -r --sort --filter @codebase-docs-ai/system-analyzer --filter @codebase-docs-ai/core typecheck
 pnpm test -- packages/system-analyzer/src/analyze-system.test.ts packages/core/src/documentation-engine.test.ts
+pnpm verify
+```
+
+### 2026-05-30: Phase 108 Embedded Secret End-To-End Artifact Regression Coverage
+
+- Added end-to-end API artifact regression coverage for embedded secret-bearing analyzer evidence in result payloads and JSON, single-Markdown, markdown-tree, and zip downloads.
+- Expanded CLI local and API-mode regression coverage for JSON, single-Markdown, markdown-tree, and zip outputs containing sanitized embedded provider keys and denied source evidence.
+- Expanded SDK high-level and direct artifact download coverage to preserve sanitized embedded evidence while excluding raw provider keys, denied `.env` evidence, and denied-source values.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.http.test.ts apps/cli/src/generate-command.test.ts packages/sdk/src/client.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/api --filter @codebase-docs-ai/cli --filter @codebase-docs-ai/sdk typecheck
 pnpm verify
 ```
 

@@ -31,6 +31,9 @@ describe('runGenerateCommand', () => {
 
       const markdown = await readFile(path.join(outputRoot, 'PROJECT_DOCUMENTATION.md'), 'utf8');
       expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(markdown).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(markdown).toContain('[REDACTED_DENIED_FILE]');
+      expect(markdown).toContain('[REDACTED_DENIED_VALUE]');
       expect(markdown).not.toContain(rawOpenAiKey);
       expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
       expect(markdown).not.toContain('.env');
@@ -66,6 +69,9 @@ describe('runGenerateCommand', () => {
         '\n'
       );
       expect(markdownTree).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(markdownTree).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(markdownTree).toContain('[REDACTED_DENIED_FILE]');
+      expect(markdownTree).toContain('[REDACTED_DENIED_VALUE]');
       expect(markdownTree).not.toContain(rawOpenAiKey);
       expect(markdownTree).not.toContain('SHOULD_NOT_APPEAR');
       expect(markdownTree).not.toContain('.env');
@@ -104,6 +110,9 @@ describe('runGenerateCommand', () => {
         .map((entry) => entry.getData().toString('utf8'))
         .join('\n');
       expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(zipContent).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(zipContent).toContain('[REDACTED_DENIED_FILE]');
+      expect(zipContent).toContain('[REDACTED_DENIED_VALUE]');
       expect(zipContent).not.toContain(rawOpenAiKey);
       expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
       expect(zipContent).not.toContain('.env');
@@ -140,6 +149,9 @@ describe('runGenerateCommand', () => {
         title: 'CLI Sanitized JSON Documentation'
       });
       expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(json).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(json).toContain('[REDACTED_DENIED_FILE]');
+      expect(json).toContain('[REDACTED_DENIED_VALUE]');
       expect(json).not.toContain(rawOpenAiKey);
       expect(json).not.toContain('SHOULD_NOT_APPEAR');
       expect(json).not.toContain('.env');
@@ -159,7 +171,7 @@ describe('runGenerateCommand', () => {
     const sanitizedMarkdown = [
       '# 06. API Contracts',
       '',
-      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+      '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |'
     ].join('\n');
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -210,6 +222,9 @@ describe('runGenerateCommand', () => {
 
       const markdown = await readFile(markdownPath, 'utf8');
       expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+      expect(markdown).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+      expect(markdown).toContain('[REDACTED_DENIED_FILE]');
+      expect(markdown).toContain('[REDACTED_DENIED_VALUE]');
       expect(markdown).not.toContain(rawOpenAiKey);
       expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
       expect(markdown).not.toContain('.env');
@@ -258,18 +273,23 @@ async function writeSanitizationSourceFixture(
   sourceRoot: string,
   rawOpenAiKey: string
 ): Promise<void> {
+  const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
   await mkdir(sourceRoot);
   await writeFile(
     path.join(sourceRoot, 'package.json'),
     JSON.stringify({
+      scripts: {
+        [`dev-${embeddedOpenAiKey}`]: `vite --token ${embeddedOpenAiKey}`
+      },
       dependencies: {
-        react: 'latest'
+        react: 'latest',
+        [`react-${embeddedOpenAiKey}`]: 'latest'
       }
     })
   );
   await writeFile(
     path.join(sourceRoot, 'api.ts'),
-    `fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`
+    `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR", { method: "POST" });\n`
   );
   await writeFile(path.join(sourceRoot, '.env'), 'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n');
 }
@@ -278,20 +298,27 @@ async function writeSanitizationArchiveFixture(
   archivePath: string,
   rawOpenAiKey: string
 ): Promise<void> {
+  const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
   const archive = new AdmZip();
   archive.addFile(
     'package.json',
     Buffer.from(
       JSON.stringify({
+        scripts: {
+          [`dev-${embeddedOpenAiKey}`]: `vite --token ${embeddedOpenAiKey}`
+        },
         dependencies: {
-          react: 'latest'
+          react: 'latest',
+          [`react-${embeddedOpenAiKey}`]: 'latest'
         }
       })
     )
   );
   archive.addFile(
     'api.ts',
-    Buffer.from(`fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`)
+    Buffer.from(
+      `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR", { method: "POST" });\n`
+    )
   );
   archive.addFile('.env', Buffer.from('IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'));
   await writeFile(archivePath, archive.toBuffer());

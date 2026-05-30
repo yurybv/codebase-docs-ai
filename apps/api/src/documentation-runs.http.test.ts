@@ -245,6 +245,9 @@ describe('Documentation runs HTTP API', () => {
     );
     const resultPayload = JSON.stringify(result);
     expect(resultPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(resultPayload).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(resultPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(resultPayload).toContain('[REDACTED_DENIED_VALUE]');
     expect(resultPayload).not.toContain(rawOpenAiKey);
     expect(resultPayload).not.toContain('SHOULD_NOT_APPEAR');
     expect(resultPayload).not.toContain('.env');
@@ -255,6 +258,9 @@ describe('Documentation runs HTTP API', () => {
     const markdown = await downloadResponse.text();
     expect(downloadResponse.status).toBe(200);
     expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).toContain('[REDACTED_DENIED_FILE]');
+    expect(markdown).toContain('[REDACTED_DENIED_VALUE]');
     expect(markdown).not.toContain(rawOpenAiKey);
     expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
     expect(markdown).not.toContain('.env');
@@ -269,6 +275,9 @@ describe('Documentation runs HTTP API', () => {
       title: 'HTTP Sanitized Documentation'
     });
     expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(json).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(json).toContain('[REDACTED_DENIED_FILE]');
+    expect(json).toContain('[REDACTED_DENIED_VALUE]');
     expect(json).not.toContain(rawOpenAiKey);
     expect(json).not.toContain('SHOULD_NOT_APPEAR');
     expect(json).not.toContain('.env');
@@ -285,6 +294,9 @@ describe('Documentation runs HTTP API', () => {
     expect(markdownTreeDownloadResponse.status).toBe(200);
     expect(markdownTreeDownloadResponse.headers.get('content-type')).toContain('application/zip');
     expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).toContain('[REDACTED_DENIED_FILE]');
+    expect(zipContent).toContain('[REDACTED_DENIED_VALUE]');
     expect(zipContent).not.toContain(rawOpenAiKey);
     expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
     expect(zipContent).not.toContain('.env');
@@ -315,20 +327,27 @@ async function archiveBlob(): Promise<Blob> {
 }
 
 async function sanitizationArchiveBlob(rawOpenAiKey: string): Promise<Blob> {
+  const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
   const archive = new AdmZip();
   archive.addFile(
     'package.json',
     Buffer.from(
       JSON.stringify({
+        scripts: {
+          [`dev-${embeddedOpenAiKey}`]: `vite --token ${embeddedOpenAiKey}`
+        },
         dependencies: {
-          react: 'latest'
+          react: 'latest',
+          [`react-${embeddedOpenAiKey}`]: 'latest'
         }
       })
     )
   );
   archive.addFile(
     'api.ts',
-    Buffer.from(`fetch("https://api.example.com/v1/${rawOpenAiKey}", { method: "POST" });\n`)
+    Buffer.from(
+      `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR", { method: "POST" });\n`
+    )
   );
   archive.addFile('.env', Buffer.from('IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'));
 

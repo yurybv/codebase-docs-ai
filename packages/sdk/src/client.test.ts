@@ -245,10 +245,11 @@ describe('CodebaseDocsAIClient', () => {
 
   it('preserves sanitized downloaded artifacts in the high-level archive flow', async () => {
     const rawOpenAiKey = `sk-${'g'.repeat(24)}`;
+    const embeddedOpenAiKey = `prefix_${rawOpenAiKey}`;
     const sanitizedMarkdown = [
       '# 01. Overview',
       '',
-      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+      '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |'
     ].join('\n');
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -308,7 +309,7 @@ describe('CodebaseDocsAIClient', () => {
           role: 'frontend',
           fileName: 'frontend.zip',
           file: new Blob([
-            `fetch("https://api.example.com/v1/${rawOpenAiKey}");\n`,
+            `fetch("https://api.example.com/v1/${embeddedOpenAiKey}/.env/SHOULD_NOT_APPEAR");\n`,
             'IGNORED_ENV=process.env.SHOULD_NOT_APPEAR\n'
           ])
         }
@@ -323,11 +324,20 @@ describe('CodebaseDocsAIClient', () => {
     const documentationPayload = JSON.stringify(result.result.documentation);
     const downloadedMarkdown = await result.download?.content.text();
     expect(documentationPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(documentationPayload).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(documentationPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(documentationPayload).toContain('[REDACTED_DENIED_VALUE]');
     expect(documentationPayload).not.toContain(rawOpenAiKey);
+    expect(documentationPayload).not.toContain(embeddedOpenAiKey);
     expect(documentationPayload).not.toContain('SHOULD_NOT_APPEAR');
     expect(downloadedMarkdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(downloadedMarkdown).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(downloadedMarkdown).toContain('[REDACTED_DENIED_FILE]');
+    expect(downloadedMarkdown).toContain('[REDACTED_DENIED_VALUE]');
     expect(downloadedMarkdown).not.toContain(rawOpenAiKey);
+    expect(downloadedMarkdown).not.toContain(embeddedOpenAiKey);
     expect(downloadedMarkdown).not.toContain('SHOULD_NOT_APPEAR');
+    expect(downloadedMarkdown).not.toContain('.env');
   });
 
   it('preserves sanitized documentation trees from direct result retrieval', async () => {
@@ -345,7 +355,8 @@ describe('CodebaseDocsAIClient', () => {
               key: 'api-contracts',
               title: '06. API Contracts',
               order: 6,
-              markdown: '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |',
+              markdown:
+                '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |',
               sourceReferences: [],
               warnings: []
             }
@@ -366,6 +377,9 @@ describe('CodebaseDocsAIClient', () => {
 
     expect(result.renderedFormats).toEqual(['json']);
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
     expect(payload).not.toContain(rawOpenAiKey);
     expect(payload).not.toContain('SHOULD_NOT_APPEAR');
     expect(payload).not.toContain('.env');
@@ -386,7 +400,8 @@ describe('CodebaseDocsAIClient', () => {
             key: 'api-contracts',
             title: '06. API Contracts',
             order: 6,
-            markdown: '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |',
+            markdown:
+              '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |',
             sourceReferences: [],
             warnings: []
           }
@@ -424,6 +439,9 @@ describe('CodebaseDocsAIClient', () => {
       title: 'Sanitized SDK JSON Download'
     });
     expect(json).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(json).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(json).toContain('[REDACTED_DENIED_FILE]');
+    expect(json).toContain('[REDACTED_DENIED_VALUE]');
     expect(json).not.toContain(rawOpenAiKey);
     expect(json).not.toContain('SHOULD_NOT_APPEAR');
     expect(json).not.toContain('.env');
@@ -434,7 +452,7 @@ describe('CodebaseDocsAIClient', () => {
     const sanitizedMarkdown = [
       '# 06. API Contracts',
       '',
-      '| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |'
+      '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |'
     ].join('\n');
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(sanitizedMarkdown, {
@@ -459,6 +477,9 @@ describe('CodebaseDocsAIClient', () => {
     expect(download.fileName).toBe('PROJECT_DOCUMENTATION.md');
     expect(download.contentType).toContain('text/markdown');
     expect(markdown).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(markdown).toContain('[REDACTED_DENIED_FILE]');
+    expect(markdown).toContain('[REDACTED_DENIED_VALUE]');
     expect(markdown).not.toContain(rawOpenAiKey);
     expect(markdown).not.toContain('SHOULD_NOT_APPEAR');
     expect(markdown).not.toContain('.env');
@@ -469,7 +490,9 @@ describe('CodebaseDocsAIClient', () => {
     const sanitizedZip = new AdmZip();
     sanitizedZip.addFile(
       '06-api-contracts.md',
-      Buffer.from('| POST | /v1/[REDACTED_OPENAI_API_KEY] | unmatched |\n')
+      Buffer.from(
+        '| POST | /v1/prefix_[REDACTED_OPENAI_API_KEY]/[REDACTED_DENIED_FILE]/[REDACTED_DENIED_VALUE] | unmatched |\n'
+      )
     );
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(sanitizedZip.toBuffer(), {
@@ -499,6 +522,9 @@ describe('CodebaseDocsAIClient', () => {
     expect(download.fileName).toBe('documentation.zip');
     expect(download.contentType).toContain('application/zip');
     expect(zipContent).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).toContain('prefix_[REDACTED_OPENAI_API_KEY]');
+    expect(zipContent).toContain('[REDACTED_DENIED_FILE]');
+    expect(zipContent).toContain('[REDACTED_DENIED_VALUE]');
     expect(zipContent).not.toContain(rawOpenAiKey);
     expect(zipContent).not.toContain('SHOULD_NOT_APPEAR');
     expect(zipContent).not.toContain('.env');

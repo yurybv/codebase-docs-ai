@@ -37,11 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation step:
-- Implement Phase 108: Embedded Secret End-To-End Artifact Regression Coverage.
+- Implement Phase 109: Web Embedded Secret Result Display Regression Coverage.
 
-Phase 108 goal:
-- Add end-to-end API/CLI/SDK regression coverage proving embedded secret-bearing analyzer evidence remains sanitized in generated artifacts and downloads across local and HTTP flows.
-- Verify raw embedded provider keys, denied `.env` evidence, and denied-source values are absent from JSON, single-Markdown, markdown-tree, and zip outputs.
+Phase 109 goal:
+- Add Web regression coverage proving embedded secret-bearing documentation results from the API remain sanitized in displayed previews, warnings, and download controls.
+- Verify raw embedded provider keys, denied `.env` evidence, and denied-source values are absent from rendered Web content and download requests.
 - Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
 - Update docs only if behavior changes.
 - Run relevant verification, preferably pnpm verify after code changes.
