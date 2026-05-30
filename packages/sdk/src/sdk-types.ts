@@ -84,7 +84,9 @@ export type DocumentationRunListSort =
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'
-  | 'completedAt:asc';
+  | 'completedAt:asc'
+  | 'durationMs:desc'
+  | 'durationMs:asc';
 
 export interface GenerateFromArchivesInput {
   name: string;

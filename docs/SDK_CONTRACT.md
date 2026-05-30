@@ -164,7 +164,7 @@ Options:
 - `format`: optional output format filter. Runs match when requested or rendered formats include this value.
 - `minSources`: optional minimum source count filter.
 - `maxSources`: optional maximum source count filter.
-- `sort`: optional sort order, either `updatedAt:desc`, `updatedAt:asc`, `createdAt:desc`, `createdAt:asc`, `completedAt:desc`, or `completedAt:asc`. When omitted, the API default is used.
+- `sort`: optional sort order, either `updatedAt:desc`, `updatedAt:asc`, `createdAt:desc`, `createdAt:asc`, `completedAt:desc`, `completedAt:asc`, `durationMs:desc`, or `durationMs:asc`. When omitted, the API default is used.
 - `createdAfter`: optional ISO timestamp lower bound for `createdAt`.
 - `createdBefore`: optional ISO timestamp upper bound for `createdAt`.
 - `completedAfter`: optional ISO timestamp lower bound for `completedAt`.

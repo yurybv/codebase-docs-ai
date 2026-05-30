@@ -78,7 +78,7 @@ describe('CLI option parsing', () => {
         format: 'json',
         minSources: '1',
         maxSources: '2',
-        sort: 'completedAt:asc',
+        sort: 'durationMs:desc',
         createdAfter: '2026-05-29T23:59:30.000Z',
         createdBefore: '2026-05-30T00:01:00.000Z',
         completedAfter: '2026-05-30T00:00:30.000Z',
@@ -96,7 +96,7 @@ describe('CLI option parsing', () => {
       format: 'json',
       minSources: 1,
       maxSources: 2,
-      sort: 'completedAt:asc',
+      sort: 'durationMs:desc',
       createdAfter: '2026-05-29T23:59:30.000Z',
       createdBefore: '2026-05-30T00:01:00.000Z',
       completedAfter: '2026-05-30T00:00:30.000Z',
@@ -358,7 +358,9 @@ describe('CLI option parsing', () => {
               'createdAt:desc',
               'createdAt:asc',
               'completedAt:desc',
-              'completedAt:asc'
+              'completedAt:asc',
+              'durationMs:desc',
+              'durationMs:asc'
             ]
           }
         }

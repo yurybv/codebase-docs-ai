@@ -20,7 +20,9 @@ export type RunListSort =
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'
-  | 'completedAt:asc';
+  | 'completedAt:asc'
+  | 'durationMs:desc'
+  | 'durationMs:asc';
 
 export interface CliSourceInput {
   inputPath: string;
@@ -77,7 +79,9 @@ const runListSortOptions: RunListSort[] = [
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',
-  'completedAt:asc'
+  'completedAt:asc',
+  'durationMs:desc',
+  'durationMs:asc'
 ];
 const runListIsoTimestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 

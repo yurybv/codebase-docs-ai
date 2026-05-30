@@ -578,7 +578,9 @@ const runListSortOptions = [
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',
-  'completedAt:asc'
+  'completedAt:asc',
+  'durationMs:desc',
+  'durationMs:asc'
 ] as const;
 
 function parseRunListSort(value: unknown): (typeof runListSortOptions)[number] | undefined {

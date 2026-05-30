@@ -37,15 +37,9 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 184: SDK And CLI Run Listing Duration Sort Option.
-- Then continue without stopping into Phase 185: Web Run History Duration Sort Control.
+- Implement Phase 185: Web Run History Duration Sort Control.
 - Then continue without stopping into Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 184 goal:
-- Expose duration sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
-- Validate SDK and CLI duration sort inputs before network requests where practical.
-- Verify SDK and CLI duration-sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
 
 Phase 185 goal:
 - Expose duration sorting through the Web run history sort selector.

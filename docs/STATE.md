@@ -82,20 +82,20 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 184: SDK And CLI Run Listing Duration Sort Option.
 - Phase 185: Web Run History Duration Sort Control.
 - Phase 186: Run Listing Duration Sort Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
+apps/web
+apps/api
 apps/cli
 packages/sdk
-apps/web
 docs
 ```
 
-The next step should expose API duration-based run listing sort support through SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose API duration-based run listing sort support through Web run history, then audit API, SDK, CLI, and Web as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2802,6 +2802,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 184 SDK And CLI Run Listing Duration Sort Option
+
+- Extended SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort` to accept `durationMs:desc` and `durationMs:asc`.
+- Kept SDK and CLI sort validation local to callers before network requests.
+- Updated SDK, CLI, README, and operations documentation for duration sort usage.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 
