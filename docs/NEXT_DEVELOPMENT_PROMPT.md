@@ -36,17 +36,38 @@ Read these files first:
 - docs/GENERATION_PROMPT.md
 - docs/GIT_WORKFLOW.md
 
-Current next implementation step:
+Current next implementation batch:
 - Implement Phase 141: Web Run Listing Pagination Cursor Control.
+- Then continue without stopping into Phase 142: CLI Run Listing Pagination Cursor Flag.
+- Then continue without stopping into Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
+- If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
 Phase 141 goal:
 - Expose API run listing pagination through the Web run history operator surface.
 - Allow operators to request the next page when the API returns `nextCursor`.
+- Preserve existing Web run history limit/status/role filters when requesting additional pages.
 - Verify Web paginated list requests preserve sanitized list output and cursor-related API errors do not expose raw values.
-- Keep shared sanitizer and existing repository-analyzer/system-analyzer/core/source-loader/API/CLI/SDK/Web/renderer/documentation-generator sanitization coverage intact.
-- Update docs only if behavior changes.
-- Run relevant verification, preferably pnpm verify after code changes.
-- Commit the completed phase directly to master.
+- Keep the Web app as a thin API-backed operator surface with no analysis, rendering, cleanup, or storage logic.
+
+Phase 142 goal:
+- Expose the API/SDK run listing `cursor` pagination option through the CLI `list-runs` command.
+- Add `list-runs --cursor <cursor>` with CLI-side validation before network requests where practical.
+- Verify cursor-filtered CLI list requests preserve sanitized list output and invalid-cursor errors do not expose raw values.
+- Keep existing CLI limit/status/role filtering and single-run generation behavior intact.
+
+Phase 143 goal:
+- Audit API, SDK, Web, and CLI run listing pagination behavior as one cross-surface contract.
+- Add or tighten regression coverage where a surface can expose raw `nextCursor`, raw cursor input, artifact paths, upload paths, denied `.env` evidence, or secret-bearing values.
+- Update README, API contract, SDK contract, Operations, Web QA, Testing, and State docs where the pagination behavior is now public.
+- Confirm `docs/NEXT_DEVELOPMENT_PROMPT.md` is advanced to the next larger implementation batch before stopping.
+
+Verification expectations:
+- Run focused tests for every touched surface.
+- Run focused typechecks for every touched package/app.
+- Run `pnpm verify` before each completed phase commit unless a real blocker prevents it.
+- Before every commit, inspect `git status`, `git diff`, `git diff --check`, and staged files.
+- Commit each meaningful completed phase directly to master using Conventional Commits.
+- Do not stop after one small task if the next task is clear and no user decision is required.
 
 Product direction reminders:
 - The product accepts one or more source-code archives/folders.

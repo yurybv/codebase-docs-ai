@@ -80,17 +80,23 @@ Continue autonomous development until a product, architecture, credential, provi
 
 ## Next Implementation Step
 
-Implement Phase 141: Web Run Listing Pagination Cursor Control.
+Implement the next larger implementation batch:
+
+- Phase 141: Web Run Listing Pagination Cursor Control.
+- Phase 142: CLI Run Listing Pagination Cursor Flag.
+- Phase 143: Run Listing Pagination Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
 packages/shared
 apps/web
+apps/cli
+packages/sdk
 docs
 ```
 
-The next step should expose API run listing pagination through the Web run history operator surface and keep Web list rendering sanitized.
+The next step should complete run listing cursor pagination across Web and CLI surfaces, then audit the API/SDK/Web/CLI contract as one sanitized cross-surface behavior. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
