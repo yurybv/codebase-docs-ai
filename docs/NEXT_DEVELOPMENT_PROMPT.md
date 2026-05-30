@@ -37,17 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 155: API Run Listing Source Count Filter Contract.
-- Then continue without stopping into Phase 156: SDK And CLI Run Listing Source Count Filters.
+- Implement Phase 156: SDK And CLI Run Listing Source Count Filters.
 - Then continue without stopping into Phase 157: Web Run History Source Count Filter Control And Audit.
 - Then continue without stopping into Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 159: API Run Listing Created-At Range Filter Contract.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 155 goal:
-- Add safe API run listing source-count filters for operator surfaces, such as `minSources` and `maxSources`.
-- Validate source-count filter inputs before storage access where practical.
-- Return persisted run summaries whose source counts match the selected range without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
-- Cover sanitized valid source-count filtering and invalid secret-bearing source-count errors.
 
 Phase 156 goal:
 - Expose API run listing source-count filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -65,6 +59,12 @@ Phase 158 goal:
 - Add or tighten regression coverage proving source-count filtering composes with `limit`, `status`, `role`, `name`, `format`, `updatedAfter`, `updatedBefore`, and `cursor` where each surface supports them.
 - Verify raw source-count filter input, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from all surfaced list results and errors.
 - Update docs only if the audit changes public behavior or testing expectations.
+
+Phase 159 goal:
+- Add safe API run listing created-at range filters for operator surfaces, such as `createdAfter` and `createdBefore`.
+- Validate created-at filter inputs before storage access where practical.
+- Return persisted run summaries whose `createdAt` values match the selected range without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover sanitized valid created-at filtering and invalid secret-bearing created-at errors.
 
 Verification expectations:
 - Run focused tests for every touched surface.

@@ -128,6 +128,15 @@ Run listing output-format filtering is a cross-surface contract. When changing A
 - API, SDK, Web, and CLI surfaces do not expose raw format input, provider keys, denied source evidence, upload storage paths, or artifact paths;
 - invalid format filter errors use stable public error codes and sanitized messages.
 
+## Run Listing Source-Count Filter Regression
+
+Run listing source-count filtering is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
+
+- `minSources` and `maxSources` filters are forwarded as non-negative integer query parameters;
+- source-count filtering composes with selected `limit`, `status`, `role`, `name`, `format`, `updatedAfter`, `updatedBefore`, and `cursor` options;
+- API, SDK, Web, and CLI surfaces do not expose raw source-count input, provider keys, denied source evidence, upload storage paths, or artifact paths;
+- invalid source-count filter errors use stable public error codes and sanitized messages.
+
 ## Web Completed-State Regression
 
 Run:

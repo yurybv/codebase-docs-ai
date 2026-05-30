@@ -464,6 +464,41 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by source count without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'j'.repeat(24)}`;
+    const created = await service.createRun({
+      name: `Zero Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const completed = await createCompletedRun(
+      `One Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      'backend',
+      ['json']
+    );
+    await setRunUpdatedAt(created.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(completed.runId, '2026-05-30T00:01:00.000Z');
+
+    const oneSourceList = await service.listRuns({ minSources: '1', maxSources: '1' });
+    const zeroSourceList = await service.listRuns({ maxSources: '0' });
+    const payload = JSON.stringify({ oneSourceList, zeroSourceList });
+
+    expect(oneSourceList.runs.map((run) => run.id)).toEqual([completed.runId]);
+    expect(zeroSourceList.runs.map((run) => run.id)).toEqual([created.runId]);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('rejects invalid run listing limits without echoing raw values', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -723,6 +758,39 @@ describe('DocumentationRunsService', () => {
       expect(payload).not.toContain(rawOpenAiKey);
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing source count filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'k'.repeat(24)}`;
+    const rawSourceCount = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    for (const options of [
+      { minSources: rawSourceCount },
+      { maxSources: rawSourceCount },
+      { minSources: '2', maxSources: '1' }
+    ]) {
+      await expect(service.listRuns(options)).rejects.toMatchObject({
+        response: {
+          code: 'RUN_LIST_SOURCE_COUNT_INVALID',
+          message:
+            'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.',
+          details: {
+            min: 0
+          }
+        }
+      });
+
+      try {
+        await service.listRuns(options);
+        throw new Error('Expected listRuns to reject invalid source count filter.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(payload).not.toContain(rawSourceCount);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
     }
   });
 

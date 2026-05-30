@@ -37,6 +37,8 @@ export class DocumentationRunsController {
     @Query('role') role: string | undefined,
     @Query('name') name: string | undefined,
     @Query('format') format: string | undefined,
+    @Query('minSources') minSources: string | undefined,
+    @Query('maxSources') maxSources: string | undefined,
     @Query('cursor') cursor: string | undefined,
     @Query('updatedAfter') updatedAfter: string | undefined,
     @Query('updatedBefore') updatedBefore: string | undefined
@@ -47,6 +49,8 @@ export class DocumentationRunsController {
       role,
       name,
       format,
+      minSources,
+      maxSources,
       cursor,
       updatedAfter,
       updatedBefore

@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 155: API Run Listing Source Count Filter Contract.
 - Phase 156: SDK And CLI Run Listing Source Count Filters.
 - Phase 157: Web Run History Source Count Filter Control And Audit.
 - Phase 158: Run Listing Source Count Cross-Surface Regression Audit.
+- Phase 159: API Run Listing Created-At Range Filter Contract.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should add source-count filtering for operator workflows across API, SDK, CLI, and Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose source-count filtering through SDK, CLI, and Web, audit it as one cross-surface contract, then continue into created-at range filtering for operator workflows. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2393,6 +2393,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts packages/shared/src/public-error-sanitizer.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 155 API Run Listing Source Count Filter Contract
+
+- Added API `minSources` and `maxSources` query filters for `GET /v1/documentation-runs`.
+- Validated source-count filters as non-negative integers before run storage listing, with sanitized `RUN_LIST_SOURCE_COUNT_INVALID` errors.
+- Added service and HTTP regression coverage for source-count filtered summaries and invalid secret-bearing source-count filter inputs.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

@@ -642,6 +642,87 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies run list source count query parameters', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'r'.repeat(24)}`;
+    const created = await service.createRun({
+      name: `HTTP Zero Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const completed = await createServiceRun(
+      service,
+      `HTTP One Source Count ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      { role: 'backend', outputFormats: ['json'] }
+    );
+    await setRunUpdatedAt(created.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(completed.runId, '2026-05-30T00:01:00.000Z');
+
+    const oneSourceResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?minSources=1&maxSources=1`
+    );
+    const oneSourcePayload = await oneSourceResponse.text();
+    const oneSourceList = JSON.parse(oneSourcePayload) as {
+      runs: Array<{ id: string }>;
+    };
+    const zeroSourceResponse = await fetch(`${apiBaseUrl}/v1/documentation-runs?maxSources=0`);
+    const zeroSourcePayload = await zeroSourceResponse.text();
+    const zeroSourceList = JSON.parse(zeroSourcePayload) as {
+      runs: Array<{ id: string }>;
+    };
+
+    expect(oneSourceResponse.status).toBe(200);
+    expect(oneSourceList.runs.map((run) => run.id)).toEqual([completed.runId]);
+    expect(oneSourcePayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(oneSourcePayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(oneSourcePayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(oneSourcePayload).not.toContain(rawOpenAiKey);
+    expect(oneSourcePayload).not.toContain('.env');
+    expect(oneSourcePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(oneSourcePayload).not.toContain(tempRoot);
+
+    expect(zeroSourceResponse.status).toBe(200);
+    expect(zeroSourceList.runs.map((run) => run.id)).toEqual([created.runId]);
+    expect(zeroSourcePayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(zeroSourcePayload).not.toContain(rawOpenAiKey);
+    expect(zeroSourcePayload).not.toContain('.env');
+    expect(zeroSourcePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(zeroSourcePayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'t'.repeat(24)}`;
+    const invalidSourceCount = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?minSources=${invalidSourceCount}`
+    );
+    const invalidPayload = await invalidResponse.text();
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidPayload).toContain('RUN_LIST_SOURCE_COUNT_INVALID');
+    expect(invalidPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidPayload).not.toContain('.env');
+    expect(invalidPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidPayload).not.toContain('/private/tmp');
+
+    const invalidRangeResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?minSources=2&maxSources=1`
+    );
+    const invalidRangePayload = await invalidRangeResponse.text();
+
+    expect(invalidRangeResponse.status).toBe(400);
+    expect(invalidRangePayload).toContain('RUN_LIST_SOURCE_COUNT_INVALID');
+    expect(invalidRangePayload).not.toContain(invalidOpenAiKey);
+    expect(invalidRangePayload).not.toContain('.env');
+    expect(invalidRangePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidRangePayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list status query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;

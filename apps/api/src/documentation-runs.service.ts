@@ -75,6 +75,8 @@ interface ListRunsOptions {
   role?: unknown;
   name?: unknown;
   format?: unknown;
+  minSources?: unknown;
+  maxSources?: unknown;
   cursor?: unknown;
   updatedAfter?: unknown;
   updatedBefore?: unknown;
@@ -209,6 +211,7 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const role = parseRunListSourceRole(options.role);
     const name = parseRunListName(options.name);
     const format = parseRunListFormat(options.format);
+    const sourceCountRange = parseRunListSourceCountRange(options.minSources, options.maxSources);
     const cursor = parseRunListCursor(options.cursor);
     const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
     const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
@@ -234,6 +237,14 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
           continue;
         }
         if (format && !runSummaryIncludesFormat(summary, format)) {
+          continue;
+        }
+        if (
+          (sourceCountRange.minSources !== undefined &&
+            summary.sourceCount < sourceCountRange.minSources) ||
+          (sourceCountRange.maxSources !== undefined &&
+            summary.sourceCount > sourceCountRange.maxSources)
+        ) {
           continue;
         }
         runs.push(summary);
@@ -972,6 +983,51 @@ function runSummaryIncludesFormat(
   return (
     summary.outputFormats.includes(format) || (summary.renderedFormats?.includes(format) ?? false)
   );
+}
+
+function parseRunListSourceCountRange(
+  minSourcesValue: unknown,
+  maxSourcesValue: unknown
+): { minSources?: number; maxSources?: number } {
+  const minSources = parseRunListSourceCount(minSourcesValue);
+  const maxSources = parseRunListSourceCount(maxSourcesValue);
+
+  if (minSources !== undefined && maxSources !== undefined && minSources > maxSources) {
+    throw invalidRunListSourceCount();
+  }
+
+  return {
+    ...(minSources === undefined ? {} : { minSources }),
+    ...(maxSources === undefined ? {} : { maxSources })
+  };
+}
+
+function parseRunListSourceCount(value: unknown): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListSourceCount();
+  }
+
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || String(value).trim() !== String(parsed)) {
+    throw invalidRunListSourceCount();
+  }
+
+  return parsed;
+}
+
+function invalidRunListSourceCount(): BadRequestException {
+  return new BadRequestException({
+    code: 'RUN_LIST_SOURCE_COUNT_INVALID',
+    message:
+      'Run list source count filters must be non-negative integers, and minSources must not exceed maxSources.',
+    details: {
+      min: 0
+    }
+  });
 }
 
 function parseRunListCursor(value: unknown): RunListCursor | undefined {
