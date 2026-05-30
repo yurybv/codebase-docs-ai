@@ -765,7 +765,13 @@ type DocumentationOutputFormat = 'markdown-tree' | 'single-markdown' | 'json';
 type RunHistoryStatusFilter = DocumentationRunStatus | 'all';
 type RunHistoryRoleFilter = SourceRole | 'all';
 type RunHistoryFormatFilter = DocumentationOutputFormat | 'all';
-type RunHistorySort = 'updatedAt:desc' | 'updatedAt:asc' | 'createdAt:desc' | 'createdAt:asc';
+type RunHistorySort =
+  | 'updatedAt:desc'
+  | 'updatedAt:asc'
+  | 'createdAt:desc'
+  | 'createdAt:asc'
+  | 'completedAt:desc'
+  | 'completedAt:asc';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
 const defaultOutputFormats: DocumentationOutputFormat[] = [...outputFormatOptions];
 const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
@@ -773,7 +779,9 @@ const runHistorySortOptions: RunHistorySort[] = [
   'updatedAt:desc',
   'updatedAt:asc',
   'createdAt:desc',
-  'createdAt:asc'
+  'createdAt:asc',
+  'completedAt:desc',
+  'completedAt:asc'
 ];
 const runHistoryStatusOptions: DocumentationRunStatus[] = [
   'created',

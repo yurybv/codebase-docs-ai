@@ -82,10 +82,10 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 177: Web Run History Completed-At Sort Control And Audit.
 - Phase 178: Run Listing Completed-At Sort Cross-Surface Regression Audit.
 - Phase 179: Run Listing Terminal Duration Contract Exploration.
 - Phase 180: SDK And CLI Terminal Duration Surface Follow-Up.
+- Phase 181: Web Terminal Duration Display Follow-Up.
 
 Required package:
 
@@ -98,7 +98,7 @@ apps/web
 docs
 ```
 
-The next step should expose completed-at sort support through Web, then audit it as one cross-surface contract. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should audit completed-at sort support as one cross-surface contract, then continue into terminal duration contract exploration. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2707,6 +2707,20 @@ Verification:
 pnpm --filter @codebase-docs-ai/sdk build
 pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-30: Phase 177 Web Run History Completed-At Sort Control And Audit
+
+- Extended the Web run history sort selector to include `completedAt:desc` and `completedAt:asc`.
+- Preserved selected limit, status, source role, name, output format, source-count range, completed-at sort, created-at range, completed-at range, updated-at range, and cursor values across Web run history pagination.
+- Updated Web regression coverage for completed-at sorted list requests while preserving sanitized history output and sort error coverage.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/web typecheck
 pnpm verify
 ```
 
