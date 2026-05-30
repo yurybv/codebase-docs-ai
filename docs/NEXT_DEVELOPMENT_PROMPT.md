@@ -37,16 +37,11 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 144: API Run Listing Updated-At Range Filter Contract.
-- Then continue without stopping into Phase 145: SDK And CLI Run Listing Updated-At Range Filters.
+- Implement Phase 145: SDK And CLI Run Listing Updated-At Range Filters.
 - Then continue without stopping into Phase 146: Web Run History Updated-At Range Controls And Audit.
+- Then continue without stopping into Phase 147: API Run Listing Name Search Filter Contract.
+- Then continue without stopping into Phase 148: SDK And CLI Run Listing Name Search Filters.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 144 goal:
-- Add safe API run listing updated-at range filters, such as `updatedAfter` and `updatedBefore`, for operator surfaces.
-- Validate timestamp inputs before storage access where practical.
-- Preserve existing API `limit`, `status`, `role`, and `cursor` behavior while applying date-range filters deterministically.
-- Verify date-filtered list responses remain sanitized and invalid secret-bearing timestamp inputs do not expose raw values.
 
 Phase 145 goal:
 - Expose API run listing updated-at range filters through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
@@ -59,6 +54,17 @@ Phase 146 goal:
 - Audit API, SDK, CLI, and Web updated-at filtering as one cross-surface contract.
 - Update README, API contract, SDK contract, Operations, Web QA, Testing, and State docs where the filtering behavior is now public.
 - Confirm `docs/NEXT_DEVELOPMENT_PROMPT.md` is advanced to the next larger implementation batch before stopping.
+
+Phase 147 goal:
+- Add a safe API run listing name search filter for operator surfaces, such as `name`.
+- Validate name-search inputs before storage access where practical, including length and blank-value handling.
+- Return persisted run summaries matching sanitized run names without exposing artifact paths, upload storage paths, raw source content, or secret-bearing evidence.
+- Cover created, completed, failed, and expired-cleaned runs where applicable, plus sanitized invalid-name errors.
+
+Phase 148 goal:
+- Expose the API run listing name search filter through the SDK `documentationRuns.list` helper and CLI `list-runs` command.
+- Validate SDK and CLI name-search inputs before network requests where practical.
+- Verify SDK and CLI name-filtered list requests preserve sanitized list output and invalid-name errors do not expose raw values.
 
 Verification expectations:
 - Run focused tests for every touched surface.

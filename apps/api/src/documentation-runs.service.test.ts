@@ -318,6 +318,32 @@ describe('DocumentationRunsService', () => {
     expect(secondPayload).not.toContain(tempRoot);
   });
 
+  it('filters listed run summaries by updated-at range without exposing raw values', async () => {
+    const rawOpenAiKey = `sk-${'d'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const oldest = await createCompletedRun('Oldest Updated Range Docs', secretSourceName);
+    const newest = await createCompletedRun('Newest Updated Range Docs', secretSourceName);
+    const middle = await createCompletedRun('Middle Updated Range Docs', secretSourceName);
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const list = await service.listRuns({
+      updatedAfter: '2026-05-30T00:00:30.000Z',
+      updatedBefore: '2026-05-30T00:01:30.000Z'
+    });
+    const payload = JSON.stringify(list);
+
+    expect(list.runs.map((run) => run.id)).toEqual([middle.runId]);
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('rejects invalid run listing limits without echoing raw values', async () => {
     const rawOpenAiKey = `sk-${'z'.repeat(24)}`;
     const rawLimit = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
@@ -490,6 +516,37 @@ describe('DocumentationRunsService', () => {
       expect(payload).not.toContain(rawOpenAiKey);
       expect(payload).not.toContain('.env');
       expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    }
+  });
+
+  it('rejects invalid run listing updated-at filters without echoing raw values', async () => {
+    const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
+    const rawTimestamp = `/private/tmp/codebase-docs-ai/${rawOpenAiKey}/.env/SHOULD_NOT_APPEAR`;
+
+    await expect(service.listRuns({ updatedAfter: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_UPDATED_AFTER_INVALID',
+        message: 'Run list updatedAfter must be a valid ISO timestamp.'
+      }
+    });
+    await expect(service.listRuns({ updatedBefore: rawTimestamp })).rejects.toMatchObject({
+      response: {
+        code: 'RUN_LIST_UPDATED_BEFORE_INVALID',
+        message: 'Run list updatedBefore must be a valid ISO timestamp.'
+      }
+    });
+
+    for (const options of [{ updatedAfter: rawTimestamp }, { updatedBefore: rawTimestamp }]) {
+      try {
+        await service.listRuns(options);
+        throw new Error('Expected listRuns to reject invalid updated-at filter.');
+      } catch (error) {
+        const payload = JSON.stringify(error);
+        expect(payload).not.toContain(rawTimestamp);
+        expect(payload).not.toContain(rawOpenAiKey);
+        expect(payload).not.toContain('.env');
+        expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+      }
     }
   });
 

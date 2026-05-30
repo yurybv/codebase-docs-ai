@@ -74,6 +74,8 @@ interface ListRunsOptions {
   status?: unknown;
   role?: unknown;
   cursor?: unknown;
+  updatedAfter?: unknown;
+  updatedBefore?: unknown;
 }
 
 interface RunListCursor {
@@ -124,6 +126,7 @@ const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
   id: z.string().min(1)
 });
+const runListTimestampSchema = z.string().datetime();
 
 @Injectable()
 export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
@@ -202,14 +205,23 @@ export class DocumentationRunsService implements OnModuleInit, OnModuleDestroy {
     const status = parseRunListStatus(options.status);
     const role = parseRunListSourceRole(options.role);
     const cursor = parseRunListCursor(options.cursor);
+    const updatedAfter = parseRunListUpdatedAfter(options.updatedAfter);
+    const updatedBefore = parseRunListUpdatedBefore(options.updatedBefore);
 
     for (const entry of await this.listRunDirectoryNames()) {
       try {
         const storedRun = await this.readJsonFile<StoredRun>(this.manifestPath(entry));
+        const updatedAt = Date.parse(storedRun.run.updatedAt);
         if (status && storedRun.run.status !== status) {
           continue;
         }
         if (role && !storedRun.run.sources.some((source) => source.role === role)) {
+          continue;
+        }
+        if (updatedAfter !== undefined && updatedAt < updatedAfter) {
+          continue;
+        }
+        if (updatedBefore !== undefined && updatedAt > updatedBefore) {
           continue;
         }
         runs.push(toRunSummary(storedRun.run));
@@ -921,6 +933,56 @@ function invalidRunListCursor(): BadRequestException {
   return new BadRequestException({
     code: 'RUN_LIST_CURSOR_INVALID',
     message: 'Run list cursor is invalid.'
+  });
+}
+
+function parseRunListUpdatedAfter(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_UPDATED_AFTER_INVALID',
+    'Run list updatedAfter must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListUpdatedBefore(value: unknown): number | undefined {
+  return parseRunListTimestamp(
+    value,
+    'RUN_LIST_UPDATED_BEFORE_INVALID',
+    'Run list updatedBefore must be a valid ISO timestamp.'
+  );
+}
+
+function parseRunListTimestamp(
+  value: unknown,
+  code: string,
+  message: string
+): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    throw invalidRunListTimestamp(code, message);
+  }
+
+  const timestamp = String(value);
+  const validation = runListTimestampSchema.safeParse(timestamp);
+  if (!validation.success) {
+    throw invalidRunListTimestamp(code, message);
+  }
+
+  const parsed = Date.parse(timestamp);
+  if (!Number.isFinite(parsed)) {
+    throw invalidRunListTimestamp(code, message);
+  }
+
+  return parsed;
+}
+
+function invalidRunListTimestamp(code: string, message: string): BadRequestException {
+  return new BadRequestException({
+    code,
+    message
   });
 }
 

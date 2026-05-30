@@ -400,6 +400,85 @@ describe('Documentation runs HTTP API', () => {
     expect(invalidPayload).not.toContain('/private/tmp');
   });
 
+  it('validates and applies run list updated-at range query parameters', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'y'.repeat(24)}`;
+    const oldest = await service.createRun({
+      name: `HTTP Oldest Updated Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const newest = await service.createRun({
+      name: `HTTP Newest Updated Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const middle = await service.createRun({
+      name: `HTTP Middle Updated Range ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    await setRunUpdatedAt(oldest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:01:00.000Z');
+    await setRunUpdatedAt(newest.runId, '2026-05-30T00:02:00.000Z');
+
+    const filteredResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?updatedAfter=${encodeURIComponent('2026-05-30T00:00:30.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
+    );
+    const filteredPayload = await filteredResponse.text();
+    const filtered = JSON.parse(filteredPayload) as {
+      runs: Array<{ id: string }>;
+    };
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.runs.map((run) => run.id)).toEqual([middle.runId]);
+    expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(filteredPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(filteredPayload).not.toContain(rawOpenAiKey);
+    expect(filteredPayload).not.toContain('.env');
+    expect(filteredPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(filteredPayload).not.toContain(tempRoot);
+
+    const invalidOpenAiKey = `sk-${'z'.repeat(24)}`;
+    const invalidTimestamp = encodeURIComponent(
+      `/private/tmp/codebase-docs-ai/${invalidOpenAiKey}/.env/SHOULD_NOT_APPEAR`
+    );
+    const invalidAfterResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?updatedAfter=${invalidTimestamp}`
+    );
+    const invalidAfterPayload = await invalidAfterResponse.text();
+    const invalidBeforeResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?updatedBefore=${invalidTimestamp}`
+    );
+    const invalidBeforePayload = await invalidBeforeResponse.text();
+
+    expect(invalidAfterResponse.status).toBe(400);
+    expect(invalidAfterPayload).toContain('RUN_LIST_UPDATED_AFTER_INVALID');
+    expect(invalidAfterPayload).not.toContain(invalidOpenAiKey);
+    expect(invalidAfterPayload).not.toContain('.env');
+    expect(invalidAfterPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidAfterPayload).not.toContain('/private/tmp');
+    expect(invalidBeforeResponse.status).toBe(400);
+    expect(invalidBeforePayload).toContain('RUN_LIST_UPDATED_BEFORE_INVALID');
+    expect(invalidBeforePayload).not.toContain(invalidOpenAiKey);
+    expect(invalidBeforePayload).not.toContain('.env');
+    expect(invalidBeforePayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(invalidBeforePayload).not.toContain('/private/tmp');
+  });
+
   it('validates and applies the run list status query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'s'.repeat(24)}`;
