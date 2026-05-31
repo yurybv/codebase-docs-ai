@@ -37,16 +37,10 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 191: API Run Listing Name Sort Contract.
-- Then continue without stopping into Phase 192: SDK And CLI Run Listing Name Sort Option.
+- Implement Phase 192: SDK And CLI Run Listing Name Sort Option.
 - Then continue without stopping into Phase 193: Web Run History Name Sort Control.
 - Then continue without stopping into Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
-
-Phase 191 goal:
-- Add safe API run listing name sort options, such as `name:asc` and `name:desc`, using sanitized public run summary names only.
-- Keep name-sorted pagination deterministic without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
-- Cover name-sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
 
 Phase 192 goal:
 - Expose name sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.

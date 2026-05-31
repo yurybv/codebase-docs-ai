@@ -390,6 +390,74 @@ describe('Documentation runs HTTP API', () => {
     expect(secondPayload).not.toContain(tempRoot);
   });
 
+  it('sorts run summaries by sanitized public name metadata', async () => {
+    const service = app.get(DocumentationRunsService);
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const pending = await service.createRun({
+      name: `Zeta Name Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const alpha = await createServiceRun(service, 'Alpha Name Sort Docs', secretSourceName);
+    const beta = await createServiceRun(service, 'Beta Name Sort Docs', secretSourceName, {
+      failBeforeStart: true
+    });
+    await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+    await setRunCreatedAt(alpha.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(alpha.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(alpha.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(beta.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(beta.runId, '2026-05-30T00:00:45.000Z');
+
+    const firstResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=name:asc`
+    );
+    const firstPayload = await firstResponse.text();
+    const firstPage = JSON.parse(firstPayload) as {
+      runs: Array<{ name: string; id: string }>;
+      nextCursor?: string;
+    };
+    const secondResponse = await fetch(
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=name:asc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+    );
+    const secondPayload = await secondResponse.text();
+    const secondPage = JSON.parse(secondPayload) as {
+      runs: Array<{ name: string; id: string }>;
+      nextCursor?: string;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.runs.map((run) => run.name)).toEqual([
+      'Alpha Name Sort Docs',
+      'Beta Name Sort Docs'
+    ]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
+    expect(firstPayload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(firstPayload).not.toContain(rawOpenAiKey);
+    expect(firstPayload).not.toContain('.env');
+    expect(firstPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(firstPayload).not.toContain(tempRoot);
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.runs.map((run) => run.name)).toEqual([
+      'Zeta Name Sort Docs [REDACTED_OPENAI_API_KEY] [REDACTED_DENIED_FILE] [REDACTED_DENIED_VALUE]'
+    ]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(secondPayload).not.toContain(rawOpenAiKey);
+    expect(secondPayload).not.toContain('.env');
+    expect(secondPayload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(secondPayload).not.toContain(tempRoot);
+  });
+
   it('validates and applies the run list limit query parameter', async () => {
     const service = app.get(DocumentationRunsService);
     const oldest = await service.createRun({

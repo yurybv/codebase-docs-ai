@@ -89,6 +89,7 @@ interface ListRunsOptions {
 
 interface RunListCursor {
   updatedAt: string;
+  name?: string | undefined;
   createdAt?: string | undefined;
   completedAt?: string | undefined;
   sourceCount?: number | undefined;
@@ -99,6 +100,7 @@ interface RunListCursor {
 type RunListSort = (typeof runListSortOptions)[number];
 type RunListSortField =
   | 'updatedAt'
+  | 'name'
   | 'createdAt'
   | 'completedAt'
   | 'sourceCount'
@@ -153,6 +155,8 @@ const maxRunListNameLength = 200;
 const runListSortOptions = [
   'updatedAt:desc',
   'updatedAt:asc',
+  'name:asc',
+  'name:desc',
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',
@@ -165,6 +169,7 @@ const runListSortOptions = [
 
 const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
+  name: z.string().min(1).max(maxRunListNameLength).optional(),
   createdAt: z.string().datetime().optional(),
   completedAt: z.string().datetime().optional(),
   sourceCount: z.number().int().nonnegative().optional(),
@@ -861,17 +866,28 @@ function compareRunSummaryToCursor(
 function compareRunSummaryOrder(
   left: Pick<
     DocumentationRunSummary,
-    'id' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
+    'id' | 'name' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
   >,
   right:
     | Pick<
         DocumentationRunSummary,
-        'id' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
+        'id' | 'name' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
       >
     | RunListCursor,
   sort: RunListSort
 ): number {
   const { field, direction } = parseRunListSortParts(sort);
+  if (field === 'name') {
+    const leftName = runSummaryNameSortValue(left.name);
+    const rightName = runSummaryNameSortValue(right.name);
+    const sortValueOrder = leftName.localeCompare(rightName);
+    if (sortValueOrder !== 0) {
+      return direction === 'asc' ? sortValueOrder : -sortValueOrder;
+    }
+
+    const idOrder = left.id.localeCompare(right.id);
+    return direction === 'asc' ? idOrder : -idOrder;
+  }
   if (field === 'sourceCount') {
     const sourceCountOrder = compareRunSummaryNumericSortValue(
       left.sourceCount,
@@ -929,9 +945,13 @@ function compareRunSummaryNumericSortValue(
   return direction === 'asc' ? durationOrder : -durationOrder;
 }
 
+function runSummaryNameSortValue(name: string | undefined): string {
+  return typeof name === 'string' ? name.toLocaleLowerCase() : '';
+}
+
 function runListSortValue(
   summary: Pick<DocumentationRunSummary, 'createdAt' | 'completedAt' | 'updatedAt'> | RunListCursor,
-  field: Exclude<RunListSortField, 'sourceCount' | 'durationMs'>
+  field: Exclude<RunListSortField, 'name' | 'sourceCount' | 'durationMs'>
 ): string {
   if (field === 'createdAt') {
     return summary.createdAt ?? summary.updatedAt;
@@ -957,6 +977,7 @@ function encodeRunListCursor(run: DocumentationRunSummary): string {
   return Buffer.from(
     JSON.stringify({
       updatedAt: run.updatedAt,
+      name: runSummaryNameSortValue(run.name),
       createdAt: run.createdAt,
       ...(run.completedAt ? { completedAt: run.completedAt } : {}),
       sourceCount: run.sourceCount,

@@ -82,7 +82,6 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 191: API Run Listing Name Sort Contract.
 - Phase 192: SDK And CLI Run Listing Name Sort Option.
 - Phase 193: Web Run History Name Sort Control.
 - Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
@@ -90,14 +89,13 @@ Implement the next larger implementation batch:
 Required package:
 
 ```text
-apps/api
 apps/cli
 packages/sdk
 apps/web
 docs
 ```
 
-The next step should add safe run-name sorting across API, SDK, CLI, and Web using sanitized public run summary names and deterministic cursors. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose and audit safe run-name sorting across SDK, CLI, and Web using sanitized public run summary names and deterministic cursors already added to the API. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2904,6 +2902,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 191 API Run Listing Name Sort Contract
+
+- Added API `name:asc` and `name:desc` run listing sort options using sanitized public run summary names only.
+- Included sanitized lowercase run names in newly issued cursors so name-sorted pagination remains deterministic across first-page and cursor-page requests.
+- Added service and HTTP regression coverage for name-sorted list pages without exposing secret-bearing raw run names or storage paths.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

@@ -340,6 +340,54 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain(tempRoot);
   });
 
+  it('sorts listed run summaries by sanitized name with safe deterministic cursors', async () => {
+    const rawOpenAiKey = `sk-${'n'.repeat(24)}`;
+    const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
+    const pending = await service.createRun({
+      name: `Zeta Name Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      options: {
+        outputFormats: ['json'],
+        language: 'en',
+        includeSourceReferences: true,
+        includeWarnings: true
+      }
+    });
+    const alpha = await createCompletedRun('Alpha Name Sort Docs', secretSourceName);
+    const beta = await createFailedRun('Beta Name Sort Docs', secretSourceName);
+    await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
+    await setRunCreatedAt(alpha.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(alpha.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(alpha.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(beta.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(beta.runId, '2026-05-30T00:00:45.000Z');
+
+    const firstPage = await service.listRuns({ limit: '2', sort: 'name:asc' });
+    const secondPage = await service.listRuns({
+      limit: '2',
+      sort: 'name:asc',
+      cursor: firstPage.nextCursor
+    });
+    const payload = JSON.stringify({ firstPage, secondPage });
+
+    expect(firstPage.runs.map((run) => run.name)).toEqual([
+      'Alpha Name Sort Docs',
+      'Beta Name Sort Docs'
+    ]);
+    expect(firstPage.nextCursor).toBeTruthy();
+    expect(secondPage.runs.map((run) => run.name)).toEqual([
+      'Zeta Name Sort Docs [REDACTED_OPENAI_API_KEY] [REDACTED_DENIED_FILE] [REDACTED_DENIED_VALUE]'
+    ]);
+    expect(secondPage.nextCursor).toBeUndefined();
+    expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
+    expect(payload).toContain('[REDACTED_DENIED_FILE]');
+    expect(payload).toContain('[REDACTED_DENIED_VALUE]');
+    expect(payload).not.toContain(rawOpenAiKey);
+    expect(payload).not.toContain('.env');
+    expect(payload).not.toContain('SHOULD_NOT_APPEAR');
+    expect(payload).not.toContain(tempRoot);
+  });
+
   it('limits listed run summaries by latest update time', async () => {
     const oldest = await service.createRun({
       name: 'Oldest Listed Docs',
