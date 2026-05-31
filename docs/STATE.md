@@ -82,20 +82,17 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 188: SDK And CLI Run Listing Source-Count Sort Option.
 - Phase 189: Web Run History Source-Count Sort Control.
 - Phase 190: Run Listing Source-Count Sort Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
-apps/cli
-packages/sdk
 apps/web
 docs
 ```
 
-The next step should expose and audit source-count based run listing sort support across SDK, CLI, and Web using the safe public `sourceCount` summary field already added to the API. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose and audit source-count based run listing sort support across Web and cross-surface regression coverage using the safe public `sourceCount` summary field already added to the API, SDK, and CLI. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2859,6 +2856,21 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 188 SDK And CLI Run Listing Source-Count Sort Option
+
+- Extended SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort` to accept `sourceCount:desc` and `sourceCount:asc`.
+- Kept SDK and CLI source-count sort validation local to callers before network requests.
+- Updated SDK, CLI, README, and operations documentation for source-count sort usage.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

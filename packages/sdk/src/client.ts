@@ -579,6 +579,8 @@ const runListSortOptions = [
   'createdAt:asc',
   'completedAt:desc',
   'completedAt:asc',
+  'sourceCount:desc',
+  'sourceCount:asc',
   'durationMs:desc',
   'durationMs:asc'
 ] as const;

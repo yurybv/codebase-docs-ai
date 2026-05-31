@@ -21,6 +21,8 @@ export type RunListSort =
   | 'createdAt:asc'
   | 'completedAt:desc'
   | 'completedAt:asc'
+  | 'sourceCount:desc'
+  | 'sourceCount:asc'
   | 'durationMs:desc'
   | 'durationMs:asc';
 
@@ -80,6 +82,8 @@ const runListSortOptions: RunListSort[] = [
   'createdAt:asc',
   'completedAt:desc',
   'completedAt:asc',
+  'sourceCount:desc',
+  'sourceCount:asc',
   'durationMs:desc',
   'durationMs:asc'
 ];

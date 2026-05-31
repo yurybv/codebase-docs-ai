@@ -44,7 +44,7 @@ program
   .option('--max-sources <count>', 'Filter recent runs by maximum source count')
   .option(
     '--sort <sort>',
-    'Sort recent runs: updatedAt:desc, updatedAt:asc, createdAt:desc, createdAt:asc, completedAt:desc, completedAt:asc, durationMs:desc, or durationMs:asc'
+    'Sort recent runs: updatedAt:desc, updatedAt:asc, createdAt:desc, createdAt:asc, completedAt:desc, completedAt:asc, sourceCount:desc, sourceCount:asc, durationMs:desc, or durationMs:asc'
   )
   .option('--created-after <timestamp>', 'Filter recent runs created at or after an ISO timestamp')
   .option('--created-before <timestamp>', 'Filter recent runs created at or before an ISO timestamp')
