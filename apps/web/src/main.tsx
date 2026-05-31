@@ -776,6 +776,8 @@ type RunHistorySort =
   | 'createdAt:asc'
   | 'completedAt:desc'
   | 'completedAt:asc'
+  | 'sourceCount:desc'
+  | 'sourceCount:asc'
   | 'durationMs:desc'
   | 'durationMs:asc';
 const outputFormatOptions: DocumentationOutputFormat[] = ['markdown-tree', 'single-markdown', 'json'];
@@ -788,6 +790,8 @@ const runHistorySortOptions: RunHistorySort[] = [
   'createdAt:asc',
   'completedAt:desc',
   'completedAt:asc',
+  'sourceCount:desc',
+  'sourceCount:asc',
   'durationMs:desc',
   'durationMs:asc'
 ];

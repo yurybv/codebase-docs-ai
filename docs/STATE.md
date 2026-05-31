@@ -82,17 +82,15 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 189: Web Run History Source-Count Sort Control.
 - Phase 190: Run Listing Source-Count Sort Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
-apps/web
 docs
 ```
 
-The next step should expose and audit source-count based run listing sort support across Web and cross-surface regression coverage using the safe public `sourceCount` summary field already added to the API, SDK, and CLI. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should audit source-count based run listing sort support as one public operator contract across API, SDK, CLI, and Web. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2871,6 +2869,20 @@ Verification:
 pnpm --filter @codebase-docs-ai/sdk build
 pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 189 Web Run History Source-Count Sort Control
+
+- Added `sourceCount:desc` and `sourceCount:asc` options to the Web run history sort selector.
+- Preserved selected limit, status, source role, name, output format, source-count range, source-count sort, created-at range, completed-at range, updated-at range, and cursor values across Web run history pagination.
+- Updated Web regression coverage and operator docs for source-count sorted run history.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 
