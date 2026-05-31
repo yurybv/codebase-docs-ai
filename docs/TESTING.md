@@ -222,3 +222,111 @@ examples/fixtures/fullstack-system
 - Use small artificial fixtures.
 - Do not include real secrets.
 - Include fake secrets only when testing redaction.
+
+## Live Provider Testing Iteration
+
+Use this iteration only after the current implementation batch is green under `pnpm verify` and the user is ready to provide temporary credentials and private test inputs outside the repository.
+
+### Stage 1: Repository-Only Verification
+
+No user data or real provider credentials are required.
+
+Run:
+
+```bash
+pnpm verify
+```
+
+Purpose:
+
+- confirm the repository is clean before live-provider work;
+- confirm deterministic, mocked, and contract tests already pass;
+- reduce the chance that a live-provider failure is caused by a local regression.
+
+### Stage 2: Provider Configuration Validation
+
+User must provide:
+
+- `DOCS_AI_OPENAI_API_KEY`
+- `DOCS_AI_OPENAI_MODEL`
+
+Optional:
+
+- `DOCS_AI_OPENAI_BASE_URL`
+- `DOCS_AI_OPENAI_TEMPERATURE`
+
+Do not ask for private source archives yet.
+
+Purpose:
+
+- verify the API and CLI start with real provider configuration;
+- verify partial or invalid provider config still fails fast in the expected way;
+- verify the configured model is reachable from the local environment.
+
+### Stage 3: Safe Fixture-Based Live Provider Smoke Test
+
+User must provide:
+
+- real OpenAI-compatible provider credentials from Stage 2.
+
+Use only committed synthetic fixtures from the repository at this stage.
+
+Purpose:
+
+- verify a real provider-backed generation run succeeds end to end without using private code;
+- compare live-provider output shape against deterministic baseline expectations;
+- capture sanitized failures before handling user-private inputs.
+
+### Stage 4: User-Supplied Private Input Test
+
+User must provide:
+
+- one or more source archives or folders they are comfortable testing locally;
+- confirmation of the intended source roles if multiple inputs are involved;
+- real provider credentials from Stage 2 if the live-provider path is still under test.
+
+Rules:
+
+- do not commit private archives, extracted private source, generated private output, or copied secrets;
+- keep private inputs outside committed fixtures;
+- prefer local-only execution first, then API mode if needed;
+- delete temporary private outputs after verification if the user wants cleanup.
+
+Purpose:
+
+- verify real-world multi-source analysis and generation behavior;
+- verify sanitization still holds on private evidence and operator-facing errors;
+- verify output usefulness, not just transport success.
+
+### Stage 5: Web/API Operator Flow Validation
+
+User should provide:
+
+- the same temporary provider credentials if Web-triggered generation is being tested against the live provider;
+- the same temporary private archives only if Stage 4 already passed and the user wants manual operator-flow coverage.
+
+Purpose:
+
+- verify the browser/operator flow with live-provider-backed runs;
+- verify upload, progress, result preview, downloads, run history, and sanitized failure rendering;
+- verify no raw provider key, denied `.env` evidence, denied-source value, upload path, or artifact path leaks into the Web surface.
+
+### When User Input Is Needed
+
+The user does **not** need to provide anything during ordinary development iterations.
+
+The user needs to provide data only when entering:
+
+- Stage 2 for real provider credentials;
+- Stage 4 for private source inputs;
+- Stage 5 for optional live Web/API operator-flow validation.
+
+### Recommended Order
+
+1. Finish the current implementation batch.
+2. Run repository-only verification.
+3. Request temporary provider credentials.
+4. Run live-provider smoke tests on synthetic fixtures.
+5. Request private source inputs only if fixture-based live runs succeed.
+6. Run local/API private-input verification.
+7. Run optional Web/API operator-flow validation.

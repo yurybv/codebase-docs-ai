@@ -41,6 +41,10 @@ Current next implementation batch:
 - Then continue without stopping into Phase 196: SDK And CLI Run Listing Composite Sort Option.
 - Then continue without stopping into Phase 197: Web Run History Composite Sort Control.
 - Then continue without stopping into Phase 198: Run Listing Composite Sort Cross-Surface Regression Audit.
+- Then continue without stopping into Phase 199: Live Provider Testing Runbook And Fixture Smoke Prep.
+- Then continue without stopping into Phase 200: Real OpenAI Provider Configuration And Smoke Command Preparation.
+- Then continue without stopping into Phase 201: Private Input Testing Iteration Preparation.
+- Then continue without stopping into Phase 202: Web/API Live Operator Validation Preparation.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
 Phase 195 goal:
@@ -63,6 +67,26 @@ Phase 198 goal:
 - Add or tighten regression coverage proving composite sorting composes with run listing filters and pagination where applicable.
 - Verify raw sort inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
 
+Phase 199 goal:
+- Turn the current testing guidance into an explicit testing iteration that separates repository-only verification, fixture-based live-provider smoke coverage, private-input validation, and Web/API operator validation.
+- Document exactly when the user must provide nothing, when the user must provide provider credentials, and when the user must provide private source inputs.
+- Keep the testing plan aligned with security rules so no private archives, extracted private source, or secrets are committed.
+
+Phase 200 goal:
+- Add or tighten the real-provider smoke-test workflow for API and CLI surfaces using environment-driven OpenAI-compatible configuration.
+- Make the live-provider test entrypoints obvious and safe to run only when credentials are intentionally present.
+- Verify provider configuration failures stay sanitized and fail fast before private-input testing begins.
+
+Phase 201 goal:
+- Prepare the private-input testing iteration for local and API flows.
+- Define what archive/folder data the user needs to provide, what temporary outputs may be created, and what cleanup rules apply after testing.
+- Keep private-input validation separate from committed fixtures and deterministic regression tests.
+
+Phase 202 goal:
+- Prepare the Web/API live operator validation iteration after fixture-based and private-input CLI/API checks succeed.
+- Define the exact manual checks for upload, progress, result preview, downloads, run history, and sanitized failure rendering with live-provider-backed runs.
+- Update README, Operations, Testing, Web QA, State, and this prompt where the testing workflow becomes part of the durable operator guidance.
+
 Verification expectations:
 - Run focused tests for every touched surface.
 - Run focused typechecks for every touched package/app.
@@ -81,6 +105,12 @@ Product direction reminders:
 - The HTTP API is the universal integration boundary.
 - The SDK is a TypeScript/Node convenience client, not the only integration path.
 - The Web UI is the operator/manual testing surface and must not contain core analysis logic.
+
+Testing iteration reminders:
+- Do not request a real OpenAI API key during repository-only implementation phases unless the live-provider preparation phases have been reached and local verification is already green.
+- Do not request private source archives until fixture-based live-provider smoke tests succeed.
+- When live-provider testing starts, prefer temporary environment variables and local-only handling of private inputs.
+- Never commit private archives, extracted private source, live-provider responses containing private code, or plaintext credentials.
 
 Continue phase by phase from docs/STATE.md. Stop only when a real blocker requires user input.
 ```
