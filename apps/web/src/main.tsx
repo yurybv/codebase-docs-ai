@@ -772,6 +772,8 @@ type RunHistoryFormatFilter = DocumentationOutputFormat | 'all';
 type RunHistorySort =
   | 'updatedAt:desc'
   | 'updatedAt:asc'
+  | 'name:asc'
+  | 'name:desc'
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'
@@ -786,6 +788,8 @@ const runHistoryLimitOptions = [10, 25, defaultDocumentationRunListLimit, 100];
 const runHistorySortOptions: RunHistorySort[] = [
   'updatedAt:desc',
   'updatedAt:asc',
+  'name:asc',
+  'name:desc',
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',

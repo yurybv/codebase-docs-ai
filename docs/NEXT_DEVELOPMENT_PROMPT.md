@@ -37,24 +37,30 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 192: SDK And CLI Run Listing Name Sort Option.
-- Then continue without stopping into Phase 193: Web Run History Name Sort Control.
-- Then continue without stopping into Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
+- Implement Phase 195: API Run Listing Status-Then-Updated Composite Sort Contract.
+- Then continue without stopping into Phase 196: SDK And CLI Run Listing Composite Sort Option.
+- Then continue without stopping into Phase 197: Web Run History Composite Sort Control.
+- Then continue without stopping into Phase 198: Run Listing Composite Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
-Phase 192 goal:
-- Expose name sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
-- Validate SDK and CLI name sort inputs before network requests where practical.
-- Verify SDK and CLI name-sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
+Phase 195 goal:
+- Add a safe API run listing composite sort preset for operator surfaces, prioritizing status groups and then recent activity, for example a `statusThenUpdated` sort family.
+- Keep composite-sorted pagination deterministic without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
+- Cover composite-sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
 
-Phase 193 goal:
-- Expose name sorting through the Web run history sort selector.
-- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when name sorting is applied.
-- Verify name-sorted Web history displays sanitized summary metadata without adding core logic to the Web surface.
+Phase 196 goal:
+- Expose composite sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
+- Validate SDK and CLI composite sort inputs before network requests where practical.
+- Verify SDK and CLI composite-sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
 
-Phase 194 goal:
-- Audit API, SDK, CLI, and Web name sort behavior as one public operator contract.
-- Add or tighten regression coverage proving name sorting composes with run listing filters and pagination where applicable.
+Phase 197 goal:
+- Expose composite sorting through the Web run history sort selector.
+- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when composite sorting is applied.
+- Verify composite-sorted Web history displays sanitized summary metadata without adding core logic to the Web surface.
+
+Phase 198 goal:
+- Audit API, SDK, CLI, and Web composite sort behavior as one public operator contract.
+- Add or tighten regression coverage proving composite sorting composes with run listing filters and pagination where applicable.
 - Verify raw sort inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
 
 Verification expectations:

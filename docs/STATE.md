@@ -82,20 +82,22 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 192: SDK And CLI Run Listing Name Sort Option.
-- Phase 193: Web Run History Name Sort Control.
-- Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
+- Phase 195: API Run Listing Status-Then-Updated Composite Sort Contract.
+- Phase 196: SDK And CLI Run Listing Composite Sort Option.
+- Phase 197: Web Run History Composite Sort Control.
+- Phase 198: Run Listing Composite Sort Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
+apps/api
 apps/cli
 packages/sdk
 apps/web
 docs
 ```
 
-The next step should expose and audit safe run-name sorting across SDK, CLI, and Web using sanitized public run summary names and deterministic cursors already added to the API. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should add one higher-value operator sort preset that groups terminal runs predictably for run history workflows without exposing internal storage or raw evidence. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2916,6 +2918,49 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 192 SDK And CLI Run Listing Name Sort Option
+
+- Extended SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort` to accept `name:asc` and `name:desc`.
+- Kept SDK and CLI name sort validation local to callers before network requests.
+- Updated SDK, CLI, README, and operations documentation for name sort usage.
+
+Verification:
+
+```text
+pnpm --filter @codebase-docs-ai/sdk build
+pnpm test -- packages/sdk/src/client.test.ts apps/cli/src/cli-options.test.ts apps/cli/src/list-runs-command.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 193 Web Run History Name Sort Control
+
+- Added `name:asc` and `name:desc` options to the Web run history sort selector.
+- Preserved selected limit, status, source role, name, output format, source-count range, name sort, created-at range, completed-at range, updated-at range, and cursor values across Web run history pagination.
+- Updated Web regression coverage and operator docs for name-sorted run history.
+
+Verification:
+
+```text
+pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 194 Run Listing Name Sort Cross-Surface Regression Audit
+
+- Audited API, SDK, CLI, and Web name sort behavior as one public operator contract.
+- Tightened API service and HTTP coverage so `name:asc` composes with status, role, name, format, source-count range, created-at range, completed-at range, updated-at range, and cursor pagination.
+- Kept SDK, CLI, and Web name-sorted list coverage aligned with sanitized output and sanitized invalid sort errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```
 

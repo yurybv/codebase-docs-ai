@@ -575,6 +575,8 @@ function invalidRunListSourceCount(): CodebaseDocsAIClientError {
 const runListSortOptions = [
   'updatedAt:desc',
   'updatedAt:asc',
+  'name:asc',
+  'name:desc',
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',

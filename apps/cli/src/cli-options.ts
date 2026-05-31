@@ -17,6 +17,8 @@ export type CliOutputFormat = DocumentationOutputFormat | 'zip';
 export type RunListSort =
   | 'updatedAt:desc'
   | 'updatedAt:asc'
+  | 'name:asc'
+  | 'name:desc'
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'
@@ -78,6 +80,8 @@ const maxRunListNameLength = 200;
 const runListSortOptions: RunListSort[] = [
   'updatedAt:desc',
   'updatedAt:asc',
+  'name:asc',
+  'name:desc',
   'createdAt:desc',
   'createdAt:asc',
   'completedAt:desc',

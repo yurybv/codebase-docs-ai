@@ -81,6 +81,8 @@ export interface DocumentationRunListOptions {
 export type DocumentationRunListSort =
   | 'updatedAt:desc'
   | 'updatedAt:asc'
+  | 'name:asc'
+  | 'name:desc'
   | 'createdAt:desc'
   | 'createdAt:asc'
   | 'completedAt:desc'

@@ -143,7 +143,8 @@ Run listing terminal duration metadata is a public summary contract. When changi
 
 Run listing sort direction is a cross-surface contract. When changing API run listing, SDK list helpers, CLI `list-runs`, or Web run history, verify that:
 
-- `sort` is forwarded as a supported run-list sort query parameter for update-time, create-time, completion-time, source-count, and duration ordering;
+- `sort` is forwarded as a supported run-list sort query parameter for update-time, name, create-time, completion-time, source-count, and duration ordering;
+- name sorting uses sanitized public run names and keeps cursor pagination deterministic;
 - source-count sorting uses safe public `sourceCount` metadata and keeps cursor pagination deterministic;
 - duration sorting uses safe terminal `durationMs` metadata and keeps non-terminal summaries deterministic;
 - default listing remains `updatedAt:desc`;

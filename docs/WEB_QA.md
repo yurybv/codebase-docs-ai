@@ -127,7 +127,7 @@ Expected behavior:
 - operators can enter a recent-run name search filter before refreshing history;
 - operators can choose a recent-run output format filter before refreshing history;
 - operators can enter recent-run source-count range filters before refreshing history;
-- operators can choose a recent-run sort direction, including completion-time, source-count, and duration ordering, before refreshing history;
+- operators can choose a recent-run sort direction, including name, completion-time, source-count, and duration ordering, before refreshing history;
 - operators can enter recent-run created-at range filters before refreshing history;
 - operators can enter recent-run completed-at range filters before refreshing history;
 - operators can enter recent-run updated-at range filters before refreshing history;
