@@ -286,11 +286,11 @@ describe('DocumentationRunsService', () => {
     expect(payload).not.toContain('renderedPaths');
   });
 
-  it('sorts listed run summaries by terminal duration with safe deterministic cursors', async () => {
+  it('sorts listed run summaries by source count with safe deterministic cursors', async () => {
     const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
     const pending = await service.createRun({
-      name: `Pending Duration Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      name: `Pending Source Count Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       options: {
         outputFormats: ['json'],
         language: 'en',
@@ -298,29 +298,38 @@ describe('DocumentationRunsService', () => {
         includeWarnings: true
       }
     });
-    const longest = await createCompletedRun('Longest Duration Sort Docs', secretSourceName);
-    const shortest = await createFailedRun('Shortest Duration Sort Docs', secretSourceName);
+    const highest = await createCompletedRunWithSources('Highest Source Count Sort Docs', [
+      {
+        name: secretSourceName,
+        role: 'frontend'
+      },
+      {
+        name: `Backend ${secretSourceName}`,
+        role: 'backend'
+      }
+    ]);
+    const middle = await createFailedRun('Middle Source Count Sort Docs', secretSourceName);
     await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
     await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
-    await setRunCreatedAt(longest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(longest.runId, '2026-05-30T00:02:00.000Z');
-    await setRunCompletedAt(longest.runId, '2026-05-30T00:01:30.000Z');
-    await setRunCreatedAt(shortest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(shortest.runId, '2026-05-30T00:00:45.000Z');
+    await setRunCreatedAt(highest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(highest.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(highest.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(middle.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:00:45.000Z');
 
-    const firstPage = await service.listRuns({ limit: '2', sort: 'durationMs:desc' });
+    const firstPage = await service.listRuns({ limit: '2', sort: 'sourceCount:desc' });
     const secondPage = await service.listRuns({
       limit: '2',
-      sort: 'durationMs:desc',
+      sort: 'sourceCount:desc',
       cursor: firstPage.nextCursor
     });
     const payload = JSON.stringify({ firstPage, secondPage });
 
-    expect(firstPage.runs.map((run) => run.id)).toEqual([longest.runId, shortest.runId]);
-    expect(firstPage.runs.map((run) => run.durationMs)).toEqual([90_000, 45_000]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([highest.runId, middle.runId]);
+    expect(firstPage.runs.map((run) => run.sourceCount)).toEqual([2, 1]);
     expect(firstPage.nextCursor).toBeTruthy();
     expect(secondPage.runs.map((run) => run.id)).toEqual([pending.runId]);
-    expect(secondPage.runs[0]?.durationMs).toBeUndefined();
+    expect(secondPage.runs[0]?.sourceCount).toBe(0);
     expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
@@ -542,10 +551,18 @@ describe('DocumentationRunsService', () => {
 
   it('filters listed run summaries by created-at range with other list filters without exposing raw values', async () => {
     const rawOpenAiKey = `sk-${'l'.repeat(24)}`;
-    const older = await createCompletedRun(
+    const older = await createCompletedRunWithSources(
       `Older Backend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      'backend',
+      [
+        {
+          name: `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+          role: 'backend'
+        },
+        {
+          name: `Extra Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+          role: 'backend'
+        }
+      ],
       ['json']
     );
     const newer = await createCompletedRun(
@@ -588,8 +605,8 @@ describe('DocumentationRunsService', () => {
       name: 'backend created search',
       format: 'json',
       minSources: '1',
-      maxSources: '1',
-      sort: 'durationMs:desc',
+      maxSources: '2',
+      sort: 'sourceCount:desc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
       completedAfter: '2026-05-30T00:00:00.000Z',
@@ -604,8 +621,8 @@ describe('DocumentationRunsService', () => {
       name: 'backend created search',
       format: 'json',
       minSources: '1',
-      maxSources: '1',
-      sort: 'durationMs:desc',
+      maxSources: '2',
+      sort: 'sourceCount:desc',
       createdAfter: '2026-05-29T23:59:59.000Z',
       createdBefore: '2026-05-30T00:01:30.000Z',
       completedAfter: '2026-05-30T00:00:00.000Z',
@@ -617,10 +634,10 @@ describe('DocumentationRunsService', () => {
     const payload = JSON.stringify({ firstPage, secondPage });
 
     expect(firstPage.runs.map((run) => run.id)).toEqual([older.runId]);
-    expect(firstPage.runs[0]?.durationMs).toBe(30_000);
+    expect(firstPage.runs[0]?.sourceCount).toBe(2);
     expect(firstPage.nextCursor).toBeTruthy();
     expect(secondPage.runs.map((run) => run.id)).toEqual([newer.runId]);
-    expect(secondPage.runs[0]?.durationMs).toBe(15_000);
+    expect(secondPage.runs[0]?.sourceCount).toBe(1);
     expect(secondPage.nextCursor).toBeUndefined();
     expect(payload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(payload).toContain('[REDACTED_DENIED_FILE]');
@@ -1723,6 +1740,44 @@ async function createCompletedRun(
       }
     ],
     sourceMetadata(sourceName, role)
+  );
+  await service.startRun(created.runId);
+  return {
+    runId: created.runId
+  };
+}
+
+async function createCompletedRunWithSources(
+  name: string,
+  sources: Array<{
+    name: string;
+    role: 'frontend' | 'backend' | 'shared' | 'infra' | 'mobile' | 'docs' | 'unknown';
+  }>,
+  outputFormats: Array<'markdown-tree' | 'single-markdown' | 'json'> = ['single-markdown']
+): Promise<{ runId: string }> {
+  const created = await service.createRun({
+    name,
+    options: {
+      outputFormats,
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    }
+  });
+  await service.uploadSources(
+    created.runId,
+    sources.map((source, index) => ({
+      fieldname: `source_${index}`,
+      originalname: `${source.role}-${index}.zip`,
+      buffer: frontendArchive().toBuffer()
+    })),
+    JSON.stringify({
+      sources: sources.map((source, index) => ({
+        fileField: `source_${index}`,
+        name: source.name,
+        role: source.role
+      }))
+    })
   );
   await service.startRun(created.runId);
   return {

@@ -311,12 +311,12 @@ describe('Documentation runs HTTP API', () => {
     expect(payload).not.toContain('renderedPaths');
   });
 
-  it('sorts run summaries by safe terminal duration metadata', async () => {
+  it('sorts run summaries by safe public source count metadata', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'e'.repeat(24)}`;
     const secretSourceName = `Frontend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`;
     const pending = await service.createRun({
-      name: `HTTP Pending Duration Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+      name: `HTTP Pending Source Count Sort Docs ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
       options: {
         outputFormats: ['json'],
         language: 'en',
@@ -324,14 +324,19 @@ describe('Documentation runs HTTP API', () => {
         includeWarnings: true
       }
     });
-    const longest = await createServiceRun(
+    const highest = await createServiceRunWithSources(service, 'HTTP Highest Source Count Sort Docs', [
+      {
+        name: secretSourceName,
+        role: 'frontend'
+      },
+      {
+        name: `Backend ${secretSourceName}`,
+        role: 'backend'
+      }
+    ]);
+    const middle = await createServiceRun(
       service,
-      'HTTP Longest Duration Sort Docs',
-      secretSourceName
-    );
-    const shortest = await createServiceRun(
-      service,
-      'HTTP Shortest Duration Sort Docs',
+      'HTTP Middle Source Count Sort Docs',
       secretSourceName,
       {
         failBeforeStart: true
@@ -339,32 +344,32 @@ describe('Documentation runs HTTP API', () => {
     );
     await setRunCreatedAt(pending.runId, '2026-05-30T00:00:00.000Z');
     await setRunUpdatedAt(pending.runId, '2026-05-30T00:03:00.000Z');
-    await setRunCreatedAt(longest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(longest.runId, '2026-05-30T00:02:00.000Z');
-    await setRunCompletedAt(longest.runId, '2026-05-30T00:01:30.000Z');
-    await setRunCreatedAt(shortest.runId, '2026-05-30T00:00:00.000Z');
-    await setRunUpdatedAt(shortest.runId, '2026-05-30T00:00:45.000Z');
+    await setRunCreatedAt(highest.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(highest.runId, '2026-05-30T00:02:00.000Z');
+    await setRunCompletedAt(highest.runId, '2026-05-30T00:01:30.000Z');
+    await setRunCreatedAt(middle.runId, '2026-05-30T00:00:00.000Z');
+    await setRunUpdatedAt(middle.runId, '2026-05-30T00:00:45.000Z');
 
     const firstResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=durationMs:desc`
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=sourceCount:desc`
     );
     const firstPayload = await firstResponse.text();
     const firstPage = JSON.parse(firstPayload) as {
-      runs: Array<{ durationMs?: number; id: string }>;
+      runs: Array<{ sourceCount: number; id: string }>;
       nextCursor?: string;
     };
     const secondResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=durationMs:desc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=2&sort=sourceCount:desc&cursor=${encodeURIComponent(firstPage.nextCursor ?? '')}`
     );
     const secondPayload = await secondResponse.text();
     const secondPage = JSON.parse(secondPayload) as {
-      runs: Array<{ durationMs?: number; id: string }>;
+      runs: Array<{ sourceCount: number; id: string }>;
       nextCursor?: string;
     };
 
     expect(firstResponse.status).toBe(200);
-    expect(firstPage.runs.map((run) => run.id)).toEqual([longest.runId, shortest.runId]);
-    expect(firstPage.runs.map((run) => run.durationMs)).toEqual([90_000, 45_000]);
+    expect(firstPage.runs.map((run) => run.id)).toEqual([highest.runId, middle.runId]);
+    expect(firstPage.runs.map((run) => run.sourceCount)).toEqual([2, 1]);
     expect(firstPage.nextCursor).toBeTruthy();
     expect(firstPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(firstPayload).toContain('[REDACTED_DENIED_FILE]');
@@ -376,7 +381,7 @@ describe('Documentation runs HTTP API', () => {
 
     expect(secondResponse.status).toBe(200);
     expect(secondPage.runs.map((run) => run.id)).toEqual([pending.runId]);
-    expect(secondPage.runs[0]?.durationMs).toBeUndefined();
+    expect(secondPage.runs[0]?.sourceCount).toBe(0);
     expect(secondPage.nextCursor).toBeUndefined();
     expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(secondPayload).not.toContain(rawOpenAiKey);
@@ -853,11 +858,20 @@ describe('Documentation runs HTTP API', () => {
   it('validates and applies run list created-at range query parameters with other list filters', async () => {
     const service = app.get(DocumentationRunsService);
     const rawOpenAiKey = `sk-${'u'.repeat(24)}`;
-    const older = await createServiceRun(
+    const older = await createServiceRunWithSources(
       service,
       `HTTP Older Backend Created Search ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
-      { role: 'backend', outputFormats: ['json'] }
+      [
+        {
+          name: `Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+          role: 'backend'
+        },
+        {
+          name: `Extra Backend ${rawOpenAiKey} .env SHOULD_NOT_APPEAR`,
+          role: 'backend'
+        }
+      ],
+      { outputFormats: ['json'] }
     );
     const newer = await createServiceRun(
       service,
@@ -894,17 +908,17 @@ describe('Documentation runs HTTP API', () => {
     await setRunCompletedAt(newer.runId, '2026-05-30T00:01:15.000Z');
 
     const filteredResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&sort=durationMs:desc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&completedAfter=${encodeURIComponent('2026-05-30T00:00:00.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=2&sort=sourceCount:desc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&completedAfter=${encodeURIComponent('2026-05-30T00:00:00.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}`
     );
     const filteredPayload = await filteredResponse.text();
     const filtered = JSON.parse(filteredPayload) as {
-      runs: Array<{ durationMs?: number; id: string }>;
+      runs: Array<{ sourceCount: number; id: string }>;
       nextCursor?: string;
     };
 
     expect(filteredResponse.status).toBe(200);
     expect(filtered.runs.map((run) => run.id)).toEqual([older.runId]);
-    expect(filtered.runs[0]?.durationMs).toBe(30_000);
+    expect(filtered.runs[0]?.sourceCount).toBe(2);
     expect(filtered.nextCursor).toBeTruthy();
     expect(filteredPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(filteredPayload).toContain('[REDACTED_DENIED_FILE]');
@@ -915,17 +929,17 @@ describe('Documentation runs HTTP API', () => {
     expect(filteredPayload).not.toContain(tempRoot);
 
     const secondResponse = await fetch(
-      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=1&sort=durationMs:desc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&completedAfter=${encodeURIComponent('2026-05-30T00:00:00.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
+      `${apiBaseUrl}/v1/documentation-runs?limit=1&status=completed&role=backend&name=${encodeURIComponent('backend created search')}&format=json&minSources=1&maxSources=2&sort=sourceCount:desc&createdAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&createdBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&completedAfter=${encodeURIComponent('2026-05-30T00:00:00.000Z')}&completedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&updatedAfter=${encodeURIComponent('2026-05-29T23:59:59.000Z')}&updatedBefore=${encodeURIComponent('2026-05-30T00:01:30.000Z')}&cursor=${encodeURIComponent(filtered.nextCursor ?? '')}`
     );
     const secondPayload = await secondResponse.text();
     const second = JSON.parse(secondPayload) as {
-      runs: Array<{ durationMs?: number; id: string }>;
+      runs: Array<{ sourceCount: number; id: string }>;
       nextCursor?: string;
     };
 
     expect(secondResponse.status).toBe(200);
     expect(second.runs.map((run) => run.id)).toEqual([newer.runId]);
-    expect(second.runs[0]?.durationMs).toBe(15_000);
+    expect(second.runs[0]?.sourceCount).toBe(1);
     expect(second.nextCursor).toBeUndefined();
     expect(secondPayload).toContain('[REDACTED_OPENAI_API_KEY]');
     expect(secondPayload).not.toContain(rawOpenAiKey);
@@ -1857,6 +1871,47 @@ async function createServiceRun(
     await service.startRun(created.runId);
   }
 
+  return {
+    runId: created.runId
+  };
+}
+
+async function createServiceRunWithSources(
+  service: DocumentationRunsService,
+  name: string,
+  sources: Array<{
+    name: string;
+    role: string;
+  }>,
+  options: {
+    outputFormats?: Array<'markdown-tree' | 'single-markdown' | 'json'>;
+  } = {}
+): Promise<{ runId: string }> {
+  const created = await service.createRun({
+    name,
+    options: {
+      outputFormats: options.outputFormats ?? ['single-markdown'],
+      language: 'en',
+      includeSourceReferences: true,
+      includeWarnings: true
+    }
+  });
+  await service.uploadSources(
+    created.runId,
+    sources.map((source, index) => ({
+      fieldname: `source_${index}`,
+      originalname: `${source.role}-${index}.zip`,
+      buffer: serviceArchiveBuffer()
+    })),
+    JSON.stringify({
+      sources: sources.map((source, index) => ({
+        fileField: `source_${index}`,
+        name: source.name,
+        role: source.role
+      }))
+    })
+  );
+  await service.startRun(created.runId);
   return {
     runId: created.runId
   };

@@ -82,7 +82,6 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 187: API Run Listing Source-Count Sort Contract.
 - Phase 188: SDK And CLI Run Listing Source-Count Sort Option.
 - Phase 189: Web Run History Source-Count Sort Control.
 - Phase 190: Run Listing Source-Count Sort Cross-Surface Regression Audit.
@@ -90,14 +89,13 @@ Implement the next larger implementation batch:
 Required package:
 
 ```text
-apps/api
 apps/cli
 packages/sdk
 apps/web
 docs
 ```
 
-The next step should add source-count based run listing sort support across API, SDK, CLI, and Web using the safe public `sourceCount` summary field. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should expose and audit source-count based run listing sort support across SDK, CLI, and Web using the safe public `sourceCount` summary field already added to the API. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2847,6 +2845,20 @@ Verification:
 ```text
 pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 187 API Run Listing Source-Count Sort Contract
+
+- Added API `sourceCount:desc` and `sourceCount:asc` run listing sort options using safe public source-count summary metadata.
+- Included `sourceCount` in newly issued cursors so source-count sorted pagination remains deterministic across first-page and cursor-page requests.
+- Added service and HTTP regression coverage for source-count sorted list pages and sanitized invalid sort handling without exposing secret-bearing run names or storage paths.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/api typecheck
 pnpm verify
 ```
 

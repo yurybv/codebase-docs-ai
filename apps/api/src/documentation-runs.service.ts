@@ -91,12 +91,18 @@ interface RunListCursor {
   updatedAt: string;
   createdAt?: string | undefined;
   completedAt?: string | undefined;
+  sourceCount?: number | undefined;
   durationMs?: number | undefined;
   id: string;
 }
 
 type RunListSort = (typeof runListSortOptions)[number];
-type RunListSortField = 'updatedAt' | 'createdAt' | 'completedAt' | 'durationMs';
+type RunListSortField =
+  | 'updatedAt'
+  | 'createdAt'
+  | 'completedAt'
+  | 'sourceCount'
+  | 'durationMs';
 type RunListSortDirection = 'desc' | 'asc';
 
 const uploadSourcesMetadataSchema = z.object({
@@ -151,6 +157,8 @@ const runListSortOptions = [
   'createdAt:asc',
   'completedAt:desc',
   'completedAt:asc',
+  'sourceCount:desc',
+  'sourceCount:asc',
   'durationMs:desc',
   'durationMs:asc'
 ] as const;
@@ -159,6 +167,7 @@ const runListCursorSchema = z.object({
   updatedAt: z.string().datetime(),
   createdAt: z.string().datetime().optional(),
   completedAt: z.string().datetime().optional(),
+  sourceCount: z.number().int().nonnegative().optional(),
   durationMs: z.number().finite().nonnegative().optional(),
   id: z.string().min(1)
 });
@@ -852,16 +861,36 @@ function compareRunSummaryToCursor(
 function compareRunSummaryOrder(
   left: Pick<
     DocumentationRunSummary,
-    'id' | 'createdAt' | 'completedAt' | 'durationMs' | 'updatedAt'
+    'id' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
   >,
   right:
-    | Pick<DocumentationRunSummary, 'id' | 'createdAt' | 'completedAt' | 'durationMs' | 'updatedAt'>
+    | Pick<
+        DocumentationRunSummary,
+        'id' | 'createdAt' | 'completedAt' | 'sourceCount' | 'durationMs' | 'updatedAt'
+      >
     | RunListCursor,
   sort: RunListSort
 ): number {
   const { field, direction } = parseRunListSortParts(sort);
+  if (field === 'sourceCount') {
+    const sourceCountOrder = compareRunSummaryNumericSortValue(
+      left.sourceCount,
+      right.sourceCount,
+      direction
+    );
+    if (sourceCountOrder !== 0) {
+      return sourceCountOrder;
+    }
+
+    const idOrder = left.id.localeCompare(right.id);
+    return direction === 'asc' ? idOrder : -idOrder;
+  }
   if (field === 'durationMs') {
-    const durationOrder = compareRunDurationSortValue(left.durationMs, right.durationMs, direction);
+    const durationOrder = compareRunSummaryNumericSortValue(
+      left.durationMs,
+      right.durationMs,
+      direction
+    );
     if (durationOrder !== 0) {
       return durationOrder;
     }
@@ -881,7 +910,7 @@ function compareRunSummaryOrder(
   return direction === 'asc' ? idOrder : -idOrder;
 }
 
-function compareRunDurationSortValue(
+function compareRunSummaryNumericSortValue(
   left: number | undefined,
   right: number | undefined,
   direction: RunListSortDirection
@@ -902,7 +931,7 @@ function compareRunDurationSortValue(
 
 function runListSortValue(
   summary: Pick<DocumentationRunSummary, 'createdAt' | 'completedAt' | 'updatedAt'> | RunListCursor,
-  field: Exclude<RunListSortField, 'durationMs'>
+  field: Exclude<RunListSortField, 'sourceCount' | 'durationMs'>
 ): string {
   if (field === 'createdAt') {
     return summary.createdAt ?? summary.updatedAt;
@@ -930,6 +959,7 @@ function encodeRunListCursor(run: DocumentationRunSummary): string {
       updatedAt: run.updatedAt,
       createdAt: run.createdAt,
       ...(run.completedAt ? { completedAt: run.completedAt } : {}),
+      sourceCount: run.sourceCount,
       ...(run.durationMs === undefined ? {} : { durationMs: run.durationMs }),
       id: run.id
     }),

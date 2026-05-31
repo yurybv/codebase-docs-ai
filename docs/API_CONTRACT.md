@@ -96,7 +96,7 @@ Query:
 - invalid `updatedAfter` values return `RUN_LIST_UPDATED_AFTER_INVALID`;
 - `updatedBefore`: optional ISO timestamp upper bound for `updatedAt`;
 - invalid `updatedBefore` values return `RUN_LIST_UPDATED_BEFORE_INVALID`;
-- `sort`: optional sort order, either `updatedAt:desc`, `updatedAt:asc`, `createdAt:desc`, `createdAt:asc`, `completedAt:desc`, `completedAt:asc`, `durationMs:desc`, or `durationMs:asc`;
+- `sort`: optional sort order, either `updatedAt:desc`, `updatedAt:asc`, `createdAt:desc`, `createdAt:asc`, `completedAt:desc`, `completedAt:asc`, `sourceCount:desc`, `sourceCount:asc`, `durationMs:desc`, or `durationMs:asc`;
 - default: `updatedAt:desc`;
 - invalid sort values return `RUN_LIST_SORT_INVALID`;
 - `cursor`: optional opaque pagination cursor returned by a previous list response;
