@@ -82,15 +82,22 @@ Continue autonomous development until a product, architecture, credential, provi
 
 Implement the next larger implementation batch:
 
-- Phase 190: Run Listing Source-Count Sort Cross-Surface Regression Audit.
+- Phase 191: API Run Listing Name Sort Contract.
+- Phase 192: SDK And CLI Run Listing Name Sort Option.
+- Phase 193: Web Run History Name Sort Control.
+- Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
 
 Required package:
 
 ```text
+apps/api
+apps/cli
+packages/sdk
+apps/web
 docs
 ```
 
-The next step should audit source-count based run listing sort support as one public operator contract across API, SDK, CLI, and Web. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
+The next step should add safe run-name sorting across API, SDK, CLI, and Web using sanitized public run summary names and deterministic cursors. Do not stop after one narrow phase when the next related task is clear and no user decision is required.
 
 ## Completed Implementation
 
@@ -2882,6 +2889,20 @@ Verification:
 
 ```text
 pnpm test -- apps/web/src/main.test.ts apps/web/src/api-errors.test.ts
+pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
+pnpm verify
+```
+
+### 2026-05-31: Phase 190 Run Listing Source-Count Sort Cross-Surface Regression Audit
+
+- Audited API, SDK, CLI, and Web source-count sort behavior as one public operator contract.
+- Tightened API service and HTTP coverage so `sourceCount:desc` composes with status, role, name, format, source-count range, created-at range, completed-at range, updated-at range, and cursor pagination.
+- Kept SDK, CLI, and Web source-count sorted list coverage aligned with sanitized output and sanitized invalid sort errors.
+
+Verification:
+
+```text
+pnpm test -- apps/api/src/documentation-runs.service.test.ts apps/api/src/documentation-runs.http.test.ts packages/sdk/src/client.test.ts apps/cli/src/list-runs-command.test.ts apps/cli/src/cli-options.test.ts apps/web/src/main.test.ts
 pnpm -r --sort --filter @codebase-docs-ai/shared --filter @codebase-docs-ai/sdk --filter @codebase-docs-ai/api --filter @codebase-docs-ai/web --filter @codebase-docs-ai/cli typecheck
 pnpm verify
 ```

@@ -37,30 +37,30 @@ Read these files first:
 - docs/GIT_WORKFLOW.md
 
 Current next implementation batch:
-- Implement Phase 187: API Run Listing Source-Count Sort Contract.
-- Then continue without stopping into Phase 188: SDK And CLI Run Listing Source-Count Sort Option.
-- Then continue without stopping into Phase 189: Web Run History Source-Count Sort Control.
-- Then continue without stopping into Phase 190: Run Listing Source-Count Sort Cross-Surface Regression Audit.
+- Implement Phase 191: API Run Listing Name Sort Contract.
+- Then continue without stopping into Phase 192: SDK And CLI Run Listing Name Sort Option.
+- Then continue without stopping into Phase 193: Web Run History Name Sort Control.
+- Then continue without stopping into Phase 194: Run Listing Name Sort Cross-Surface Regression Audit.
 - If those finish cleanly, continue into the next highest-value product gap from docs/STATE.md and docs/IMPLEMENTATION_PLAN.md, update this file again, verify, and commit.
 
-Phase 187 goal:
-- Add safe API run listing source-count sort options, such as `sourceCount:desc` and `sourceCount:asc`, using only public run summary metadata.
-- Keep source-count sorted pagination deterministic without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
-- Cover source-count sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
+Phase 191 goal:
+- Add safe API run listing name sort options, such as `name:asc` and `name:desc`, using sanitized public run summary names only.
+- Keep name-sorted pagination deterministic without exposing storage paths, upload paths, raw source content, or secret-bearing evidence.
+- Cover name-sorted first-page and cursor-page behavior with sanitized invalid-sort errors.
 
-Phase 188 goal:
-- Expose source-count sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
-- Validate SDK and CLI source-count sort inputs before network requests where practical.
-- Verify SDK and CLI source-count sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
+Phase 192 goal:
+- Expose name sort options through SDK `documentationRuns.list({ sort })` and CLI `list-runs --sort`.
+- Validate SDK and CLI name sort inputs before network requests where practical.
+- Verify SDK and CLI name-sorted list requests preserve sanitized list output and invalid-sort errors do not expose raw values.
 
-Phase 189 goal:
-- Expose source-count sorting through the Web run history sort selector.
-- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when source-count sorting is applied.
-- Verify source-count sorted Web history displays sanitized summary metadata without adding core logic to the Web surface.
+Phase 193 goal:
+- Expose name sorting through the Web run history sort selector.
+- Preserve Web run history limit/status/role/name/format/source-count/created-at/completed-at/updated-at/cursor behavior when name sorting is applied.
+- Verify name-sorted Web history displays sanitized summary metadata without adding core logic to the Web surface.
 
-Phase 190 goal:
-- Audit API, SDK, CLI, and Web source-count sort behavior as one public operator contract.
-- Add or tighten regression coverage proving source-count sorting composes with run listing filters and pagination where applicable.
+Phase 194 goal:
+- Audit API, SDK, CLI, and Web name sort behavior as one public operator contract.
+- Add or tighten regression coverage proving name sorting composes with run listing filters and pagination where applicable.
 - Verify raw sort inputs, provider keys, denied `.env` evidence, denied-source values, upload storage paths, and artifact paths remain absent from surfaced list results and errors.
 
 Verification expectations:

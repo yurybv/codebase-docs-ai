@@ -105,7 +105,7 @@ This document tracks the product capabilities that must exist in the generated p
 - Output format selection.
 - Run history refresh.
 - Run history pagination.
-- Run history sort direction, including terminal duration ordering.
+- Run history sort direction, including source-count and terminal duration ordering.
 - Run history created-at range filters.
 - Run history completed-at range filters.
 - Run history updated-at range filters.
